@@ -1,0 +1,26 @@
+{
+   "name": "Miller",
+   "age": 17,
+   "driverLic": 3,
+   "status": "hidden",
+   "address": {
+      "postal-code": 11111,
+      "city": "PleasantVille",
+      "absent": false
+   },
+   "telecom": [
+      {
+         "use": "hidden",
+         "value": "(03) 5555 0000"
+      },
+      {
+         "use": "home",
+         "value": "(03) 5555 1111",
+         "kind": "smart"
+      }
+   ],
+   "shopping": [
+      {"p#123": {"status": "ordered"}},
+      {"p#456": {"status": "shipped"}}
+   ]
+}

@@ -1,0 +1,21 @@
+{
+	"version": "0.1",
+	"matchRules": {
+		"rules": [
+			{
+				"rule": "a0.(**) --> e.$1"
+			},
+			{
+				"rule": "a.c --> a.aa.c"
+			}
+		],
+		"noMatch": "include"
+	},
+	"skipRules": {
+		"rules": [
+			{
+				"match": "a.d"
+			}
+		]
+	}
+}

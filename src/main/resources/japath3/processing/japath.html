@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+<meta charset="UTF-8">
+<title>Main</title>
+</head>
+
+<body>
+
+	<pre id="ret">...</pre>
+
+	<script type="application/javascript" src="stringify.js"></script>
+	<script type="application/javascript" src="japath-1.js"></script>
+	<script type="text/javascript">
+	
+		try {
+		//ret = peg$parse("{\"a\" :(c.d)}")
+		// ret = peg$parse("pers.cond( driverLic, age, name )")
+		// ret = peg$parse("cond(true, 99, 88)$h")
+		// ret = peg$parse("new $x {cond(true, 99, 88)$h, age: $h}")
+		// ret = peg$parse("x[# 1..]")
+		// ret = peg$parse("x[# 1]")
+		// ret = peg$parse("eq(' ')")
+		// ret = peg$parse("'    x  y  '")
+		// ret = peg$parse("f(\"\"\"aaa \n bbb\"\"\")")
+		ret = peg$parse("property($a)")
+		// ret = peg$parse("j::time::germanToIsoDate(a.f)")
+		//ret = peg$parse("'x''")
+		
+		} catch (e) {
+			console.log(e)
+		}
+
+		document.getElementById("ret").innerHTML = ret
+	</script>
+</body>
+
+</html>

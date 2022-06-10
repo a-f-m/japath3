@@ -1,0 +1,109 @@
+package japath3.processing;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.Map;
+
+import org.apache.commons.io.IOUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Function;
+import org.mozilla.javascript.JavaScriptException;
+import org.mozilla.javascript.ScriptRuntime;
+import org.mozilla.javascript.Scriptable;
+
+import io.vavr.Tuple;
+import io.vavr.Tuple2;
+import japath3.core.JapathException;
+
+/**
+ *  
+ *
+ */
+public class PegjsEngineRhino {
+
+	Context cx;
+	private Scriptable scope;
+	private String script;
+
+	public PegjsEngineRhino() {
+
+		stdInit();
+	}
+
+	public PegjsEngineRhino(String script) {
+		this();
+		init(script);
+	}
+
+	public PegjsEngineRhino(Reader r) throws IOException {
+
+		this(IOUtils.toString(r));
+	}
+
+	private void stdInit() {
+		try {
+			cx = Context.enter();
+			scope = cx.initStandardObjects(null);
+			cx.evaluateReader(scope,
+					new InputStreamReader(Language.class.getResourceAsStream("stringify.js")),
+					"stringify.js",
+					1,
+					null);
+
+		} catch (Exception e) {
+			throw new JapathException(e);
+		}
+	}
+
+	private void init(String script) {
+		this.script = script;
+		try {
+			cx.evaluateString(scope, script, "pegjs", 1, null);
+			
+		} catch (Exception e) {
+			throw new JapathException(e);
+		}
+	}
+	
+	public Tuple2<JSONObject, String> getAst(String text) {
+
+		String astStr = "";
+		try {
+			Object fObj = scope.get("peg$parse", scope);
+
+			Object functionArgs[] = { text };
+			Function f = (Function) fObj;
+			try {
+				ScriptRuntime.exitActivationFunction(cx);
+				
+			} catch (NullPointerException e) {
+				// TODO: handle exception
+			}
+			Object ret = f.call(cx, scope, scope, functionArgs);
+			astStr = ret.toString();
+
+		} catch (JavaScriptException e) {
+			try {
+				JSONObject error = new JSONObject((Map) e.getValue());
+				JSONObject loc = error.getJSONObject("location");
+				return Tuple.of(null,
+						"error at line " + loc.getJSONObject("start")
+								.getInt("line") + ", column " + loc.getJSONObject("start").getInt("column") + ": " + e.getMessage()
+				// + error.get("message")
+				);
+
+			} catch (JSONException e1) {
+				throw new JapathException(e1);
+			} finally {
+				Context.exit();
+				stdInit();
+				init(script);
+				getAst("x");
+			}
+		}
+		return Tuple.of(new JSONObject(astStr), null);
+	}
+}

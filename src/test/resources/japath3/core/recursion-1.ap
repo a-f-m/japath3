@@ -1,0 +1,19 @@
+def-script(
+    """
+    function incr(x) {
+        return x+1
+    }
+    """
+).
+
+def(f,
+    self $x
+    .cond(
+        eq(3),
+        ::log('ready'),
+        js::incr().f()
+    ).::log($x)
+).
+
+//[1, 2, 3].*.f()
+[1].*.f()

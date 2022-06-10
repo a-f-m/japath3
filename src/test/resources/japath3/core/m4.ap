@@ -1,0 +1,59 @@
+
+
+// class ConceptDefinition --------------------------------------
+
+def(mapUse, //
+        cond (eq('900000000000003001'), 'pref', 
+        cond (eq('900000000000013009'), 'syn', 
+        cond (eq('_no-use'), 'syn', 
+        _)))
+).
+
+def(mapLang, 
+    cond (eq('_no-lang'), 'us', _)
+).
+
+def(irTransform, 
+    _ $d . 
+        [ distinct(
+                *.[ orElse(language, '_no-lang'), 
+                    orElse(use.code, '_no-use') ]
+          )
+        ]
+        .* { _[0] $lang, _[1] $use, 
+             js::conc('ir_', $use.mapUse(), '_', $lang.mapLang()) $prop }
+        .{ 
+            property($prop) :
+                [ $d.*?( 
+                    and (
+                        cond ($lang.eq('_no-lang'), 
+                                not(language), language.eq($lang)), 
+                        cond ($use.eq('_no-use'), 
+                                not(use.code), use.code.eq($use)))
+                    ).value 
+                ]
+         } 
+).
+
+def(ConceptDefinition__projection,
+    {
+        "code": code,
+        "display": display
+    } 
+    .embed( [ $.designation.irTransform() ].lift())
+).
+ConceptDefinition__projection()
+
+// def(ConceptDefinition__relations, // #0: prefix, #>0 id_i
+//     {
+
+//     }
+// )
+
+// end class ConceptDefinition --------------------------------------
+
+// class ConceptProperty --------------------------------------
+
+
+
+// end class ConceptProperty --------------------------------------

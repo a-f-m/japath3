@@ -1,0 +1,14 @@
+self{::complete}.and(
+	// every(*, §.match('(_op)?|(type)?|_body|(apathExpr)?|(var)?|(constraints)?|(pretty)?|(asArray)?|(schemaGenSwitches)?|(salient)?')),
+	opt(_op).type(String),
+	opt(type).type(String),
+	_body,
+	opt(apathExpr).type(String),
+	opt(var).type(String),
+	opt(constraints).type(String),
+	opt(pretty).type(Boolean),
+	opt(asArray).type(Boolean),
+	opt(schemaGenSwitches).type(String),
+	opt(salient).type(Boolean),
+	opt(genMessages).type(Boolean)
+	)

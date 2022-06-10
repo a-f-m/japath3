@@ -1,0 +1,8 @@
+def(f,
+    _{_ $x, #0.message($x)}
+).
+def(g, 
+    _{_ $y}
+    .message($y)
+).
+f(a.g())

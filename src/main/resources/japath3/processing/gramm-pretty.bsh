@@ -1,0 +1,177 @@
+// Dies ist ein aufgenommenes Makro. �berpr�fen Sie zuerst alle Befehle,
+// um sicher zu gehen, dass die beabsichtigten Befehle ausgef�hrt werden.
+// Um das Makro zu starten, aktivieren Sie die Datei,
+// in der das Makro arbeiten soll und dr�cken C+m C+p.
+
+textArea.goToBufferStart(false);
+SearchAndReplace.setSearchString("\\{return \\w+;\\}");
+SearchAndReplace.setReplaceString("");
+SearchAndReplace.setBeanShellReplace(false);
+SearchAndReplace.setWholeWord(false);
+SearchAndReplace.setIgnoreCase(false);
+SearchAndReplace.setRegexp(true);
+SearchAndReplace.setSearchFileSet(new CurrentBufferSet());
+SearchAndReplace.replaceAll(view);
+
+textArea.goToBufferStart(false);
+SearchAndReplace.setSearchString("(\\{(?!')[^\\}]*)\\n");
+SearchAndReplace.setReplaceString("$1");
+SearchAndReplace.setBeanShellReplace(false);
+SearchAndReplace.setWholeWord(false);
+SearchAndReplace.setIgnoreCase(false);
+SearchAndReplace.setRegexp(true);
+SearchAndReplace.setSearchFileSet(new CurrentBufferSet());
+SearchAndReplace.replaceAll(view);
+
+textArea.goToBufferStart(false);
+SearchAndReplace.setSearchString("\\{(?!').*\\}");
+SearchAndReplace.setReplaceString("");
+SearchAndReplace.setBeanShellReplace(false);
+SearchAndReplace.setWholeWord(false);
+SearchAndReplace.setIgnoreCase(false);
+SearchAndReplace.setRegexp(true);
+SearchAndReplace.setSearchFileSet(new CurrentBufferSet());
+SearchAndReplace.replaceAll(view);
+
+textArea.goToBufferStart(false);
+SearchAndReplace.setSearchString("x:\\(");
+SearchAndReplace.setReplaceString("");
+SearchAndReplace.setBeanShellReplace(false);
+SearchAndReplace.setWholeWord(false);
+SearchAndReplace.setIgnoreCase(false);
+SearchAndReplace.setRegexp(true);
+SearchAndReplace.setSearchFileSet(new CurrentBufferSet());
+SearchAndReplace.replaceAll(view);
+
+textArea.goToBufferStart(false);
+SearchAndReplace.setSearchString("^\\)");
+SearchAndReplace.setReplaceString("");
+SearchAndReplace.setBeanShellReplace(false);
+SearchAndReplace.setWholeWord(false);
+SearchAndReplace.setIgnoreCase(false);
+SearchAndReplace.setRegexp(true);
+SearchAndReplace.setSearchFileSet(new CurrentBufferSet());
+SearchAndReplace.replaceAll(view);
+
+textArea.goToBufferStart(false);
+SearchAndReplace.setSearchString("\\w+\\:\\((.*?)(?<!\')\\)");
+SearchAndReplace.setReplaceString("($1)");
+SearchAndReplace.setBeanShellReplace(false);
+SearchAndReplace.setWholeWord(false);
+SearchAndReplace.setIgnoreCase(false);
+SearchAndReplace.setRegexp(true);
+SearchAndReplace.setSearchFileSet(new CurrentBufferSet());
+SearchAndReplace.replaceAll(view);
+
+textArea.goToBufferStart(false);
+SearchAndReplace.setSearchString("\\w+:");
+SearchAndReplace.setReplaceString("");
+SearchAndReplace.setBeanShellReplace(false);
+SearchAndReplace.setWholeWord(false);
+SearchAndReplace.setIgnoreCase(false);
+SearchAndReplace.setRegexp(true);
+SearchAndReplace.setSearchFileSet(new CurrentBufferSet());
+SearchAndReplace.replaceAll(view);
+
+textArea.goToBufferStart(false);
+SearchAndReplace.setSearchString("//.*?$");
+SearchAndReplace.setReplaceString("");
+SearchAndReplace.setBeanShellReplace(false);
+SearchAndReplace.setWholeWord(false);
+SearchAndReplace.setIgnoreCase(false);
+SearchAndReplace.setRegexp(true);
+SearchAndReplace.setSearchFileSet(new CurrentBufferSet());
+SearchAndReplace.replaceAll(view);
+
+textArea.goToBufferStart(false);
+SearchAndReplace.setSearchString(" ?_(?!') ?");
+SearchAndReplace.setReplaceString(" ");
+SearchAndReplace.setBeanShellReplace(false);
+SearchAndReplace.setWholeWord(false);
+SearchAndReplace.setIgnoreCase(false);
+SearchAndReplace.setRegexp(true);
+SearchAndReplace.setSearchFileSet(new CurrentBufferSet());
+SearchAndReplace.replaceAll(view);
+
+textArea.goToBufferStart(false);
+SearchAndReplace.setSearchString("^\\s*\\n");
+SearchAndReplace.setReplaceString("");
+SearchAndReplace.setBeanShellReplace(false);
+SearchAndReplace.setWholeWord(false);
+SearchAndReplace.setIgnoreCase(false);
+SearchAndReplace.setRegexp(true);
+SearchAndReplace.setSearchFileSet(new CurrentBufferSet());
+SearchAndReplace.replaceAll(view);
+
+textArea.goToBufferStart(false);
+SearchAndReplace.setSearchString("\\((\'\\w+\')\\)");
+SearchAndReplace.setReplaceString("$1");
+SearchAndReplace.setBeanShellReplace(false);
+SearchAndReplace.setWholeWord(false);
+SearchAndReplace.setIgnoreCase(false);
+SearchAndReplace.setRegexp(true);
+SearchAndReplace.setSearchFileSet(new CurrentBufferSet());
+SearchAndReplace.replaceAll(view);
+
+/*textArea.goToBufferStart(false);
+SearchAndReplace.setSearchString("/");
+SearchAndReplace.setReplaceString("|");
+SearchAndReplace.setBeanShellReplace(false);
+SearchAndReplace.setWholeWord(false);
+SearchAndReplace.setIgnoreCase(false);
+SearchAndReplace.setRegexp(true);
+SearchAndReplace.setSearchFileSet(new CurrentBufferSet());
+SearchAndReplace.replaceAll(view);*/
+
+textArea.goToBufferStart(false);
+SearchAndReplace.setSearchString("(?s)\\n\\s*/\\s*\\n");
+SearchAndReplace.setReplaceString(" /\\n");
+SearchAndReplace.setBeanShellReplace(false);
+SearchAndReplace.setWholeWord(false);
+SearchAndReplace.setIgnoreCase(false);
+SearchAndReplace.setRegexp(true);
+SearchAndReplace.setSearchFileSet(new CurrentBufferSet());
+SearchAndReplace.replaceAll(view);
+
+textArea.goToBufferStart(false);
+//SearchAndReplace.setSearchString("  |");
+//SearchAndReplace.setReplaceString(" |");
+SearchAndReplace.setSearchString("  /");
+SearchAndReplace.setReplaceString(" /");
+SearchAndReplace.setBeanShellReplace(false);
+SearchAndReplace.setWholeWord(false);
+SearchAndReplace.setIgnoreCase(false);
+SearchAndReplace.setRegexp(false);
+SearchAndReplace.setSearchFileSet(new CurrentBufferSet());
+SearchAndReplace.replaceAll(view);
+
+textArea.goToBufferStart(false);
+SearchAndReplace.setSearchString("\\|\\*(.*)\\*\\|");
+SearchAndReplace.setReplaceString("/*$1*/");
+SearchAndReplace.setBeanShellReplace(false);
+SearchAndReplace.setWholeWord(false);
+SearchAndReplace.setIgnoreCase(false);
+SearchAndReplace.setRegexp(true);
+SearchAndReplace.setSearchFileSet(new CurrentBufferSet());
+SearchAndReplace.replaceAll(view);
+
+for (int i = 0; i < 5; i++) {
+textArea.goToBufferStart(false);
+SearchAndReplace.setSearchString("\\( ");
+SearchAndReplace.setReplaceString("(");
+SearchAndReplace.setBeanShellReplace(false);
+SearchAndReplace.setWholeWord(false);
+SearchAndReplace.setIgnoreCase(false);
+SearchAndReplace.setRegexp(true);
+SearchAndReplace.setSearchFileSet(new CurrentBufferSet());
+SearchAndReplace.replaceAll(view);
+textArea.goToBufferStart(false);
+SearchAndReplace.setSearchString(" \\)");
+SearchAndReplace.setReplaceString(")");
+SearchAndReplace.setBeanShellReplace(false);
+SearchAndReplace.setWholeWord(false);
+SearchAndReplace.setIgnoreCase(false);
+SearchAndReplace.setRegexp(true);
+SearchAndReplace.setSearchFileSet(new CurrentBufferSet());
+SearchAndReplace.replaceAll(view);
+}

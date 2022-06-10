@@ -1,0 +1,27 @@
+{
+   "root": {
+      "store": {
+         "book": [
+            {
+               "category": "reference",
+               "author": "Nigel Rees",
+               "title": "Sayings of the Century",
+               "price": 8.95,
+               "onStock": true
+            },
+            {
+               "category": "fiction",
+               "author": "Evelyn Waugh",
+               "title": "Sword of Honour",
+               "price": 12,
+               "onStock": false
+            }
+         ],
+         "bicycle": {
+            "color": "red",
+            "price": 19.95
+         }
+      },
+      "expensive": 10
+   }
+}

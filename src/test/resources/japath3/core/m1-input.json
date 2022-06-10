@@ -1,0 +1,48 @@
+{
+    "code": "chol-mass",
+    "display": "SChol (mg/L)",
+    "definition": "Serum Cholesterol, in mg/L",
+    "designation": [
+        {
+            "language": "de",
+            "use": {
+                "system": "http://acme.com/config/fhir/codesystems/internal",
+                "code": "internal-label"
+            },
+            "value": "From Paragon Labs"
+        },
+        {
+            "language": "bg",
+            "use": {
+                "system": "http://snomed.info/sct",
+                "code": "900000000000003001"
+            },
+            "value": "...1"
+        },
+        {
+            "language": "bg",
+            "use": {
+                "system": "http://snomed.info/sct",
+                "code": "900000000000003001"
+            },
+            "value": "...2"
+        },
+        {
+            "language": "de",
+            "value": "xxx"
+        },
+        {
+            "use": {
+                "system": "http://snomed.info/sct",
+                "code": "900000000000003001"
+            },
+            "value": "yyy"
+        },
+        {
+            "value": "zzz"
+        },
+        {
+            "value": "uuu"
+        }
+    ]
+}
