@@ -31,6 +31,7 @@ import java.util.stream.Stream;
 import com.florianingerl.util.regex.Matcher;
 
 import io.vavr.Tuple2;
+import japath3.core.Ctx.ParamAVarEnv;
 import japath3.core.Japath.NodeProcessing.Kind;
 import japath3.core.Node.DefaultNode;
 import japath3.core.Node.PrimitiveType;
@@ -114,6 +115,7 @@ public class Japath {
 			@Override public String toString() { return "Nop"; }
 		};	
 		public default Expr deepCopy(Expr[] params, Map<String, Bind> vmap) throws CloneNotSupportedException {return this;};
+		public default Expr paramClone(Ctx.ParamAVarEnv env) throws CloneNotSupportedException {return this;};
 	}
 	
 	public static abstract class AExpr implements Expr, Cloneable {
@@ -144,6 +146,15 @@ public class Japath {
 			clone.exprs = new Expr[exprs.length];
 			for (int i = 0; i < exprs.length; i++) {
 				clone.exprs[i] = exprs[i].deepCopy(params, vmap);
+			}
+			return clone; 
+		}
+		@Override
+		public Expr paramClone(ParamAVarEnv env) throws CloneNotSupportedException {
+			CompoundExpr clone = (CompoundExpr) super.clone();
+			clone.exprs = new Expr[exprs.length];
+			for (int i = 0; i < exprs.length; i++) {
+				clone.exprs[i] = exprs[i].paramClone(env);
 			}
 			return clone; 
 		}
@@ -199,6 +210,9 @@ public class Japath {
 			if (globalVar == null && isLocalCanditate) {
 				var.bindNode(node);
 				return single(node);
+//				Var var_ = node.ctx.env.registerVar(vname_);
+//				var_.bindNode(node);
+//				return single(node);
 			}
 			
 			// legacy global vars old style for compatibility:
@@ -265,6 +279,7 @@ public class Japath {
 		@Override public NodeIter eval(Node node) {
 			
 			Var var = def != null ? def.var : node.ctx.getVars().v(vname);
+//			Var var = def != null ? node.ctx.env.getVar(vname) : node.ctx.getVars().v(vname);
 			// play save:
 			if (!var.bound()) throw new JapathException("var '" + vname + "' not bound");
 			
@@ -326,7 +341,39 @@ public class Japath {
 		@Override public NodeIter eval(Node node) {
 			
 			try {
-				return node.ctx.getPed(name).exprs[0].deepCopy(exprs, new HashMap<String, Japath.Bind>()).eval(node);
+				ParametricExprDef ped = node.ctx.getPed(name);
+//				//---
+//				Expr[] paramExprs = new Expr[exprs.length];
+//				for (int j = 0; j < exprs.length; j++) {
+//					try {
+//						paramExprs[j] = exprs[j].paramClone(node.ctx.env);
+//					} catch (CloneNotSupportedException e) {
+//						throw new JapathException(e);
+//					}
+//				}
+//				Ctx.ParamAVarEnv env = new ParamAVarEnv(paramExprs);
+//				node.ctx.env = env;
+//
+//				//--
+				
+//				return nit;
+				
+				NodeIter nit = ped.exprs[0].deepCopy(exprs, new HashMap<String, Japath.Bind>()).eval(node);
+//				NodeIter nit = ped.exprs[0].eval(node);
+				
+				return new NodeIter() {
+					
+					@Override
+					public boolean hasNext() {
+						return nit.hasNext();
+					}
+					@Override
+					public Node next() {
+						Node next = nit.next();
+//						next.ctx.env = env;
+						return next;
+					}
+				};
 			} catch (CloneNotSupportedException e) {
 				throw new JapathException(e);
 			}
@@ -343,7 +390,12 @@ public class Japath {
 		
 		@Override public NodeIter eval(Node node) {
 			
-			throw new JapathException("cannot happen");
+			
+			ParamAVarEnv env = node.ctx.env;
+			if (i < 0 || i >= env.params.length) throw new JapathException(
+					"bad (zero-based) parameter number " + i + " (parameter expressions: " + asList(env.params) + ")");
+			return env.params[i].eval(node);
+//			throw new JapathException("cannot happen");
 
 		}
 		@Override public Expr deepCopy(Expr[] params, Map<String, Bind> vmap) throws CloneNotSupportedException {
@@ -354,6 +406,14 @@ public class Japath {
 			} else {
 				return params[i];
 			}
+		}
+		@Override
+		public Expr paramClone(ParamAVarEnv env) throws CloneNotSupportedException {
+			if (env == null) throw new JapathException("no parameter given (expr: '" + this + "')");
+			if (env.params.length == 0) throw new JapathException("parameter '" + this + "' not bound");
+			if (i < 0 || i >= env.params.length) throw new JapathException(
+					"bad (zero-based) parameter number " + i + " (parameter expressions: " + asList(env.params) + ")");
+			return env.params[i];
 		}
 		@Override public String toString() { return "#" + i; }
 	}
@@ -536,6 +596,11 @@ public class Japath {
 		@Override public Expr deepCopy(Expr[] params, Map<String, Bind> vmap) throws CloneNotSupportedException { 
 			PathAsProperty clone = (PathAsProperty) super.clone();
 			clone.expr = expr.deepCopy(params, vmap);
+			return clone;
+		}
+		@Override public Expr paramClone(Ctx.ParamAVarEnv env) throws CloneNotSupportedException { 
+			PathAsProperty clone = (PathAsProperty) super.clone();
+			clone.expr = expr.paramClone(env);
 			return clone;
 		}
 		

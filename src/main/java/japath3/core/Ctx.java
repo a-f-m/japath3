@@ -20,6 +20,7 @@ import io.vavr.collection.Map;
 import io.vavr.collection.Set;
 import io.vavr.collection.TreeSet;
 import io.vavr.control.Option;
+import japath3.core.Japath.Expr;
 import japath3.core.Japath.NodeIter;
 import japath3.core.Japath.ParametricExprDef;
 import japath3.processing.EngineGraal;
@@ -31,6 +32,31 @@ import japath3.schema.Schema;
 import japath3.util.Basics.Ref;
 
 public class Ctx {
+	
+	public static class ParamAVarEnv {
+		public Expr[] params;
+		public Map<String, Var> vars;
+		public ParamAVarEnv(Expr[] params) {
+			this.params = params;
+			vars = HashMap.empty();
+		}
+		public Var registerVar(String name) {
+			Tuple2<Var, ? extends Map<String, Var>> t = vars.computeIfAbsent(name, x -> {return new Var();} );
+			vars = t._2;
+			return t._1;
+		}
+		public Var getVar(String name) {
+			Option<Var> var = vars.get(name);
+			if (var.isEmpty()) {
+				throw new JapathException("variable '" + name + "' not defined");
+			}
+			return var.get();
+		}
+		@Override
+		public String toString() {
+			return asList(params).toString() + vars;
+		}
+	}
 
 	private Schema schema;
 	private boolean checkValidity;
@@ -49,6 +75,9 @@ public class Ctx {
 	
 	
 	private Map<String, ParametricExprDef> defs;
+	
+	//!!!test
+	public ParamAVarEnv env;
 	
 	// js
 	private static EngineGraal jsEngine;
