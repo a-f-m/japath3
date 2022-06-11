@@ -1,6 +1,7 @@
 package japath3.core;
 
 import static io.vavr.collection.List.ofAll;
+import static japath3.core.Ctx.ParamAVarEnv.fromEnvx;
 import static japath3.core.Japath.BoolExpr.Op.and;
 import static japath3.core.Japath.BoolExpr.Op.not;
 import static japath3.core.Japath.BoolExpr.Op.or;
@@ -18,7 +19,6 @@ import static japath3.util.Basics.it;
 import static japath3.util.Basics.stream;
 import static java.util.Arrays.asList;
 
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -209,11 +209,14 @@ public class Japath {
 			Var globalVar = globalVars.getVar(vname_);
 
 			if (globalVar == null && isLocalCanditate) {
-				var.bindNode(node);
-				return single(node);
-//				Var var_ = node.ctx.env.registerVar(vname_);
-//				var_.bindNode(node);
+				
+//		deepCopy version:				
+//				var.bindNode(node);
 //				return single(node);
+				
+				Var var_ = fromEnvx(envx).registerVar(vname_);
+				var_.bindNode(node);
+				return single(node);
 			}
 			
 			// legacy global vars old style for compatibility:
@@ -278,9 +281,11 @@ public class Japath {
 		public VarAppl(String vname) { this.vname = vname; }
 
 		@Override public NodeIter eval(Node node, Object... envx) {
+//			deepCopy version:			
+//			Var var = def != null ? def.var : node.ctx.getVars().v(vname);
 			
-			Var var = def != null ? def.var : node.ctx.getVars().v(vname);
-//			Var var = def != null ? node.ctx.env.getVar(vname) : node.ctx.getVars().v(vname);
+			Var var = def != null ? fromEnvx(envx).getVar(vname) : node.ctx.getVars().v(vname);
+
 			// play save:
 			if (!var.bound()) throw new JapathException("var '" + vname + "' not bound");
 			
@@ -343,23 +348,24 @@ public class Japath {
 			
 			try {
 				ParametricExprDef ped = node.ctx.getPed(name);
-//				//---
-//				Expr[] paramExprs = new Expr[exprs.length];
-//				for (int j = 0; j < exprs.length; j++) {
-//					try {
-//						paramExprs[j] = exprs[j].paramClone(node.ctx.env);
-//					} catch (CloneNotSupportedException e) {
-//						throw new JapathException(e);
-//					}
-//				}
-//				Ctx.ParamAVarEnv env = new ParamAVarEnv(paramExprs);
-//				node.ctx.env = env;
-//
-//				//--
+//				deepCopy version:				
+//				NodeIter nit = ped.exprs[0].deepCopy(exprs, new HashMap<String, Japath.Bind>()).eval(node, envx);
 				
 				
-				NodeIter nit = ped.exprs[0].deepCopy(exprs, new HashMap<String, Japath.Bind>()).eval(node, envx);
-//				NodeIter nit = ped.exprs[0].eval(node, ped.name + "-" + LocalTime.now());
+				//---
+				Expr[] paramExprs = new Expr[exprs.length];
+				for (int j = 0; j < exprs.length; j++) {
+					try {
+						paramExprs[j] = exprs[j].paramClone(fromEnvx(envx));
+					} catch (CloneNotSupportedException e) {
+						throw new JapathException(e);
+					}
+				}
+				Ctx.ParamAVarEnv env = new ParamAVarEnv(paramExprs);
+				
+				NodeIter nit = ped.exprs[0].eval(node, env);
+				
+				//--
 				
 				return new NodeIter() {
 					
@@ -370,7 +376,6 @@ public class Japath {
 					@Override
 					public Node next() {
 						Node next = nit.next();
-//						next.ctx.env = env;
 						return next;
 					}
 				};
@@ -391,7 +396,7 @@ public class Japath {
 		@Override public NodeIter eval(Node node, Object... envx) {
 			
 			
-			ParamAVarEnv env = node.ctx.env;
+			ParamAVarEnv env = fromEnvx(envx);
 			if (i < 0 || i >= env.params.length) throw new JapathException(
 					"bad (zero-based) parameter number " + i + " (parameter expressions: " + asList(env.params) + ")");
 			return env.params[i].eval(node, envx);

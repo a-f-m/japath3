@@ -37,6 +37,9 @@ public class Ctx {
 		
 		public Expr[] params;
 		public Map<String, Var> vars;
+		public ParamAVarEnv() {
+			this(new Expr[0]);
+		}
 		public ParamAVarEnv(Expr[] params) {
 			this.params = params;
 			vars = HashMap.empty();
@@ -52,6 +55,15 @@ public class Ctx {
 				throw new JapathException("variable '" + name + "' not defined");
 			}
 			return var.get();
+		}
+		public static ParamAVarEnv fromEnvx(Object... envx) {
+			if (envx == null || envx.length == 0) 
+				throw new JapathException("internal: no envx given");
+			if (  !(envx[0] instanceof ParamAVarEnv ) ) 
+				return new ParamAVarEnv();
+//				throw new JapathException("internal: envx[0] no 'ParamAVarEnv'");
+			
+			return (ParamAVarEnv) envx[0];
 		}
 		@Override
 		public String toString() {
@@ -76,9 +88,6 @@ public class Ctx {
 	
 	
 	private Map<String, ParametricExprDef> defs;
-	
-	//!!!test
-	public ParamAVarEnv env;
 	
 	// js
 	private static EngineGraal jsEngine;
