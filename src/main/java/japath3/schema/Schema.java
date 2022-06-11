@@ -64,7 +64,7 @@ public class Schema {
 
 		public SchemaBoolExpr(Op op, Expr[] exprs) { super(op, exprs); }
 
-		public NodeIter eval(Node node) {
+		public NodeIter eval(Node node, Object... envx) {
 
 			Ctx ctx = node.ctx;
 			boolean b = true;
@@ -78,10 +78,10 @@ public class Schema {
 				for (Expr e : exprs) {
 					boolean b_;
 					if (i == 0 && e instanceof Message) {
-						mess = ((Message) e).getMessage(node);
+						mess = ((Message) e).getMessage(node, envx);
 						b_ = true;
 					} else {
-						b_ = testIt(e.eval(node));
+						b_ = testIt(e.eval(node, envx));
 					}
 					// if (ctx.checkValidity() && (op == not ? b : !b))
 					b_ = op == not ? !b_ : b_; 
@@ -97,7 +97,7 @@ public class Schema {
 				b = false;
 				int top = schema.violations.size();
 				for (Expr e : exprs)
-					b = testIt(e.eval(node)) || b;
+					b = testIt(e.eval(node, envx)) || b;
 				if (ctx.checkValidity()) {
 					if (!b) {
 						schema.addViolation(OrOp, this, node);
@@ -108,7 +108,7 @@ public class Schema {
 				break;
 			default:
 //				throw new UnsupportedOperationException();
-				return super.eval(node);
+				return super.eval(node, envx);
 			}
 //			return singleBool(op == not ? !b : b, node);
 			return singleBool(b, node);
@@ -119,14 +119,14 @@ public class Schema {
 
 		public SchemaQuantifierExpr(Op op, Expr qant, Expr check) { super(op, qant, check); }
 		
-		@Override public NodeIter eval(Node node) {
+		@Override public NodeIter eval(Node node, Object... envx) {
 			
 			Ctx ctx = node.ctx;
-			NodeIter nit = exprs[0].eval(node);
+			NodeIter nit = exprs[0].eval(node, envx);
 			boolean b = true;
 			while (nit.hasNext()) {
 				Node next = nit.next();
-				boolean b_ = testIt(exprs[1].eval(next));
+				boolean b_ = testIt(exprs[1].eval(next, envx));
 				if (ctx.checkValidity() && !b_ && exprs[0] == all) 
 					ctx.getSchema().addViolation(AndOp, this, next);
 				b = b_ && b;
@@ -139,7 +139,7 @@ public class Schema {
 
 		public SchemaHasType(PrimitiveType t) { super(t); }		
 		
-		@Override public NodeIter eval(Node node) {
+		@Override public NodeIter eval(Node node, Object... envx) {
 			Ctx ctx = node.ctx;
 			boolean b = node.type(t);
 			if (ctx.checkValidity() && !b) 

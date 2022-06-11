@@ -18,6 +18,7 @@ import static japath3.util.Basics.it;
 import static japath3.util.Basics.stream;
 import static java.util.Arrays.asList;
 
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -106,12 +107,12 @@ public class Japath {
 
 	@FunctionalInterface
 	public static interface Expr {
-		public NodeIter eval(Node node);
+		public NodeIter eval(Node node, Object... envx);
 		public default void clearVars(Ctx ctx) {};
 		public default Stream<Expr> stream() {throw new UnsupportedOperationException();};
 		public default void visit(BiConsumer<Expr, Boolean> c) {c.accept(this, true);};
 		public static Expr Nop = new Expr() {
-			@Override public NodeIter eval(Node node) { return single(node); }
+			@Override public NodeIter eval(Node node, Object... envx) { return single(node); }
 			@Override public String toString() { return "Nop"; }
 		};	
 		public default Expr deepCopy(Expr[] params, Map<String, Bind> vmap) throws CloneNotSupportedException {return this;};
@@ -161,7 +162,7 @@ public class Japath {
 	}
 	
 	public static Expr srex(String regex) {
-		return y -> {
+		return (y, envx) -> {
 			return y.selector.toString().matches(regex) ? single(y) : empty;
 		};
 	}
@@ -172,11 +173,11 @@ public class Japath {
 		
 		return new Expr() {
 			
-			@Override public NodeIter eval(Node y) { 
+			@Override public NodeIter eval(Node y, Object... envx) { 
 				if (e == null) {
 					v.bindNode(y);
 				} else {
-					NodeIter nit = e.eval(y);
+					NodeIter nit = e.eval(y, envx);
 					if (nit.hasNext()) {
 //						if (nit.hasNext()) throw new JapathException("not allowed"); TOOD
 						v.bindNode(nit.next());
@@ -200,7 +201,7 @@ public class Japath {
 
 		public Bind(String vname) { this.vname = vname; }
 
-		@Override public NodeIter eval(Node node) {
+		@Override public NodeIter eval(Node node, Object... envx) {
 			
 			String vname_ = vname.equals("_") ? node.selector.toString() : vname;
 			
@@ -276,7 +277,7 @@ public class Japath {
 
 		public VarAppl(String vname) { this.vname = vname; }
 
-		@Override public NodeIter eval(Node node) {
+		@Override public NodeIter eval(Node node, Object... envx) {
 			
 			Var var = def != null ? def.var : node.ctx.getVars().v(vname);
 //			Var var = def != null ? node.ctx.env.getVar(vname) : node.ctx.getVars().v(vname);
@@ -326,7 +327,7 @@ public class Japath {
 			});
 
 		}
-		@Override public NodeIter eval(Node node) { node.ctx.declare(name, this); return single(node); }
+		@Override public NodeIter eval(Node node, Object... envx) { node.ctx.declare(name, this); return single(node); }
 		@Override public String toString() { return "def('" + name + "', " + exprs[0] + ")"; }
 	}
 	
@@ -338,7 +339,7 @@ public class Japath {
 			this.name = name;
 			this.exprs = exprs == null ? new Expr[0] : exprs;
 		}
-		@Override public NodeIter eval(Node node) {
+		@Override public NodeIter eval(Node node, Object... envx) {
 			
 			try {
 				ParametricExprDef ped = node.ctx.getPed(name);
@@ -356,10 +357,9 @@ public class Japath {
 //
 //				//--
 				
-//				return nit;
 				
-				NodeIter nit = ped.exprs[0].deepCopy(exprs, new HashMap<String, Japath.Bind>()).eval(node);
-//				NodeIter nit = ped.exprs[0].eval(node);
+				NodeIter nit = ped.exprs[0].deepCopy(exprs, new HashMap<String, Japath.Bind>()).eval(node, envx);
+//				NodeIter nit = ped.exprs[0].eval(node, ped.name + "-" + LocalTime.now());
 				
 				return new NodeIter() {
 					
@@ -374,7 +374,7 @@ public class Japath {
 						return next;
 					}
 				};
-			} catch (CloneNotSupportedException e) {
+			} catch (Exception e) {
 				throw new JapathException(e);
 			}
 		}
@@ -388,13 +388,13 @@ public class Japath {
 		
 		public ParamAppl(int idx) { this.i = idx; }
 		
-		@Override public NodeIter eval(Node node) {
+		@Override public NodeIter eval(Node node, Object... envx) {
 			
 			
 			ParamAVarEnv env = node.ctx.env;
 			if (i < 0 || i >= env.params.length) throw new JapathException(
 					"bad (zero-based) parameter number " + i + " (parameter expressions: " + asList(env.params) + ")");
-			return env.params[i].eval(node);
+			return env.params[i].eval(node, envx);
 //			throw new JapathException("cannot happen");
 
 		}
@@ -420,25 +420,25 @@ public class Japath {
 	
 	public static Expr all = new All();
 	public static class All extends AExpr {
-		@Override public NodeIter eval(Node node) { return node.all(); }
+		@Override public NodeIter eval(Node node, Object... envx) { return node.all(); }
 		@Override public String toString() { return "all" ; }
 	}
 
 	public static Expr desc = new Desc();
 	public static class Desc extends AExpr {
-		@Override public NodeIter eval(Node node) { return node.desc(); }
+		@Override public NodeIter eval(Node node, Object... envx) { return node.desc(); }
 		@Override public String toString() { return "desc" ; }
 	}
 	
 	public static Expr self = new Self();
 	public static class Self extends AExpr {
-		@Override public NodeIter eval(Node node) { return single(node); }
+		@Override public NodeIter eval(Node node, Object... envx) { return single(node); }
 		@Override public String toString() { return "self" ; }
 	}
 	
 	public static Expr create = new Create();
 	public static class Create extends AExpr {
-		@Override public NodeIter eval(Node node) {
+		@Override public NodeIter eval(Node node, Object... envx) {
 			return single(node.create(Node.undefWo, "", null, node.ctx).setConstruct(true));
 		}
 		@Override public String toString() { return "create" ; }
@@ -446,7 +446,7 @@ public class Japath {
 
 	public static Expr text = new Text();
 	public static class Text extends AExpr {
-		@Override public NodeIter eval(Node node) { return node.text(); }
+		@Override public NodeIter eval(Node node, Object... envx) { return node.text(); }
 		@Override public String toString() { return "text()" ; }
 	}
 	
@@ -457,14 +457,14 @@ public class Japath {
 			this.exprs = exprs;
 		}
 		@Override
-		public NodeIter eval(Node node) {
-			return eval(exprs, node);
+		public NodeIter eval(Node node, Object... envx) {
+			return eval(exprs, node, envx);
 		}
-		private NodeIter eval(Expr[] steps, Node node) {
+		private NodeIter eval(Expr[] steps, Node node, Object... envx) {
 			if (steps == null || steps.length == 0) {
 				return single(node);
 			} else {
-				NodeIter itY = steps[0].eval(node);
+				NodeIter itY = steps[0].eval(node, envx);
 //				if (itY == emptyTrue) return singleBool(true);
 				if (itY == emptyTrueCut) return itY;
 				return new NodeIter() {
@@ -482,7 +482,7 @@ public class Japath {
 //									System.out.println(">>> steps: " + asList(steps));
 //									System.out.println(">>> tail: " + (tail != null ? asList(tail) : "null"));
 //									System.out.println(">>> next: " + next);
-									itZ = eval(tail, next);
+									itZ = eval(tail, next, envx);
 									if (itZ.hasNext()) {
 										return true;
 									} else {
@@ -512,7 +512,7 @@ public class Japath {
 	
 	public static class Walk extends CompoundExpr {
 		private Walk(Expr[] exprs) { this.exprs = exprs; }
-		@Override public NodeIter eval(Node node) {
+		@Override public NodeIter eval(Node node, Object... envx) {
 			for (@SuppressWarnings("unused") Node n : walki(node, exprs));
 			return single(node);
 		}
@@ -535,7 +535,7 @@ public class Japath {
 				if (expl != null) throw new JapathException("'" + name + "' is not a regex (" + expl + ")");
 			}
 		}
-		public NodeIter eval(Node node) {
+		public NodeIter eval(Node node, Object... envx) {
 			
 			if (isTrueRegex && !ignoreRegex) {
 				return regexSelection(node);
@@ -573,9 +573,9 @@ public class Japath {
 
 		public PathAsProperty(Expr e) { expr = e; }
 
-		@Override public NodeIter eval(Node node) {
+		@Override public NodeIter eval(Node node, Object... envx) {
 
-			NodeIter nit = expr.eval(node);
+			NodeIter nit = expr.eval(node, envx);
 			
 			if (nit.hasNext()) {
 				if (nit.hasNext()) {
@@ -628,7 +628,7 @@ public class Japath {
 			this.upper = upper;
 			this.seq = seq;
 		}
-		public NodeIter eval(Node node) {
+		public NodeIter eval(Node node, Object... envx) {
 			
 			if (seq) {
 				if (node.construct) throw new JapathException("construction not allowd for sequence subscript");
@@ -658,7 +658,7 @@ public class Japath {
 	public static Expr sel = new Selector();
 	public static class Selector extends AExpr {
 
-		@Override public NodeIter eval(Node node) { return single(new DefaultNode(node.selector.toString(), node.ctx)); }
+		@Override public NodeIter eval(Node node, Object... envx) { return single(new DefaultNode(node.selector.toString(), node.ctx)); }
 		@Override public String toString() { return "sel"; }
 	}
 	
@@ -669,7 +669,7 @@ public class Japath {
 	public static <T> Expr constExpr(T o) {
 		return new Expr() {
 			
-			@Override public NodeIter eval(Node node) { 
+			@Override public NodeIter eval(Node node, Object... envx) { 
 				return singleObject(o, node); }
 			@Override public String toString() {
 				return o instanceof String ? embrace(((String) o).replace("'", "\\'"), '\'') : o.toString();
@@ -683,10 +683,10 @@ public class Japath {
 		
 		private Comparison(Op op, Expr e) { this.op = op; exprs = new Expr[] { e }; }
 
-		@Override public NodeIter eval(Node node) {
+		@Override public NodeIter eval(Node node, Object... envx) {
 			
 			boolean ret = false;
-			NodeIter nit = exprs[0].eval(node);
+			NodeIter nit = exprs[0].eval(node, envx);
 			if (nit.hasNext()) {
 				
 				Object o = nit.val();
@@ -746,10 +746,10 @@ public class Japath {
 			this.func = func;
 			this.exprs = exprs == null ? new Expr[0] : exprs;
 		}
-		public NodeIter eval(Node node) {
+		public NodeIter eval(Node node, Object... envx) {
 			
 			NodeIter[] nits = new NodeIter[exprs.length];
-			for (int i = 0; i < nits.length; i++) nits[i] = exprs[i].eval(node);
+			for (int i = 0; i < nits.length; i++) nits[i] = exprs[i].eval(node, envx);
 			if (kind.equals("directive")) {
 				return node.ctx.handleDirective(ns, func, node, nits);
 			} else if (kind.equals("java")) {
@@ -771,7 +771,7 @@ public class Japath {
 		
 		public HasType(PrimitiveType t) { this.t = t; }
 //		public HasType(String t) { this.t = PrimitiveType.valueOf(t); }
-		@Override public NodeIter eval(Node node) { 
+		@Override public NodeIter eval(Node node, Object... envx) { 
 			return singleBool(node.type(t), node); 
 			}
 		@Override public String toString() { return "type(" + t + ")"; }
@@ -781,12 +781,12 @@ public class Japath {
 		
 		private Union(Expr[] exprs) { this.exprs = exprs; }
 
-		@Override public NodeIter eval(Node node) {
+		@Override public NodeIter eval(Node node, Object... envx) {
 			
 			Iterable<Node>[] iters = new Iterable[exprs.length * 2];
 			for (int i = 0, j = 0; i < iters.length; i += 2, j++) {
 				Expr ei = exprs[j];
-				iters[i] = it(ei.eval(node));
+				iters[i] = it(ei.eval(node, envx));
 				iters[i + 1] = it(new Iterator<Node>() {
 					@Override public boolean hasNext() {
 						ei.clearVars(node.ctx);
@@ -809,9 +809,9 @@ public class Japath {
 		
 		private Optional(Expr... opt) { exprs = opt; }
 		
-		@Override public NodeIter eval(Node node) {
+		@Override public NodeIter eval(Node node, Object... envx) {
 			
-			NodeIter nit = exprs[0].eval(node);
+			NodeIter nit = exprs[0].eval(node, envx);
 			return nit.hasNext() ? nit : emptyTrueCut;
 		}
 		@Override public String toString() { return "opt(" + exprs[0] + ")"; }
@@ -827,7 +827,7 @@ public class Japath {
 			this.exprs = exprs;
 			this.op = op;
 		}
-		public NodeIter eval(Node node) {
+		public NodeIter eval(Node node, Object... envx) {
 			
 			boolean b = true;
 			switch (op) {
@@ -835,32 +835,32 @@ public class Japath {
 			case not:
 				b = true;
 				for (Expr e : exprs) 
-					b = testIt(e.eval(node)) && b;
+					b = testIt(e.eval(node, envx)) && b;
 				break;
 			case or:
 			case xor:
 				b = false;
 				for (Expr e : exprs) { 
-					boolean test = testIt(e.eval(node));
+					boolean test = testIt(e.eval(node, envx));
 					b = op == or ? test || b : test ^ b;
 				}
 				break;
 			case imply:
-				b = testIt(exprs[0].eval(node)) ? testIt(exprs[1].eval(node)) : true;
+				b = testIt(exprs[0].eval(node, envx)) ? testIt(exprs[1].eval(node, envx)) : true;
 				break;
 			case constant:
-				return exprs[0].eval(node);
+				return exprs[0].eval(node, envx);
 			default: throw new UnsupportedOperationException();
 			}
 			return singleBool( op == not ? !b : b, node);
 		}
 
 		public static Expr True = new Expr() {
-			@Override public NodeIter eval(Node node) { return singleBool(true, node); }
+			@Override public NodeIter eval(Node node, Object... envx) { return singleBool(true, node); }
 			@Override public String toString() { return "true"; }
 		};
 		public static Expr False = new Expr() {
-			@Override public NodeIter eval(Node node) { return singleBool(false, node); }
+			@Override public NodeIter eval(Node node, Object... envx) { return singleBool(false, node); }
 			@Override public String toString() { return "false"; }
 		};
 		@Override public String toString() { return (op != Op.constant ? op.toString() + strStream() : exprs[0].toString() ); }
@@ -870,10 +870,10 @@ public class Japath {
 		
 		protected SubExpr(boolean passNode, Expr[] exprs) { this.exprs = exprs; }
 		
-		@Override public NodeIter eval(Node node) {
+		@Override public NodeIter eval(Node node, Object... envx) {
 			Node x = node;
 			for (Expr e : exprs)
-				e.eval(x).forEachRemaining(dummy -> {});
+				e.eval(x, envx).forEachRemaining(dummy -> {});
 			
 			return single(x);
 		}
@@ -885,13 +885,13 @@ public class Japath {
 		
 		protected Struct(Expr[] exprs) { this.exprs = exprs; }
 		
-		@Override public NodeIter eval(Node node) {
+		@Override public NodeIter eval(Node node, Object... envx) {
 //			Node x = node.create(Node.undefWo, "", null, node.ctx).setConstruct(true);
 			Node x = node.create(node.createWo(false), "", null, node.ctx).setConstruct(true);
 			for (Expr e : exprs) {
 				if (!(e instanceof Assignment))
 					throw new JapathException("only assignments allowed at " + this);
-				((Assignment) e).assignEval(x, node);
+				((Assignment) e).assignEval(x, node, envx);
 			}
 			return single(x);
 		}
@@ -903,11 +903,11 @@ public class Japath {
 		
 		protected Array(Expr[] exprs) { this.exprs = exprs; }
 		
-		@Override public NodeIter eval(Node node) {
+		@Override public NodeIter eval(Node node, Object... envx) {
 			Node x = node.create(node.createWo(true), "", null, node.ctx).setConstruct(true);
 			int i = 0;
 			for (Expr e : exprs) {
-				for (Node n : e.eval(node)) {
+				for (Node n : e.eval(node, envx)) {
 					x.set(i, n.val());
 					i++;
 				}
@@ -924,9 +924,9 @@ public class Japath {
 			exprs = new Expr[] { b, ifExpr, elseExpr == null ? Nop : elseExpr };
 		}
 		
-		@Override public NodeIter eval(Node node) {
-			return testIt(exprs[0].eval(node)) ? exprs[1].eval(node)
-					: exprs[2] == Nop ? empty : exprs[2].eval(node);
+		@Override public NodeIter eval(Node node, Object... envx) {
+			return testIt(exprs[0].eval(node, envx)) ? exprs[1].eval(node, envx)
+					: exprs[2] == Nop ? empty : exprs[2].eval(node, envx);
 		}
 		
 		@Override public String toString() {
@@ -944,12 +944,12 @@ public class Japath {
 			exprs = new Expr[] { qant == null ? all : qant, check };
 		}
 
-		@Override public NodeIter eval(Node node) {
+		@Override public NodeIter eval(Node node, Object... envx) {
 			
-			NodeIter nit = exprs[0].eval(node);
+			NodeIter nit = exprs[0].eval(node, envx);
 			boolean b = op == Op.every; // acc. to xpath sem, false if 'some'
 			while (nit.hasNext()) {
-				boolean t = testIt(exprs[1].eval(nit.next()));
+				boolean t = testIt(exprs[1].eval(nit.next(), envx));
 				b = op == Op.every ? t && b : t || b;
 			}
 			return singleBool(b, node);
@@ -961,7 +961,7 @@ public class Japath {
 	public static class Filter extends CompoundExpr {
 
 		private Filter(Expr expr) { exprs = new Expr[] { expr }; }
-		@Override public NodeIter eval(Node node) { return testIt(exprs[0].eval(node)) ? single(node) : empty; }
+		@Override public NodeIter eval(Node node, Object... envx) { return testIt(exprs[0].eval(node, envx)) ? single(node) : empty; }
 		@Override public String toString() { return "?filter(" + exprs[0] + ")"; }
 	}
 	
@@ -984,11 +984,11 @@ public class Japath {
 				((Selection) x).scope = scope;
 		}
 		
-		public NodeIter assignEval(Node lhsCtxNode, Node rhsCtxNode) {
+		public NodeIter assignEval(Node lhsCtxNode, Node rhsCtxNode, Object... envx) {
 
 			List<Node> ret = new ArrayList<>();
 			
-			NodeIter nit = exprs[1].eval(rhsCtxNode);
+			NodeIter nit = exprs[1].eval(rhsCtxNode, envx);
 			io.vavr.collection.List<Node> nl = ofAll(nit);
 			boolean single = nl.size() == 1;
 			
@@ -998,7 +998,7 @@ public class Japath {
 //				expr = __(expr.eval(lhsCtxNode).val().toString());
 //			}
 			//
-			NodeIter e0 = expr.eval(lhsCtxNode);
+			NodeIter e0 = expr.eval(lhsCtxNode, envx);
 			e0.forEachRemaining(lhNode -> {
 				
 				int i = 0;
@@ -1018,8 +1018,8 @@ public class Japath {
 			return nodeIter(ret.iterator());
 		}
 		
-		@Override public NodeIter eval(Node node) { 
-			return assignEval(node, node);
+		@Override public NodeIter eval(Node node, Object... envx) { 
+			return assignEval(node, node, envx);
 		}
 
 		@Override public String toString() { return "assign(" + exprs[0] + ", " + exprs[1] + ")"; }
@@ -1029,12 +1029,12 @@ public class Japath {
 		
 		private Message(Expr... opt) { exprs = opt; }
 		
-		@Override public NodeIter eval(Node node) {
+		@Override public NodeIter eval(Node node, Object... envx) {
 			
-			System.out.println(getMessage(node));
+			System.out.println(getMessage(node, envx));
 			return single(node);
 		}
-		public String getMessage(Node node) { return exprs[0].eval(node).node().val().toString(); }
+		public String getMessage(Node node, Object... envx) { return exprs[0].eval(node, envx).node().val().toString(); }
 		@Override public String toString() { return "message(" + exprs[0] + ")"; }
 	}
 	
@@ -1133,7 +1133,8 @@ public class Japath {
 		n.ctx.initSalience(n);
 		n.ctx.getVars().add(Var.of(n), "$");
 		
-		Iterable<Node> it = it(path(path).eval(n));
+		String envx = "root";
+		Iterable<Node> it = it(path(path).eval(n, envx));
 		return n.ctx.salient() ? io.vavr.collection.Iterator.concat(it, Basics.action(() -> {
 			n.ctx.checkSalience();
 		})) : it;
@@ -1157,7 +1158,8 @@ public class Japath {
 
 		np.process(n, Kind.Pre, level, orderNo, isLast);
 		
-		Iterator<Node> it = path(all).eval(n);
+		String envx = "root";
+		Iterator<Node> it = path(all).eval(n, envx);
 		int i = 0;
 		boolean b = it.hasNext();
 		while (b) {

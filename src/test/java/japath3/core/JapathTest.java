@@ -60,15 +60,15 @@ public class JapathTest {
 		Node n = w_(" {a: [ {b: 99, b1: {b2: 88} }, {c: 'lala'  } ]}  ");
 		
 
-		Node x = select(n, y -> n.get("a"), __(1), __("c"));
+		Node x = select(n, (y, envx) -> n.get("a"), __(1), __("c"));
 
 		assertEquals("lala", x.val());
 
-		x = select(n, y -> n.get("a"), __(0), __("cNop"));
+		x = select(n, (y, envx) -> n.get("a"), __(0), __("cNop"));
 
 		assertEquals(nilo, x.val());
 
-		x = select(n, y -> n.get("a"), all, __("c"));
+		x = select(n, (y, envx) -> n.get("a"), all, __("c"));
 		
 		assertEquals("lala", x.val());
 		
@@ -84,7 +84,7 @@ public class JapathTest {
 		x = select(n,
 				__("a"), //
 				__(0), //
-				y -> {
+				(y, envx) -> {
 					h.bindNode(y.get("b").node());
 					Integer i = ((Number) y.get("b").val()).intValue();
 					return i == 99 ? single(y) : empty;
@@ -131,7 +131,7 @@ public class JapathTest {
 		Vars vars2 = n1.ctx.getVars();
 		select(n1,
 				pe,
-				y -> {
+				(y, envx) -> {
 					String s = "" + vars2.v("h") + vars2.v("h1") + vars2.v("h2");
 					System.out.println(s);
 					assertTrue( s.equals("^`b`->99^null^`b2`->88") || s.equals("^null^`c`->lala^null") );
@@ -215,7 +215,7 @@ public class JapathTest {
 		Node n = w_(" {a: [ {b: 99, b1: {b2: 88} }, {c: 'lala'  } ]}  ");
 //
 		StringBuilder sb = new StringBuilder();
-		select(n, y -> n.get("a"), desc, y -> {
+		select(n, (y, envx) -> n.get("a"), desc, (y, envx) -> {
 			sb.append(y.toString());
 			return empty;
 		});
@@ -225,7 +225,7 @@ public class JapathTest {
 				sb.toString());
 		
 		sb.setLength(0);
-		select(n, y -> n.get("a"), desc, srex("b.*"), y -> {
+		select(n, (y, envx) -> n.get("a"), desc, srex("b.*"), (y, envx) -> {
 			sb.append(y.toString());
 			return empty;
 		});
@@ -235,7 +235,7 @@ public class JapathTest {
 				sb.toString());
 		
 		sb.setLength(0);
-		select(n, y -> n.get("a"), desc, y -> {
+		select(n, (y, envx) -> n.get("a"), desc, (y, envx) -> {
 			sb.append("-" + y.selector);
 			System.out.println("-" + y.selector);
 			return empty;
@@ -301,13 +301,14 @@ public class JapathTest {
 		
 		assertIt(n, "[99]", "99");
 		
-		assertEquals((Integer) 99, Japath.constExpr(99).eval(n).val());
+		String envx = "root";
+		assertEquals((Integer) 99, Japath.constExpr(99).eval(n, envx).val());
 		
-		assertEquals((Double) 99.1, Japath.constExpr(99.1).eval(n).val());
+		assertEquals((Double) 99.1, Japath.constExpr(99.1).eval(n, envx).val());
 		
-		assertEquals("99", Japath.constExpr("99").eval(n).val());
+		assertEquals("99", Japath.constExpr("99").eval(n, envx).val());
 		
-		assertEquals(true, Japath.constExpr(true).eval(n).val());
+		assertEquals(true, Japath.constExpr(true).eval(n, envx).val());
 		
 		// tbc.
 		
@@ -437,7 +438,7 @@ public class JapathTest {
 		String jo = "{l: [{i: 0}, {i: 1}, {i: 2}]}";
 
 		Node n = w_(jo);
-		select(n, e_("l.*"), x -> {
+		select(n, e_("l.*"), (x, envx) -> {
 			x.set("i", ((Number) x.val("i")).intValue() + 1);
 			return ok;
 		});
@@ -514,7 +515,7 @@ public class JapathTest {
 		
 		PathExpr e = e_("**.every(c, eq('lala'))");
 		System.out.println(stringify(e, 1));
-		select(n, e, x -> {
+		select(n, e, (x, envx) -> {
 			sb.append(" " + x.val());
 			return ok;
 		}).val();
@@ -525,7 +526,7 @@ public class JapathTest {
 		e = e_("d.every(*, eq('lalax'))");
 		System.out.println(stringify(e, 1));
 		sb.setLength(0);
-		select(n, e, x -> {
+		select(n, e, (x, envx) -> {
 			sb.append(" " + (boolean) x.val());
 			return ok;
 		}).val();
@@ -541,7 +542,7 @@ public class JapathTest {
 		Node n = w_(jo);
 		
 		StringBuilder sb = new StringBuilder();
-		select(n, e_("**.type(Number)"), x -> {
+		select(n, e_("**.type(Number)"), (x, envx) -> {
 			sb.append(" " + (boolean) x.val());
 			return ok;
 		});

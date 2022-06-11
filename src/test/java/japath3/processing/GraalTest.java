@@ -35,8 +35,9 @@ public class GraalTest {
 			
 			Node n = w_(" {a: [ {b: 99, b1: {b2: 88, b3: null} }, {c: 'lala'  } ]}  ");
 			Expr expr = e_("a[0].b1");
-			
-			NodeIter nit = expr.eval(n);
+
+			String envx = "root";
+			NodeIter nit = expr.eval(n, envx);
 
 			
 			

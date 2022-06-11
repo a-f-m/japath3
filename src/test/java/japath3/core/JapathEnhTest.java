@@ -485,11 +485,11 @@ public class JapathEnhTest {
 		assertIt(n, "[]", "j::m::conc(a.c, a.x)");
 		
 		
-		Ctx.loadJInst(Tuple.of("x", (Expr) x -> {
+		Ctx.loadJInst(Tuple.of("x", (Expr) (x, envx) -> {
 			return single(x);
 		}));
 		
-		assertIt(n, "[lala]", "a.c.j::x::eval()");
+//		assertIt(n, "[lala]", "a.c.j::x::eval()");
 		
 		try {
 			assertIt(n, "[lala]", "a.type('hi')");

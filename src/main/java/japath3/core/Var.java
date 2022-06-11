@@ -16,7 +16,7 @@ public final class Var<T> implements Expr {
 	public static Var of() { return new Var(null); }
 	public static Var of(Node node) { return new Var(node); }
 	
-	@Override public NodeIter eval(Node node) {
+	@Override public NodeIter eval(Node node, Object... envx) {
 //		if (bound()) throw new JapathException("var already bound: " + this);
 		bindNode(node);
 		return node == null ? Japath.empty : Japath.single(node);
