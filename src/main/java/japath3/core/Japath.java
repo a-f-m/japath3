@@ -211,7 +211,8 @@ public class Japath {
 			Vars globalVars = node.ctx.getVars();
 			Var globalVar = globalVars.getVar(vname_);
 
-			if (globalVar == null && isLocalCanditate) {
+//			if (globalVar == null && isLocalCanditate) { // global var preference
+			if (isLocalCanditate) { // local var preference
 				
 //		deepCopy version:				
 //				var.bindNode(node);

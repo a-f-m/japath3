@@ -20,7 +20,6 @@ assignment = y:(path / String) ':' _ e:simpleExpr
     { return {assignment: {lhs: typeof y === 'string' ? { step: { lhsProperty: y}} : y, rhs: e }}}
 
 path = x:( 
-//    (argNumber / stepExpr) (('.' _ ) stepExpr )* 
     stepExpr (('.' _ ) stepExpr )* 
 )
     { return {path: skip(flatten(x), '.')}; }
@@ -35,9 +34,8 @@ stepExpr = x:(
 step = x:(
     self / wild / selector / union / comparison / boolExpr / 
     filter / cond  / optional / 
-    type / text / var /
+    type / text / var / argNumber / 
     exprDef / scriptDef / message /
-    argNumber / 
     exprAppl / create / struct / array /
     funcCall /
     property // / subscript

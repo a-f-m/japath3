@@ -989,13 +989,13 @@ function peg$parse(input, options) {
                         if (s1 === peg$FAILED) {
                           s1 = peg$parsevar();
                           if (s1 === peg$FAILED) {
-                            s1 = peg$parseexprDef();
+                            s1 = peg$parseargNumber();
                             if (s1 === peg$FAILED) {
-                              s1 = peg$parsescriptDef();
+                              s1 = peg$parseexprDef();
                               if (s1 === peg$FAILED) {
-                                s1 = peg$parsemessage();
+                                s1 = peg$parsescriptDef();
                                 if (s1 === peg$FAILED) {
-                                  s1 = peg$parseargNumber();
+                                  s1 = peg$parsemessage();
                                   if (s1 === peg$FAILED) {
                                     s1 = peg$parseexprAppl();
                                     if (s1 === peg$FAILED) {

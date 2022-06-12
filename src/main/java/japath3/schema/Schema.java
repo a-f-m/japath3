@@ -121,6 +121,8 @@ public class Schema {
 		
 		@Override public NodeIter eval(Node node, Object... envx) {
 			
+			if (op != Op.every) return super.eval(node, envx);
+			
 			Ctx ctx = node.ctx;
 			NodeIter nit = exprs[0].eval(node, envx);
 			boolean b = true;

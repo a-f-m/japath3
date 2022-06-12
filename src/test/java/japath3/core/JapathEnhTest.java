@@ -25,6 +25,7 @@ import org.graalvm.polyglot.Value;
 import org.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import io.vavr.Tuple;
@@ -759,7 +760,7 @@ public class JapathEnhTest {
 		
 		Node n = w_(" {a: 99 }  ");
 		
-		assertIt(n, "[x8899]", "def(f, g(88).g(#0)). def(g, js::conc($x, #0) $x). _{new $x:'x'}.f(99).$x");
+		assertIt(n, "[x]", "def(f, g(88).g(#0)). def(g, js::conc($x, #0) $x. message($x)). _{new $x:'x'}.f(99).$x");
 		
 	}
 	
