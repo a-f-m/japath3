@@ -805,10 +805,7 @@ function peg$parse(input, options) {
 
     s0 = peg$currPos;
     s1 = peg$currPos;
-    s2 = peg$parseargNumber();
-    if (s2 === peg$FAILED) {
-      s2 = peg$parsestepExpr();
-    }
+    s2 = peg$parsestepExpr();
     if (s2 !== peg$FAILED) {
       s3 = [];
       s4 = peg$currPos;
@@ -998,17 +995,20 @@ function peg$parse(input, options) {
                               if (s1 === peg$FAILED) {
                                 s1 = peg$parsemessage();
                                 if (s1 === peg$FAILED) {
-                                  s1 = peg$parseexprAppl();
+                                  s1 = peg$parseargNumber();
                                   if (s1 === peg$FAILED) {
-                                    s1 = peg$parsecreate();
+                                    s1 = peg$parseexprAppl();
                                     if (s1 === peg$FAILED) {
-                                      s1 = peg$parsestruct();
+                                      s1 = peg$parsecreate();
                                       if (s1 === peg$FAILED) {
-                                        s1 = peg$parsearray();
+                                        s1 = peg$parsestruct();
                                         if (s1 === peg$FAILED) {
-                                          s1 = peg$parsefuncCall();
+                                          s1 = peg$parsearray();
                                           if (s1 === peg$FAILED) {
-                                            s1 = peg$parseproperty();
+                                            s1 = peg$parsefuncCall();
+                                            if (s1 === peg$FAILED) {
+                                              s1 = peg$parseproperty();
+                                            }
                                           }
                                         }
                                       }

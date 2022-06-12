@@ -348,7 +348,7 @@ public class LanguageTest extends Language {
 			+ "   {\"step\": {\"def\": {\r\n"
 			+ "      \"name\": \"func\",\r\n"
 			+ "      \"expr\": {\"path\": [\r\n"
-			+ "         {\"argNumber\": 1},\r\n"
+			+ "         {\"step\": {\"argNumber\": 1}},\r\n"
 			+ "         {\"step\": {\"property\": \"a\"}},\r\n"
 			+ "         {\"step\": {\"property\": \"b\"}}\r\n"
 			+ "      ]}\r\n"

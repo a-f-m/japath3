@@ -86,7 +86,7 @@ public abstract class Node {
 	
 	public static class Null implements Comparable {
 		@Override public int compareTo(Object o) {
-			if (!(o instanceof Null)) throw new JapathException("can only be compared to 'null");
+			if (!(o instanceof Null)) throw new JapathException("can only be compared to 'Null'");
 			return 0; 
 		}
 		@Override public String toString() { return "null"; }

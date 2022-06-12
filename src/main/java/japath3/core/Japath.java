@@ -43,6 +43,9 @@ import japath3.util.Regex;
  * core containing ADT and 'select & walking'. In order to be compact, 'single line'-code is preferred (similar to functional languages).
  * Furthermore, as usual in languages like scala, relevant (ADT-)classes are defined within this class. 
  * For efficiency reasons primitive java arrays and collections are used in parallel to the functional vavr lib.
+ * 
+ * Note that the code is highly optimized concerning verbosity and usage of the java programming language. Therefore "classical" code 
+ * quality tools might pop-up suggestions. 
  *   
  * @author andreas-fm
  *
@@ -349,36 +352,11 @@ public class Japath {
 			try {
 				ParametricExprDef ped = node.ctx.getPed(name);
 //				deepCopy version:				
-//				NodeIter nit = ped.exprs[0].deepCopy(exprs, new HashMap<String, Japath.Bind>()).eval(node, envx);
+//				return ped.exprs[0].deepCopy(exprs, new HashMap<String, Japath.Bind>()).eval(node, envx);
 				
 				
-				//---
-				Expr[] paramExprs = new Expr[exprs.length];
-				for (int j = 0; j < exprs.length; j++) {
-					try {
-						paramExprs[j] = exprs[j].paramClone(fromEnvx(envx));
-					} catch (CloneNotSupportedException e) {
-						throw new JapathException(e);
-					}
-				}
-				Ctx.ParamAVarEnv env = new ParamAVarEnv(paramExprs);
+				return ped.exprs[0].eval(node, new Ctx.ParamAVarEnv().cloneResolvedParams(exprs, envx));
 				
-				NodeIter nit = ped.exprs[0].eval(node, env);
-				
-				//--
-				
-				return new NodeIter() {
-					
-					@Override
-					public boolean hasNext() {
-						return nit.hasNext();
-					}
-					@Override
-					public Node next() {
-						Node next = nit.next();
-						return next;
-					}
-				};
 			} catch (Exception e) {
 				throw new JapathException(e);
 			}
@@ -1132,22 +1110,32 @@ public class Japath {
 		return ret;
 	}
 	
+	//----------------- evaluation methods:  -------
+
+	
 	public static Stream<Node> walks(Node n, Expr... path) {return stream(walki(n, path));}
 	
-	public static Iterable<Node> walki(Node n, Expr... path) { 
+	public static Iterable<Node> walki(Node n, Expr... path) {
+		return walki(n, new Ctx.ParamAVarEnv(), path);
+	}
+	
+	public static Iterable<Node> walki(Node n, Ctx.ParamAVarEnv envx, Expr... path) { 
 		n.ctx.initSalience(n);
 		n.ctx.getVars().add(Var.of(n), "$");
 		
-		String envx = "root";
 		Iterable<Node> it = it(path(path).eval(n, envx));
 		return n.ctx.salient() ? io.vavr.collection.Iterator.concat(it, Basics.action(() -> {
 			n.ctx.checkSalience();
 		})) : it;
 	}
+	
+	public static Node select(Node n, Expr... path) {
+		return select(n, new Ctx.ParamAVarEnv(), path);
+	}
 
-	public static Node select(Node n, Expr... path) {		
+	public static Node select(Node n, Ctx.ParamAVarEnv envx, Expr... path) {		
 		Node node = nil;
-		for (Node n_: walki(n, path)) node = n_;
+		for (Node n_: walki(n, envx, path)) node = n_;
 		return node;
 	}
 	

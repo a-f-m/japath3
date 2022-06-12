@@ -65,6 +65,19 @@ public class Ctx {
 			
 			return (ParamAVarEnv) envx[0];
 		}
+		public Ctx.ParamAVarEnv cloneResolvedParams(Expr[] exprs, Object... envx) {
+			
+			params = new Expr[exprs.length];
+			for (int j = 0; j < exprs.length; j++) {
+				try {
+					params[j] = exprs[j].paramClone(fromEnvx(envx));
+				} catch (CloneNotSupportedException e) {
+					throw new JapathException(e);
+				}
+			}
+			return this;
+		}
+
 		@Override
 		public String toString() {
 			return asList(params).toString() + vars;

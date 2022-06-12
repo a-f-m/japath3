@@ -15,6 +15,17 @@ public class Vars {
 
 	private Map<String, Var> varMap = LinkedHashMap.empty();
 	public Map<String, Bind> firstOccs = HashMap.empty();
+	
+	public static Vars of(Tuple2<String, Object>... bindings) {
+		
+		Vars vars = new Vars();
+		for (Tuple2<String, Object> t : bindings) {
+			Var var;
+			vars.add(var = new Var(), t._1);
+			var.bindNode(new Node.DefaultNode(t._2, new Ctx()));
+		}
+		return vars;
+	}
 
 	public Var getVar(String name) { return varMap.getOrElse(name, null); }
 	

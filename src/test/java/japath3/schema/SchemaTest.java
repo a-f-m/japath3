@@ -235,7 +235,7 @@ public class SchemaTest {
 		System.out.println("------");
 		
 		Schema schema = new Schema().genSelectorRestriction(true)
-				.setSchema(IOUtils.toString(new FileInputStream("src/test/resources/japath3/processing/schema-input-1.jap"), "utf-8"));
+				.setSchema(IOUtils.toString(new FileInputStream("src/test/resources/japath3/processing/schema-input-1.ap"), "utf-8"));
 
 		Node n = NodeFactory.w_(jo);
 		System.out.println(schema.buildConstraintText(n));

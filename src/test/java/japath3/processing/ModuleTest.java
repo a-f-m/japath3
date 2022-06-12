@@ -1,5 +1,6 @@
 package japath3.processing;
 
+import static japath3.core.Node.nil;
 import static japath3.processing.Language.e_;
 import static japath3.wrapper.WJsonOrg.w_;
 import static org.junit.Assert.assertEquals;
@@ -10,8 +11,12 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import io.vavr.Tuple;
+import japath3.core.Ctx;
 import japath3.core.JapathException;
 import japath3.core.Node;
+import japath3.core.Var;
+import japath3.core.Vars;
 
 public class ModuleTest {
 
@@ -58,8 +63,20 @@ public class ModuleTest {
 		n = w_(" {a: {b: false, c: 'lala', d: 'lolo'} }  ");
 		
 		assertEquals("lalala123", m.trans(n, "f", e_("a.c"), e_("union(1,2,3)")).val().toString());
+	}
+	
+	@Test public void testGlobalVars() {
+		
+		String s = "def(f, $x). def(g, #0 $x)";
+		Module m = new Module("test", s);
+		
+		Node n = w_(" {a: {b: false, c: 'lala', d: 'lolo'} }  ");
+		
+		
+//		Node.DefaultNode n = new Node.DefaultNode(Node.nilo, ctx);
+		assertEquals("99", m.trans(n, "f", Vars.of(Tuple.of("x", 99))).val().toString());
 
-
+		assertEquals("88", m.trans(n, "g", Vars.of(Tuple.of("x", 99)), 88).val().toString());
 	}
 	
 	// deferred
