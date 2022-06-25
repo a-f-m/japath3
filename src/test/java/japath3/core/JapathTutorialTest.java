@@ -1,14 +1,14 @@
 package japath3.core;
 
+import static japath3.core.Japath.walki;
+import static japath3.processing.Language.e_;
+import static japath3.wrapper.NodeFactory.w_;
+
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import static japath3.core.Japath.walki;
-import static japath3.processing.Language.e_;
-import static japath3.wrapper.WJsonOrg.w_;
 
 public class JapathTutorialTest {
 

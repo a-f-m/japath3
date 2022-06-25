@@ -21,6 +21,7 @@ import static japath3.schema.Schema.ViolationKind.AndOp;
 import static japath3.schema.Schema.ViolationKind.OrOp;
 import static japath3.util.Basics.embrace;
 import static japath3.util.Basics.it;
+import static japath3.util.Basics.setIfAbsent;
 import static org.apache.commons.lang3.StringUtils.repeat;
 
 import java.io.IOException;
@@ -72,6 +73,9 @@ public class Schema {
 			switch (op) {
 			case and:
 			case not:
+				// for violations in negation scope negation are not traced 
+				if (op == not) envx = setIfAbsent(1, true, envx);
+				
 				b = true;
 				int i = 0;
 				String mess = null;
@@ -85,7 +89,7 @@ public class Schema {
 					}
 					// if (ctx.checkValidity() && (op == not ? b : !b))
 					b_ = op == not ? !b_ : b_; 
-					if (ctx.checkValidity() && !b_) {
+					if (!(boolean) Basics.getAt(1, envx, false) && ctx.checkValidity() && !b_) {
 						schema.addViolation(AndOp, e, node, mess);
 						mess = null;
 					}
@@ -98,7 +102,7 @@ public class Schema {
 				int top = schema.violations.size();
 				for (Expr e : exprs)
 					b = testIt(e.eval(node, envx)) || b;
-				if (ctx.checkValidity()) {
+				if (!(boolean) Basics.getAt(1, envx, false) && ctx.checkValidity()) {
 					if (!b) {
 						schema.addViolation(OrOp, this, node);
 					} else {
@@ -129,7 +133,7 @@ public class Schema {
 			while (nit.hasNext()) {
 				Node next = nit.next();
 				boolean b_ = testIt(exprs[1].eval(next, envx));
-				if (ctx.checkValidity() && !b_ && exprs[0] == all) 
+				if (!(boolean) Basics.getAt(1, envx, false) && ctx.checkValidity() && !b_ && exprs[0] == all) 
 					ctx.getSchema().addViolation(AndOp, this, next);
 				b = b_ && b;
 			}

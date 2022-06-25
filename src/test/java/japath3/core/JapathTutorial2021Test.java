@@ -3,7 +3,8 @@ package japath3.core;
 import static japath3.core.Japath.select;
 import static japath3.core.Japath.walki;
 import static japath3.processing.Language.e_;
-import static japath3.wrapper.WJsonOrg.w_;
+//import static japath3.wrapper.WJsonOrg.w_;
+import static japath3.wrapper.NodeFactory.w_;
 
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -15,7 +16,7 @@ import org.junit.Test;
 import japath3.core.Japath.PathExpr;
 import japath3.processing.Language;
 import japath3.util.Regex;
-import japath3.wrapper.WJsonOrg;
+import japath3.wrapper.NodeFactory;
 
 public class JapathTutorial2021Test {
 
@@ -196,7 +197,7 @@ public class JapathTutorial2021Test {
 				+ "    \"favs\": [\"coen-brothers\", \"dylan\"]\r\n"
 				+ "}";
 		
-		Node node = WJsonOrg.w_(jo);
+		Node node = NodeFactory.w_(jo);
 		
 		PathExpr expr = Language.e_("pers.name");
 		

@@ -294,7 +294,7 @@ public class Commands {
 			} catch (JapathException e) {
 				throw new JapathException("--constraints/schema: " + e.getMessage());
 			}
-			if (viol != null) throw new JapathException(Kind.ConstraintViolation, "constraints violated. Visit all '!!!'-annotations below\n" + viol);
+			if (viol != null) throw new JapathException(Kind.ConstraintViolation, "Constraints violated. Possible corrections ('!!!'-annotations) below\n" + viol);
 		}
 	}
 }

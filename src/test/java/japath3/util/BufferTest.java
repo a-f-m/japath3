@@ -1,13 +1,13 @@
 package japath3.util;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.List;
 import java.util.function.Consumer;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 public class BufferTest {
 

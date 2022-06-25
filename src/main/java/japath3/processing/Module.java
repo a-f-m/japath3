@@ -8,7 +8,6 @@ import java.util.HashMap;
 
 import org.apache.commons.io.IOUtils;
 
-import io.vavr.Tuple;
 import io.vavr.Tuple2;
 import io.vavr.collection.List;
 import io.vavr.control.Option;
@@ -27,6 +26,8 @@ public class Module {
 	private String name;
 	private Env env;
 	private boolean isSchemaModule;
+	// if a schema module:
+	private boolean genMessages;// = true;
 	
 	public Module(String name, String pathExprStr, boolean isSchemaModule) {
 		init(name, pathExprStr, isSchemaModule);
@@ -55,7 +56,25 @@ public class Module {
 		this.isSchemaModule = isSchemaModule;
 
 		env = new Env();
+		// env is populated aside;
 		e_(env, pathExprStr, isSchemaModule, true);
+		return this;
+	}
+	
+	public Module importModule(Module... modules) {
+		
+		for (Module importModule : modules) {
+			for (Tuple2<String, ParametricExprDef> entry : importModule.env.defs) {
+				
+				if (env.defs.containsKey(entry._1)) {
+					throw new JapathException(
+							"import of parametric expression '" + entry._1 + "' from module '" + importModule.name
+									+ "' failed'. "
+									+ "Already defined in module '" + name + "'");
+				}
+				env.defs = env.defs.put(entry._1, entry._2);
+			}
+		}
 		return this;
 	}
 	
@@ -96,16 +115,25 @@ public class Module {
 		return Japath.select(n, new Ctx.ParamAVarEnv(params), getExpr(exprName));
 	}
 	
+	public static record ValidationResult(String violations, String schema) {}
 	
-	public Option<Tuple2<String, String>> checkSchema(Node jo, String schemaName) {
+	public Option<ValidationResult> checkSchema(Node jo, String schemaName) {
+		return checkSchema(jo, schemaName, null);
+	}
+	
+	/**
+	 * returns (violations, schema) 
+	 */
+	public Option<ValidationResult> checkSchema(Node jo, String schemaName, Vars vars) {
 		
 		if (!isSchemaModule) throw new JapathException("'" + name + "' is not a schema module");
-
-		Schema schema = new Schema().setSchema(getExpr(schemaName));
+		if (vars != null) jo.ctx.setVars(vars);
+		
+		Schema schema = new Schema().setSchema(getExpr(schemaName)).genMessages(genMessages);
 		Option<String> validityViolations = schema.getValidityViolations(jo);
 
 		return validityViolations.isDefined()
-				? Option.of(Tuple.of(validityViolations.get(), Language.stringify(schema.getSchemaExpr(), 2)))
+				? Option.of( new ValidationResult(validityViolations.get(), Language.stringify(schema.getSchemaExpr(), 2)))
 				: Option.none();				
 	}
 

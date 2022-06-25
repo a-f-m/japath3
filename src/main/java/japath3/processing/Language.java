@@ -180,7 +180,7 @@ public class Language {
 			String name = x.val("name");
 			if (name.matches(keywords)) throw new JapathException("def name '" + name + "' is reserved");
 			ParametricExprDef ped = paramExprDef(name, buildExpr(env, x.node("expr"), schemaProc).get(0));
-			if (env.defs.containsKey(name)) throw new JapathException("user-defined expression '" + name + "' already defined");
+			if (env.defs.containsKey(name)) throw new JapathException("parametric expression '" + name + "' already defined");
 			env.defs = env.defs.put(name, ped);
 			return List.of(ped);
 		}

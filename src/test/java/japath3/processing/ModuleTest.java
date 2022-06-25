@@ -1,8 +1,7 @@
 package japath3.processing;
 
-import static japath3.core.Node.nil;
 import static japath3.processing.Language.e_;
-import static japath3.wrapper.WJsonOrg.w_;
+import static japath3.wrapper.NodeFactory.w_;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -12,10 +11,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import io.vavr.Tuple;
-import japath3.core.Ctx;
 import japath3.core.JapathException;
 import japath3.core.Node;
-import japath3.core.Var;
 import japath3.core.Vars;
 
 public class ModuleTest {

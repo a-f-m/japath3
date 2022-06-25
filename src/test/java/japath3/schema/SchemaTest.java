@@ -1,8 +1,9 @@
 package japath3.schema;
 
 import static japath3.util.JoeUtil.createJoe;
-import static japath3.wrapper.WJsonOrg.w_;
+import static japath3.wrapper.NodeFactory.w_;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
@@ -187,7 +188,7 @@ public class SchemaTest {
 				+ "		  d.type(String)))\n"
 				+ "");
 		
-		Node n = NodeFactory.w_(jo);
+		Node n = w_(jo);
 		boolean valid = schema.checkValidity(n);
 		
 		assertEquals("{\n"
@@ -207,7 +208,7 @@ public class SchemaTest {
 	
 	@Test public void testNulls() throws Exception {
 		
-		Node n = w_(createJoe("{a: 1, b: null, c: [1, null]}"));
+		Node n = NodeFactory.w_(createJoe("{a: 1, b: null, c: [1, null]}"));
 		System.out.println(n);
 		
 //		Schema schema = new Schema().genCompleteness(true);
@@ -262,6 +263,22 @@ public class SchemaTest {
 		assertEquals("TreeSet(cxx)", n.ctx.undefSelectors.toString());
 	}
 	
+	@Test public void testNegation() throws Exception {
+		
+		Node n = w_("{a:1, b:[{c: 88, cx: 3}, {c: 88, cx: 4}]}");
+		
+		assertTrue(Schema.checkValidity(n, "assert(not(b[0].cx.eq(3)))").length() != 0);
+
+		assertTrue(Schema.checkValidity(n, "assert(b[0].cx.eq(4))").length() != 0);
+		
+		assertEquals(null, Schema.checkValidity(n, "assert(b[0].cx.eq(3))"));
+		
+//		assertEquals(null, Schema.checkValidity(n, "assert(cond(a, assert(not(b.some(*, and(c.eq(88), or(cx.eq(5), not(cx))))))))"));
+		assertEquals(expect2, Schema.checkValidity(n, "assert(cond(a, assert(not(b.some(*, and(c.eq(88), cx.eq(4)))))))").toString());
+
+//		assertEquals(null, Schema.checkValidity(w_(new JSONObject(json1)), e2));
+	}
+	
 	@SuppressWarnings("unused")
 	private String cr(String s) { return s.replace("\r", ""); }
 
@@ -295,6 +312,23 @@ public class SchemaTest {
 			+ "  ]\n"
 			+ "}\n"
 			+ "";
+	
+	String expect2 = "{   ← ← ← !!! possible correction: cond(a,assert(not(b.some(*,assert(c.eq(88),cx.eq(4))))))\n"
+			+ "!!! possible correction: not(b.some(*,assert(c.eq(88),cx.eq(4))))\n"
+			+ "\n"
+			+ "  a: 1,\n"
+			+ "  b: [\n"
+			+ "    {\n"
+			+ "      c: 88,\n"
+			+ "      cx: 3\n"
+			+ "    },\n"
+			+ "    {\n"
+			+ "      c: 88,\n"
+			+ "      cx: 4\n"
+			+ "    }\n"
+			+ "  ]\n"
+			+ "}\n"
+			+ ""; 
 	
 	String e1 = "assert(\n"
 			+ "	every(*,\n"
@@ -341,4 +375,9 @@ public class SchemaTest {
 			+ "							u.type(String),\n"
 			+ "							v.type(Number))))))))\n"
 			+ "";
+	
+	String json1 = "";
+	
+	String e2 = "";
+	
 }

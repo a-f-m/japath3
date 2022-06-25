@@ -1,0 +1,15 @@
+{
+    "modules": [
+        {
+            "name": "s1",
+            "isSchema": true
+        },
+        {
+            "name": "m1"
+        },
+        {
+            "name": "m2",
+            "imports": ["m1"]
+        }
+    ]
+}

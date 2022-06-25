@@ -1,15 +1,15 @@
 package japath3.util;
 
+import static java.lang.Math.min;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyIterator;
+import static org.junit.Assert.assertEquals;
+
 import java.util.List;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import static java.lang.Math.min;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyIterator;
-import static org.junit.Assert.assertEquals;
 
 import japath3.util.Pager.PageFunc;
 

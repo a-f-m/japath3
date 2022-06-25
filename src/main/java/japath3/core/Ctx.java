@@ -347,8 +347,8 @@ public class Ctx {
 
 	public void declare(String name, ParametricExprDef ped) {
 		
-		if (StandardDefs.globalDefs.containsKey(name)) throw new JapathException("global def expression '" + name + "' already defined");
-		if (defs.containsKey(name)) throw new JapathException("user-defined expression '" + name + "' already defined");
+		if (StandardDefs.globalDefs.containsKey(name)) throw new JapathException("global parametric expression '" + name + "' already defined");
+		if (defs.containsKey(name)) throw new JapathException("parametric expression '" + name + "' already defined");
 		defs = defs.put(name, ped);
 	}
 	
@@ -360,7 +360,7 @@ public class Ctx {
 			return gped;
 		}
 		
-		if (!defs.containsKey(name)) throw new JapathException("user-defined expression '" + name + "' not defined");
+		if (!defs.containsKey(name)) throw new JapathException("parametric expression '" + name + "' not defined");
 		return defs.get(name).get();
 	}
 

@@ -1,10 +1,5 @@
 package japath3.processing;
 
-import org.json.JSONObject;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import static japath3.core.Japath.__;
 import static japath3.core.Japath.all;
 import static japath3.core.Japath.and;
@@ -19,6 +14,11 @@ import static japath3.core.Japath.type;
 import static japath3.core.Japath.union;
 import static japath3.util.Basics.prettyNesting;
 import static org.junit.Assert.assertEquals;
+
+import org.json.JSONObject;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import io.vavr.Tuple2;
 import japath3.core.Japath.BoolExpr;

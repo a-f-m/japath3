@@ -1,14 +1,14 @@
 package japath3.processing;
 
+import static japath3.processing.Language.e_;
+import static japath3.wrapper.NodeFactory.w_;
+
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Value;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import static japath3.processing.Language.e_;
-import static japath3.wrapper.NodeFactory.w_;
 
 import japath3.core.Japath.Expr;
 import japath3.core.Japath.NodeIter;

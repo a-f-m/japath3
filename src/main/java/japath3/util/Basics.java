@@ -181,6 +181,39 @@ public class Basics {
 		ret[0] = x; 
 		return ret;
 	}
+	
+	public static Object[] setAt(int idx, Object x, Object[] a) {
+		return setAt(idx, x, a, Object.class);
+	}
+	
+	public static <T> T[] setAt(int idx, T x, T[] a, Class<T> clazz) {
+		T[] ret;
+		if (idx >= a.length) {
+			ret = (T[]) Array.newInstance(clazz, idx + 1);
+			System.arraycopy(a, 0, ret, 0, a.length);
+		} else {
+			ret = a;
+		}
+		ret[idx] = x; 
+		return ret;
+	}
+	
+	public static Object[] setIfAbsent(int idx, Object x, Object[] a) {
+		return setIfAbsent(idx, x, a, Object.class);
+	}
+	
+	public static <T> T[] setIfAbsent(int idx, T x, T[] a, Class<T> clazz) {
+		
+		if (idx >= a.length) {
+			return setAt(idx, x, a, clazz);
+		} else {
+			return a;
+		}
+	}
+	
+	public static <T> T getAt(int idx, T[] a, T defaultValue) {
+		return idx >= a.length ? defaultValue : a[idx];
+	}
 
 	//!!! alias test
 //	static class Xxx<T extends List<Tuple2<String, String>>> {
@@ -209,7 +242,7 @@ public class Basics {
 //		
 //	}
 	
-	public static <T> T al(Object o) {
+	public static <T> T align(Object o) {
 		return (T) o;
 	}
 	
