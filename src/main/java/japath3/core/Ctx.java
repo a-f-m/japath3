@@ -360,8 +360,9 @@ public class Ctx {
 			return gped;
 		}
 		
-		if (!defs.containsKey(name)) throw new JapathException("parametric expression '" + name + "' not defined");
-		return defs.get(name).get();
+		Option<ParametricExprDef> d = defs.get(name);
+		if (!d.isDefined()) throw new JapathException("parametric expression '" + name + "' not defined");
+		return d.get();
 	}
 
 	public Ctx setDefs(Map<String, ParametricExprDef> defs) {

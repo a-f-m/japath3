@@ -101,9 +101,7 @@ public class Module {
 	
 	public Node trans(Node n, String exprName, Vars vars, Object... paramObjs) {
 		
-		n.ctx.setDefs(env.defs);
-		if (vars != null) n.ctx.setVars(vars);
-		
+		prepare(n, vars);		
 		Expr[] params = List.of(paramObjs).map(x -> {
 			boolean primitive = x instanceof Number || x instanceof Boolean || x instanceof String;
 			if (!(x instanceof Expr || primitive)) {
@@ -124,17 +122,22 @@ public class Module {
 	/**
 	 * returns (violations, schema) 
 	 */
-	public Option<ValidationResult> checkSchema(Node jo, String schemaName, Vars vars) {
+	public Option<ValidationResult> checkSchema(Node n, String schemaName, Vars vars) {
 		
 		if (!isSchemaModule) throw new JapathException("'" + name + "' is not a schema module");
-		if (vars != null) jo.ctx.setVars(vars);
+		prepare(n, vars);
 		
 		Schema schema = new Schema().setSchema(getExpr(schemaName)).genMessages(genMessages);
-		Option<String> validityViolations = schema.getValidityViolations(jo);
+		Option<String> validityViolations = schema.getValidityViolations(n);
 
 		return validityViolations.isDefined()
 				? Option.of( new ValidationResult(validityViolations.get(), Language.stringify(schema.getSchemaExpr(), 2)))
 				: Option.none();				
+	}
+
+	private void prepare(Node n, Vars vars) {
+		n.ctx.setDefs(env.defs);
+		if (vars != null) n.ctx.setVars(vars);
 	}
 
 }

@@ -1,11 +1,12 @@
 {
     "modules": [
         {
-            "name": "s1",
-            "isSchema": true
+            "name": "m1"
         },
         {
-            "name": "m1"
+            "name": "s1",
+            "isSchema": true,
+            "imports": ["m1"]
         },
         {
             "name": "m2",

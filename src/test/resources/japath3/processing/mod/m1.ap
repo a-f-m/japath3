@@ -1,3 +1,6 @@
+def(c99, 99).
+def(cTrue, true).
+
 def(g,
     #0
 )
