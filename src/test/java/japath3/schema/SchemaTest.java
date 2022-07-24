@@ -52,7 +52,8 @@ public class SchemaTest {
 //		assertEquals(e1, t + "\n");
 
 		Writer fw = new BufferedWriter(
-				new OutputStreamWriter(new FileOutputStream("src/test/resources/japath3/processing/schema-input-1.jap"),
+//				new OutputStreamWriter(new FileOutputStream("src/test/resources/japath3/processing/schema-input-1.jap"),
+				new OutputStreamWriter(new FileOutputStream("src/test/resources/japath3/processing/schema-input-1.ap"),
 						"utf-8"));
 
 		fw. write(t);
@@ -154,7 +155,7 @@ public class SchemaTest {
 //		System.out.println(schema.annotatedViolations(n));
 		assertEquals("{   ← ← ← !!! possible correction: b.assert(c.type(Number),d.type(String))\n"
 				+ "  a: 1,\n"
-				+ "  b: {   ← ← ← !!! additional selectors [d1, cx] not covered by schema\n"
+				+ "  b: {   ← ← ← !!! selectors [d1, cx] not covered by schema\n"
 				+ "!!! possible correction: c.type(Number)\n"
 				+ "\n"
 				+ "    cx: 1,\n"
@@ -193,7 +194,7 @@ public class SchemaTest {
 		
 		assertEquals("{\n"
 				+ "  a: 1,\n"
-				+ "  b: {   ← ← ← !!! additional selectors [d1, cx] not covered by schema\n"
+				+ "  b: {   ← ← ← !!! selectors [d1, cx] not covered by schema\n"
 				+ "!!! c, d must exist and of type Number resp. String\n"
 				+ "\n"
 				+ "    cx: 1,\n"

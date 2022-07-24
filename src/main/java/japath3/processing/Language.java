@@ -404,8 +404,12 @@ public class Language {
 	}
 	
 	public static String stringify(Expr e, int indent) {
-		return Basics.prettyNesting(stringify0(
-				e), indent, ",", "\\.", "(type|opt|every|match|all|text|def|new|\\=|\\.|java|::complete|::modifiable)");
+		return Basics.prettyNesting( //
+				stringify0(e).replace(".def(", "\n.def("),
+				indent,
+				",",
+				"\\.",
+				"(type|opt|every|match|all|text|new|\\=|\\.|java|::complete|::modifiable)").replaceAll("(?m)\\(\\s*\\)", "()");
 	}
 	
 	public static Expr clone(Expr e, boolean schemaProc) {
@@ -433,5 +437,10 @@ public class Language {
 	}
 	
 	public static boolean isIdentifier(String id) { return id.matches("[a-zA-Z_][a-zA-Z0-9_]*"); }
+	
+	public static void main(String[] args) {
+
+		System.out.println( "(  \r\n )".replaceAll("(?m)\\(\\s*\\)", "()")  );
+	}
 
 }

@@ -259,6 +259,6 @@ public class JoeUtil {
 		System.out.println(s);
 		System.out.println("---");
 //		System.out.println(s.replaceAll("[^:]//[^\"]*?\n", "\n"));
-		System.out.println(s.replaceAll("(?m)([^:]|^)//.*?$", ""));
+		System.out.println(s.replaceAll(commentRegex, ""));
 	}
 }
