@@ -9,7 +9,7 @@ def(lift,
 ).
 
 def(embed, 
-    _{ _ $root, 
+    _ $root{ 
        #0.*
        ._{ selector $p,
            $root.property($p) : _ } 

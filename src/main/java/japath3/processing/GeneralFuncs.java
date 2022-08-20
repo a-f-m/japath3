@@ -1,6 +1,6 @@
 package japath3.processing;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import japath3.core.Japath;
@@ -15,7 +15,7 @@ public class GeneralFuncs { // available by ns 'it' or 'gen'
 		
 		if (nits.length == 0 || nits.length > 1) throw new JapathException("'set' must have exactly one argument");
 		
-		Set mem = new HashSet();
+		Set mem = new LinkedHashSet();
 		
 		return Japath.nodeIter(Basics.stream(nits[0].iterator()).filter(x -> {
 			return !mem.contains(x.val().toString());
@@ -26,12 +26,28 @@ public class GeneralFuncs { // available by ns 'it' or 'gen'
 		
 	}
 	
+	public NodeIter sort(Node ctxNode, NodeIter[] nits) {
+		
+		if (nits.length == 0 || nits.length > 1) throw new JapathException("'sort' must have exactly two arguments (node iterator and key selection)");
+		
+//		if (!ctxNode.isArray()) throw new JapathException("context node must be an array"); 
+		
+		return null;
+		
+		
+	}
+	
 	public NodeIter project(Node ctxNode, NodeIter[] nits) {
 		
-		if (nits.length == 0 || nits.length > 1) throw new JapathException("'set' must have exactly one argument");
+		if (nits.length == 0 || nits.length > 1) throw new JapathException("'project' must have exactly one argument");
 		
 		Node p = ctxNode.create(ctxNode.createWo(false), "");
-		
+
+		// alternative !?
+//		for (NodeIter nit : nits) {
+//			Object name = nit.val();
+//			if (nit.hasNext()) throw new JapathException("argument must be a single value");
+
 		Basics.stream(nits[0].iterator()).forEach(x -> {
 			Object name = x.val();
 			if (name instanceof String) {

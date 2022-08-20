@@ -268,7 +268,7 @@ public class Commands {
 		Node n = null;
 		if (body instanceof String && ((String) body).charAt(0) == '-') {
 			try {
-				body =  IOUtils.toString(new FileReader(((String) body).substring(1)));
+				body =  IOUtils.toString(new FileReader(((String) body).substring(1))).replace("/", "\\/")  ;
 			} catch (IOException e) {
 				throw new JapathException(e);
 			}
