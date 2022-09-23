@@ -1,0 +1,12 @@
+// Dies ist ein aufgenommenes Makro. Überprüfen Sie zuerst alle Befehle,
+// um sicher zu gehen, dass die beabsichtigten Befehle ausgeführt werden.
+// Um das Makro zu starten, aktivieren Sie die Datei,
+// in der das Makro arbeiten soll und drücken C+m C+p.
+SearchAndReplace.setSearchString("^(\\w+) = (.*)\\s*$");
+SearchAndReplace.setReplaceString("$1 = x:( $2 ) \\t\\t\\t/*adt:*/ { return {$1: flatten(x)}}");
+SearchAndReplace.setBeanShellReplace(false);
+SearchAndReplace.setWholeWord(false);
+SearchAndReplace.setIgnoreCase(false);
+SearchAndReplace.setRegexp(true);
+SearchAndReplace.setSearchFileSet(new CurrentBufferSet());
+SearchAndReplace.replaceAll(view);

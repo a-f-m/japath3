@@ -10,5 +10,6 @@ self{::complete}.and(
 	opt(asArray).type(Boolean),
 	opt(schemaGenSwitches).type(String),
 	opt(salient).type(Boolean),
-	opt(genMessages).type(Boolean)
+	opt(genMessages).type(Boolean),
+	opt(genMessagesOnly).type(Boolean)
 	)

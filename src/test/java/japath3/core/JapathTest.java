@@ -28,13 +28,11 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.util.stream.Collectors;
 
-import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import japath3.core.Japath.Expr;
@@ -551,16 +549,6 @@ public class JapathTest {
 	}
 	
 	@Test
-	@Ignore
-	public void testCallFunc() {
-		
-		PathExpr e = e_("a.call(`p.f`)(x, y)");
-		
-		System.out.println(stringify(e, 1));
-		
-	}
-	
-	@Test
 	public void testSelector() {
 
 		String jo = "{ a:{b: 99, c:'lala', e:'c'}, d:{c:'lalax'}  }";
@@ -577,53 +565,6 @@ public class JapathTest {
 		assertIt(n, "[lala]", "a.property(cond(true, 'c'))");
 	}
 	
-	@Test
-	@Ignore
-	public void testVarsUnif() throws Exception {
-		
-		Node n = w_("{\n"
-				+ "   \"name\": \"Miller\",\n"
-				+ "   \"age\": 17,\n"
-				+ "   \"driverLic\": 3,\n"
-				+ "   \"status\": \"hidden\",\n"
-				+ "   \"address\": {\n"
-				+ "      \"postal-code\": 11111,\n"
-				+ "      \"city\": \"PleasantVille\",\n"
-				+ "      \"absent\": false\n"
-				+ "   },\n"
-				+ "   \"telecom\": [\n"
-				+ "      {\n"
-				+ "         \"use\": \"hidden\",\n"
-				+ "         \"value\": \"(03) 5555 0000\"\n"
-				+ "      },\n"
-				+ "      {\n"
-				+ "         \"use\": \"home\",\n"
-				+ "         \"value\": \"(03) 5555 1111\",\n"
-				+ "         \"kind\": \"smart\"\n"
-				+ "      }\n"
-				+ "   ],\n"
-				+ "   \"shopping\": [\n"
-				+ "      {\"p#123\": {\"status\": \"ordered\"}},\n"
-				+ "      {\"p#456\": {\"status\": \"shipped\"}}\n"
-				+ "   ]\n"
-				+ "}");
-		
-		try {
-			assertIt(n, "[LinkedHashMap((s, ^`status`->hidden))]", " ?(status $s).telecom.*.use $s ");
-			
-//		n.ctx.clearVars();
-			assertIt(n, "[^`status`->hidden]", " ?(status$s).$s ");
-			
-//		n.ctx.clearVars();
-			assertIt(n, "[hidden]", " ?(status $s).telecom.*.use $s ");
-			
-		} catch (JapathException e) {
-			// so far no unif. allowed
-			System.out.println(e);
-		}
-	}
-
-
 	@Test
 	public void testVars1() {
 
@@ -651,7 +592,7 @@ public class JapathTest {
 	@Test
 	public void testArrays() {
 		
-		String jo = "{a: [ [ 1, 2, 3] ] }";
+		String jo = "{a: [ [ 1, 2, 3] ], b: [4, 5] }";
 		
 		Node n = w_(jo);
 		
@@ -663,10 +604,15 @@ public class JapathTest {
 		
 		assertIt(n, "[3]", "a.*.*[#2..5]");
 		
+		try {
+			assertIt(n, "", "b[>]");
+			fail();
+		} catch (JapathException e) {
+			// ok
+		}
 	}
 	
-	@Test
-//	@Ignore
+	@Test 
 	public void testXml() {
 		
 		Element root = Jsoup.parse("<root>\n"
@@ -700,7 +646,6 @@ public class JapathTest {
 	}
 
 	@Test
-//	@Ignore
 	public void testPouHtml() throws Exception {
 		
 		Element root = Jsoup.parse(new File("src/test/resources/japath3/core/source.html"), "utf-8").root();
@@ -727,8 +672,7 @@ public class JapathTest {
 
 	}
 	
-	@Test
-//	@Ignore
+	@Test 
 	public void testParamExpr() throws Exception {
 		
 		Node n = w_(" {a: {b: false, c: 'lala'} }  ");
@@ -752,7 +696,7 @@ public class JapathTest {
 		n.ctx.clearDefs();
 		assertIt(n, "[[99,88]]", "def(h, [#1, #0]) .def(g, h(88, #0)) .def(f, g(#0)) .a.f(99)");
 		
-		// recursion
+		// ifinite recursion
 		n.ctx.clearDefs();
 		try {
 			assertIt(n, "", "def(f, f()) .a.f()");
@@ -768,7 +712,72 @@ public class JapathTest {
 		
 	}
 	
-	@Test public void testModular() {
+	@Test 
+	public void testNamedParamExpr() throws Exception {
+		
+		Node n = w_(" {a: {b: false, c: 'lala'}, d:[1, 2] }  ");
+
+		// only const
+		// param $y bind trial
+		n.ctx.clearDefs();
+		try {
+			assertIt(n, "", "def(f(x, y), _{a $y}. {b: $y}). f(88, 99)");
+			fail();
+		} catch (JapathException e) {
+			// ok
+		}
+		
+		// param use
+		n.ctx.clearDefs();
+		assertIt(n, "[{\"b\":99}]", "def(f(a, b), {b: $b}). f(88, 99)");
+		
+		// no param use
+		n.ctx.clearDefs();
+		assertIt(n, "[{\"a\":{\"b\":false,\"c\":\"lala\"}}]", "def(f(a, b), {a: a, b: b}). f(88, 99)");
+		
+		try {
+			assertIt(n, "", "def(f(x:{a: $v}), a)");
+			fail();
+		} catch (JapathException e) {
+			System.out.println(e + "");
+		}
+		try {
+			assertIt(n, "", "def(f(x:{a: #0}), a)");
+			fail();
+		} catch (JapathException e) {
+			System.out.println(e + "");
+		}
+		try {
+			assertIt(n, "", "def(f(x:{a: b $c}), a)");
+			fail();
+		} catch (JapathException e) {
+			System.out.println(e + "");
+		}
+		
+	}
+	
+	@Test 
+	public void testNamedParamDefaults() throws Exception {
+		
+		Node n = w_(" {a: {b: false, c: 'lala'}, d:[1, 2] }  ");
+		
+		try {
+			assertIt(n, "", "def(f(a, b, c: [66]), {a: $a, b: $b, c: $c}). f(77)");
+			fail();
+		} catch (JapathException e) {
+			System.out.println(e + "");
+		}
+
+		n.ctx.clearDefs();
+		assertIt(n, "[{\"a\":77,\"b\":{\"b1\":88},\"c\":[66]}]", "def(f(a, b: {b1: 88}, c: [66]), {a: $a, b: $b, c: $c}). f(77)");
+		
+		n.ctx.clearDefs();
+		assertIt(n, "[77]", "def(f(a), $a). def(g(b: 77), f($b)). g()");
+	}
+
+	
+	@Test 
+	public void testModular() {
 		
 		Node n = w_(" {a: {b: false, c: 'lala'} }  ");
 		
@@ -784,10 +793,9 @@ public class JapathTest {
 	}
 	
 	@Test 
-//	@Ignore
 	public void testPrefixNames() throws Exception {
 		
-		Node n = w_(new JSONObject("{a:1, c: true, b:4.4, x:{y:9}}"));
+		Node n = w_("{a:1, c: true, b:4.4, x:{y:9}}");
 		
 		assertEquals("{\"P_a\":1,\"P_c\":true,\"P_b\":4.4,\"P_x\":{\"y\":9}}", n.prefixPropertyNames("P_").val().toString()  );
 	}

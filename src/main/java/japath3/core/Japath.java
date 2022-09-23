@@ -18,6 +18,7 @@ import static japath3.util.Basics.embrace;
 import static japath3.util.Basics.it;
 import static japath3.util.Basics.stream;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -34,6 +36,7 @@ import com.florianingerl.util.regex.Matcher;
 import io.vavr.Tuple2;
 import japath3.core.Ctx.ParamAVarEnv;
 import japath3.core.Japath.NodeProcessing.Kind;
+import japath3.core.Japath.ParametricExprDef.FormalParam;
 import japath3.core.Node.DefaultNode;
 import japath3.core.Node.PrimitiveType;
 import japath3.util.Basics;
@@ -118,8 +121,14 @@ public class Japath {
 			@Override public NodeIter eval(Node node, Object... envx) { return single(node); }
 			@Override public String toString() { return "Nop"; }
 		};	
-		public default Expr deepCopy(Expr[] params, Map<String, Bind> vmap) throws CloneNotSupportedException {return this;};
-		public default Expr paramClone(Ctx.ParamAVarEnv env) throws CloneNotSupportedException {return this;};
+		public static Expr Nil = new Expr() {
+			@Override public NodeIter eval(Node node, Object... envx) { return empty; }
+			@Override public String toString() { return "nil"; }
+		};	
+		public default Expr deepCopy(Function<Expr, Expr> copyFunc) throws CloneNotSupportedException {
+			return copyFunc.apply(this);
+		};
+		public static Function<Expr, Expr> identity() { return e -> {return e;}; }
 	}
 	
 	public static abstract class AExpr implements Expr, Cloneable {
@@ -145,21 +154,12 @@ public class Japath {
 			c.accept(this, false);
 		}
 		public Expr last() {return exprs[exprs.length - 1];};
-		@Override public Expr deepCopy(Expr[] params, Map<String, Bind> vmap) throws CloneNotSupportedException { 
+		
+		@Override public Expr deepCopy(Function<Expr, Expr> copyFunc) throws CloneNotSupportedException { 
 			CompoundExpr clone = (CompoundExpr) super.clone();
 			clone.exprs = new Expr[exprs.length];
-			for (int i = 0; i < exprs.length; i++) {
-				clone.exprs[i] = exprs[i].deepCopy(params, vmap);
-			}
-			return clone; 
-		}
-		@Override
-		public Expr paramClone(ParamAVarEnv env) throws CloneNotSupportedException {
-			CompoundExpr clone = (CompoundExpr) super.clone();
-			clone.exprs = new Expr[exprs.length];
-			for (int i = 0; i < exprs.length; i++) {
-				clone.exprs[i] = exprs[i].paramClone(env);
-			}
+			for (int i = 0; i < exprs.length; i++) 
+				clone.exprs[i] = exprs[i].deepCopy(copyFunc);
 			return clone; 
 		}
 	}
@@ -261,18 +261,8 @@ public class Japath {
 			if (vmap.putIfAbsent(vname, this) != null)
 				throw new JapathException("variable '" + vname + "' already assigned within def '" + defName + "'");
 		}
-		@Override public Expr deepCopy(Expr[] params, Map<String, Bind> vmap) throws CloneNotSupportedException {
-			if (isLocalCanditate) {
-				Bind clone = (Bind) super.clone();
-				clone.var = new Var();
-				vmap.put(vname, clone);
-				return clone; 
-			} else {
-				return this;
-			}
-		}
 
-		@Override public String toString() { return "bind_(" + embrace(vname, '"') + ")"; }
+		@Override public String toString() { return "bind_(" + embrace(vname, "\"") + ")"; }
 	}
 	
 	public static class VarAppl extends AExpr {
@@ -307,37 +297,85 @@ public class Japath {
 			}	
 		}
 		
-		@Override public Expr deepCopy(Expr[] params, Map<String, Bind> vmap) throws CloneNotSupportedException {
-			VarAppl clone = (VarAppl) super.clone();
-			Bind bind = vmap.get(vname);
-			if (bind != null) {
-				clone.def = bind;
-				return clone;
-			} else {
-				// then it's a global var
-				return this;
-			}
-		}
-
-		@Override public String toString() { return "varAppl(" + embrace(vname, '"') + ")"; }
+		@Override public String toString() { return "varAppl(" + embrace(vname, "\"") + ")"; }
 	}
 	
 	public static class ParametricExprDef extends CompoundExpr {
 		
-		public String name;
-		
-		public ParametricExprDef(String name, Expr e) {
-			this.name = name;
-			exprs = new Expr[] { e };
-			Map<String, Bind> vmap = new HashMap<>();
-			e.visit((x, pre) -> {
-				if (x instanceof Bind) ((Bind) x).connectLocalVar(vmap, name);
-				if (x instanceof VarAppl) ((VarAppl) x).connectLocalVar(vmap, name); 
-			});
+		public static record FormalParam(String name, Expr default_) {
+			
+			public FormalParam(String name) {
+				this(name, null);
+			}
 
+			@Override public boolean equals(Object obj) { return name.equals(((FormalParam) obj).name); }
+			@Override public int hashCode() { return name.hashCode(); }
+			@Override public String toString() { return name + (default_() == null ? "" : ": " + default_); }
+		}
+		
+		public String name;
+		public List<FormalParam> formalParams;
+//		public Expr[] parameterDefaults;
+		
+		public ParametricExprDef(String name, List<FormalParam> parameters, Expr expr) {
+			this.name = name;
+			this.formalParams = parameters;
+			exprs = new Expr[] { expr };
+			checkParamDefaults();
+			// must preseed
+			numberingVarAppls();
+			
+			connectParamALocalVar();
+			// substitutes $-parameters by #-parameters:
+		}
+
+		private void checkParamDefaults() {
+			
+			for (FormalParam param : formalParams) {
+				if (param.default_ != null)
+					param.default_().visit((x, pre) -> {
+						if (pre && (x instanceof Bind b || x instanceof VarAppl v || x instanceof ParamAppl p)) 
+							throw new JapathException(
+									"no variables or parameters allowed in a parameter default (found '" + x + "')");
+					});
+			}
+		}
+
+		private void connectParamALocalVar() {
+			
+			Map<String, Bind> vmap = new HashMap<>();
+			exprs[0].visit((x, pre) -> {
+				if (pre) {
+					if (x instanceof Bind b) {
+						if (formalParams.contains(new FormalParam(b.vname)))
+							throw new JapathException("parameter '" + b.vname + "' cannot be bound");
+						b.connectLocalVar(vmap, name);
+					}
+					if (x instanceof VarAppl va) va.connectLocalVar(vmap, name);
+					if (x instanceof ParamAppl pa) 
+						pa.enclosingPed = this;
+				}
+			});
+		}
+		
+		private void numberingVarAppls() {
+			
+			try {
+				exprs[0] = exprs[0].deepCopy(e -> {
+//					if (e instanceof ParamAppl pa && parameters.length > 0) throw new JapathException(
+//							"named and numbered parameters shall not be used within one parametric expression ('" + name + "')");
+					if (e instanceof VarAppl va) {
+						int idx;
+						if ((idx = formalParams.indexOf(new FormalParam(va.vname))) >= 0) return new ParamAppl(idx, va.vname);
+					}
+					return e;
+				});
+			} catch (CloneNotSupportedException e1) {
+				throw new JapathException(e1);
+			}
 		}
 		@Override public NodeIter eval(Node node, Object... envx) { node.ctx.declare(name, this); return single(node); }
-		@Override public String toString() { return "def('" + name + "', " + exprs[0] + ")"; }
+		@Override public String toString() { return "def('" + name + (formalParams.isEmpty() ? "" : formalParams ) + "', " + exprs[0] + ")"; }
 	}
 	
 	public static class ParametricExprAppl extends CompoundExpr {
@@ -352,11 +390,7 @@ public class Japath {
 			
 			try {
 				ParametricExprDef ped = node.ctx.getPed(name);
-//				deepCopy version:				
-//				return ped.exprs[0].deepCopy(exprs, new HashMap<String, Japath.Bind>()).eval(node, envx);
-				
-				
-				return ped.exprs[0].eval(node, new Ctx.ParamAVarEnv().cloneResolvedParams(exprs, envx));
+				return ped.exprs[0].eval(node, new Ctx.ParamAVarEnv().cloneResolvedParams(exprs, ped, envx));
 				
 			} catch (Exception e) {
 				throw new JapathException(e);
@@ -369,8 +403,11 @@ public class Japath {
 	public static class ParamAppl extends AExpr {
 		
 		public int i;
+		public String substName;
+		public ParametricExprDef enclosingPed;
 		
 		public ParamAppl(int idx) { this.i = idx; }
+		public ParamAppl(int idx, String substName) { this(idx); this.substName = substName; }
 		
 		@Override public NodeIter eval(Node node, Object... envx) {
 			
@@ -379,27 +416,9 @@ public class Japath {
 			if (i < 0 || i >= env.params.length) throw new JapathException(
 					"bad (zero-based) parameter number " + i + " (parameter expressions: " + asList(env.params) + ")");
 			return env.params[i].eval(node, envx);
-//			throw new JapathException("cannot happen");
 
 		}
-		@Override public Expr deepCopy(Expr[] params, Map<String, Bind> vmap) throws CloneNotSupportedException {
-			
-			if ( i < 0 || i >=  params.length) {
-				throw new JapathException(
-						"bad (zero-based) parameter number " + i + " (parameter expressions: " + asList(params) + ")");
-			} else {
-				return params[i];
-			}
-		}
-		@Override
-		public Expr paramClone(ParamAVarEnv env) throws CloneNotSupportedException {
-			if (env == null) throw new JapathException("no parameter given (expr: '" + this + "')");
-			if (env.params.length == 0) throw new JapathException("parameter '" + this + "' not bound");
-			if (i < 0 || i >= env.params.length) throw new JapathException(
-					"bad (zero-based) parameter number " + i + " (parameter expressions: " + asList(env.params) + ")");
-			return env.params[i];
-		}
-		@Override public String toString() { return "#" + i; }
+		@Override public String toString() { return substName == null ? "#" + i : "$" + substName; }
 	}
 	
 	public static Expr all = new All();
@@ -548,56 +567,36 @@ public class Japath {
 		@Override public boolean isProperty() {return true;}
 		@Override public Object selector() { return name; }
 		@Override public String toString() { return "__" + (isTrueRegex ? "r" : "") + (ignoreRegex ? "i" : "")
-				+ "(" + embrace(name, '"').replace("\\`", "`") + ")"; }
+				+ "(" + embrace(name, "\"").replace("\\`", "`") + ")"; }
 	}
 	
 	public static class PathAsProperty extends Selection {
 
-		public Expr expr;
-
-		public PathAsProperty(Expr e) { expr = e; }
+		public PathAsProperty(Expr e) { exprs = new Expr[] { e }; }
 
 		@Override public NodeIter eval(Node node, Object... envx) {
 
-			NodeIter nit = expr.eval(node, envx);
+			NodeIter nit = exprs[0].eval(node, envx);
 			
 			if (nit.hasNext()) {
 				if (nit.hasNext()) {
-					new JapathException("single evaluation item expected at node '" + node + "' (expr: " + expr + ")");
+					new JapathException("single evaluation item expected at node '" + node + "' (expr: " + exprs[0] + ")");
 				}
 				Object s = nit.next().val();
 				if (!(s instanceof String)) {
 					throw new JapathException(
-							"evaluation to string expected, found '" + s + "' (at node '" + node + "', expr: " + expr + ")");
+							"evaluation to string expected, found '" + s + "' (at node '" + node + "', expr: " + exprs[0] + ")");
 				} else {
 					return node.getChecked((String) s, this);
 				}
 			} else {
-				throw new JapathException("non-empty evaluation expected at node '" + node + "' (expr: " + expr + ")");
+				throw new JapathException("non-empty evaluation expected at node '" + node + "' (expr: " + exprs[0] + ")");
 			}
 		}		
-		
-		@Override public Expr deepCopy(Expr[] params, Map<String, Bind> vmap) throws CloneNotSupportedException { 
-			PathAsProperty clone = (PathAsProperty) super.clone();
-			clone.expr = expr.deepCopy(params, vmap);
-			return clone;
-		}
-		@Override public Expr paramClone(Ctx.ParamAVarEnv env) throws CloneNotSupportedException { 
-			PathAsProperty clone = (PathAsProperty) super.clone();
-			clone.expr = expr.paramClone(env);
-			return clone;
-		}
-		
-		
-		@Override public void visit(BiConsumer<Expr, Boolean> c) {
-			c.accept(this, true);
-			expr.visit(c); 
-			c.accept(this, false);
-		};
 
 		@Override public boolean isProperty() { return true; }
 		@Override public Object selector() { throw new JapathException("dynamic selector"); }
-		@Override public String toString() { return "pathAsPropery(" + expr + ")"; }
+		@Override public String toString() { return "pathAsPropery(" + exprs[0] + ")"; }
 	}
 	
 	public static class Idx extends Selection {
@@ -620,6 +619,7 @@ public class Japath {
 						? single(node)
 						: empty;
 			} else {
+				if (!node.construct && i == -1) throw new JapathException("appending only allowed at construction or in modification mode");
 				NodeIter e = node.getChecked(i, this);
 				return e == empty && node.construct ? node.undef(i) : e;
 			}
@@ -629,13 +629,13 @@ public class Japath {
 		@Override public String toString() { return "__(" + i + (seq ? ", true" : "") + ", " + upper + "" + ")"; }
 	}
 	
-	public static abstract class Selection extends AExpr {
+	public static abstract class Selection extends CompoundExpr {
 		protected Assignment.Scope scope = Assignment.Scope.none;
 		public abstract boolean isProperty();
 		public abstract Object selector();
 		public static Expr expr(Object selector) {
-			return selector instanceof String ? (((String) selector).equals("*") ? all : __((String) selector))
-					: selector instanceof Integer ? __((Integer) selector) : null;
+			return selector instanceof String s ? (((String) selector).equals("*") ? all : __(s))
+					: selector instanceof Integer i ? __(i) : null;
 		}
 	}
 	
@@ -646,20 +646,29 @@ public class Japath {
 		@Override public String toString() { return "sel"; }
 	}
 	
-	// for compactness:
-	public static <T> Expr c_(T o) {
-		return constExpr(o);
-	}
 	public static <T> Expr constExpr(T o) {
 		return new Expr() {
 			
 			@Override public NodeIter eval(Node node, Object... envx) { 
 				return singleObject(o, node); }
 			@Override public String toString() {
-				return o instanceof String ? embrace(((String) o).replace("'", "\\'"), '\'') : o.toString();
+				return o instanceof String s ? embrace(s.replace("'", "\\'"), "'") : o.toString();
 			}
 		};
 	}
+	
+	public static Expr constNodeExpr(Node n) {
+		return new Expr() {
+			@Override public NodeIter eval(Node node, Object... envx) { return single(n); }
+		};
+	}
+
+	public static Expr constNodeListExpr(io.vavr.collection.List<Node> l) {
+		return new Expr() {
+			@Override public NodeIter eval(Node node, Object... envx) { return nodeIter(l.iterator()); }
+		};
+	}
+	
 	
 	public static class Comparison<T> extends CompoundExpr {
 		public enum Op {eq, neq, lt, gt, le, ge, match};
@@ -679,8 +688,8 @@ public class Japath {
 				if (op == eq || op == neq || op == lt || op == gt || op == le || op == ge) {
 					
 					// type coercion for numbers
-					if (o instanceof Number) o = ((Number) o).doubleValue();
-					if (v instanceof Number) v = ((Number) v).doubleValue();
+					if (o instanceof Number num) o = num.doubleValue();
+					if (v instanceof Number num) v = num.doubleValue();
 					//
 					checkVals(node, o, v);
 						
@@ -873,9 +882,9 @@ public class Japath {
 //			Node x = node.create(Node.undefWo, "", null, node.ctx).setConstruct(true);
 			Node x = node.create(node.createWo(false), "", null, node.ctx).setConstruct(true);
 			for (Expr e : exprs) {
-				if (!(e instanceof Assignment))
+				if (!(e instanceof Assignment ass))
 					throw new JapathException("only assignments allowed at " + this);
-				((Assignment) e).assignEval(x, node, envx);
+				ass.assignEval(x, node, envx);
 			}
 			return single(x);
 		}
@@ -956,16 +965,15 @@ public class Japath {
 		private Assignment(Expr lhs, Expr rhs) { 
 			exprs = new Expr[] { lhs, rhs };
 			lhs.visit((x, pre) -> {
-				setScope(x, Scope.lhs);
+				if (pre) setScope(x, Scope.lhs);
 			});
 			rhs.visit((x, pre) -> {
-				setScope(x, Scope.rhs);
+				if (pre) setScope(x, Scope.rhs);
 			});
 		}
 
 		private void setScope(Expr x, Scope scope) {
-			if (x instanceof Selection && ((Selection) x).scope == Scope.none) 
-				((Selection) x).scope = scope;
+			if (x instanceof Selection sel && sel.scope == Scope.none) sel.scope = scope;
 		}
 		
 		public NodeIter assignEval(Node lhsCtxNode, Node rhsCtxNode, Object... envx) {
@@ -1041,7 +1049,10 @@ public class Japath {
 	
 	public static Bind bind_(String vname) { return new Bind(vname); }
 	public static VarAppl varAppl(String vname) { return new VarAppl(vname); }
-	public static ParametricExprDef paramExprDef(String name, Expr e) { return new ParametricExprDef(name, e); }
+	public static ParametricExprDef paramExprDef(String name, List<FormalParam> parameters, Expr e) {
+		return new ParametricExprDef(name, parameters, e);
+	}
+	public static ParametricExprDef paramExprDef(String name, Expr e) { return new ParametricExprDef(name, emptyList(), e); }
 	public static ParametricExprAppl paramExprAppl(String name, Expr... exprs) { return new ParametricExprAppl(name, exprs); }
 	public static ParamAppl paramAppl(int i) { return new ParamAppl(i); }
 	public static PathExpr path(Expr... exprs) { return new PathExpr(exprs); }

@@ -1,15 +1,1 @@
-{
-   "code": "chol-mass",
-   "display": "SChol (mg/L)",
-   "ir_internal-label_de": ["From Paragon Labs"],
-   "ir_pref_bg": [
-      "...1",
-      "...2"
-   ],
-   "ir_syn_de": ["xxx"],
-   "ir_pref_us": ["yyy"],
-   "ir_syn_us": [
-      "zzz",
-      "uuu"
-   ]
-}
+{"code":"chol-mass","display":"SChol (mg/L)","ir_internal-label_de":["From Paragon Labs"],"ir_pref_bg":["...1","...2"],"ir_syn_de":["xxx"],"ir_pref_us":["yyy"],"ir_syn_us":["zzz","uuu"]}

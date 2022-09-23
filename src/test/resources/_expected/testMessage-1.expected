@@ -1,0 +1,10 @@
+{
+  "a": 1,
+  "b": {    // ← selectors [d1, cx] not covered by schema
+    // ← c, d must exist and of type Number resp. String
+
+    "cx": 1,
+    "d": "lolo",
+    "d1": "lolo"
+  }
+}

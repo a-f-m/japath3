@@ -1,0 +1,15 @@
+{  // ← cond(a,assert(not(b.some(*,assert(c.eq(88),cx.eq(4))))))
+  // ← not(b.some(*,assert(c.eq(88),cx.eq(4))))
+
+  "a": 1,
+  "b": [
+    {
+      "c": 88,
+      "cx": 3
+    },
+    {
+      "c": 88,
+      "cx": 4
+    }
+  ]
+}

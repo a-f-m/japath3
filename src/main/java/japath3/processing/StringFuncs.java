@@ -12,6 +12,19 @@ import japath3.wrapper.WJsonOrg;
 public class StringFuncs {
 
 	public String conc(String s1, String s2) { return s1 + s2; }
+	
+	public NodeIter mconc(Node ctxNode, NodeIter[] nits) {
+		
+		String ret = "";
+		
+		for (NodeIter nit : nits) {
+			String val = nit.val();
+			ret += val;
+		}
+		
+		return Japath.singleObject(ret, ctxNode);
+		
+	}
 
 	public NodeIter split(Node ctxNode, NodeIter[] niRegex) {
 

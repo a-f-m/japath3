@@ -2,12 +2,14 @@ package japath3.core;
 
 import static japath3.core.Japath.empty;
 import static japath3.core.Japath.single;
+import static java.lang.Math.max;
 import static java.util.Arrays.asList;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.stream.Collectors;
 
 import org.graalvm.polyglot.Value;
 
@@ -22,7 +24,9 @@ import io.vavr.collection.TreeSet;
 import io.vavr.control.Option;
 import japath3.core.Japath.Expr;
 import japath3.core.Japath.NodeIter;
+import japath3.core.Japath.ParamAppl;
 import japath3.core.Japath.ParametricExprDef;
+import japath3.core.Japath.ParametricExprDef.FormalParam;
 import japath3.processing.EngineGraal;
 import japath3.processing.GeneralFuncs;
 import japath3.processing.StandardDefs;
@@ -57,23 +61,40 @@ public class Ctx {
 			return var.get();
 		}
 		public static ParamAVarEnv fromEnvx(Object... envx) {
-			if (envx == null || envx.length == 0) 
-				throw new JapathException("internal: no envx given");
-			if (  !(envx[0] instanceof ParamAVarEnv ) ) 
-				return new ParamAVarEnv();
-//				throw new JapathException("internal: envx[0] no 'ParamAVarEnv'");
-			
-			return (ParamAVarEnv) envx[0];
+			if (envx == null || envx.length == 0 || !(envx[0] instanceof ParamAVarEnv p)) return new ParamAVarEnv();			
+			return p;
 		}
-		public Ctx.ParamAVarEnv cloneResolvedParams(Expr[] exprs, Object... envx) {
+		public Ctx.ParamAVarEnv cloneResolvedParams(Expr[] exprs, ParametricExprDef ped, Object... envx) {
 			
-			params = new Expr[exprs.length];
-			for (int j = 0; j < exprs.length; j++) {
-				try {
-					params[j] = exprs[j].paramClone(fromEnvx(envx));
-				} catch (CloneNotSupportedException e) {
-					throw new JapathException(e);
+			params = new Expr[max(exprs.length, ped.formalParams.size())];
+			try {
+				int j = 0;
+				ParamAVarEnv env = fromEnvx(envx);
+				if (env == null) throw new JapathException("no parameter given (expr: '" + this + "')");
+				for (; j < exprs.length; j++) {
+						params[j] = exprs[j].deepCopy(e -> {
+							
+							if (e instanceof ParamAppl pa) {
+								
+								if (env.params.length == 0) throw new JapathException("parameter '" + this + "' not bound");
+								if (pa.i >= env.params.length) throw new JapathException(
+										"bad (zero-based) parameter number " + pa.i + " (parameter expressions: " + asList(env.params) + ")");
+								return env.params[pa.i];
+							}
+							return e;
+						});
+						
 				}
+				// handle defaults
+				for (int k = j; k < ped.formalParams.size(); k++) {
+					FormalParam formalParam = ped.formalParams.get(k);
+					if (formalParam.default_() == null) {
+						throw new JapathException("no parameter default for '" + formalParam + "' defined");
+					}
+					params[k] = formalParam.default_();
+				}
+			} catch (Exception e) {
+				throw new JapathException(e);
 			}
 			return this;
 		}
@@ -206,7 +227,7 @@ public class Ctx {
 	}
 	
 	public static void loadJInst(String ns, Object o) {
-		if (nsToEnvObj.containsKey(ns)) throw new JapathException("multiple def of '" + ns + "'");
+		if (nsToEnvObj.containsKey(ns)) throw new JapathException("multiple definition of namespace '" + ns + "'");
 		nsToEnvObj = nsToEnvObj.put(ns, o);
 	}
 
@@ -243,7 +264,7 @@ public class Ctx {
 					+ ":"
 					+ func
 					+ " ("
-					+ (e instanceof InvocationTargetException ? ((InvocationTargetException) e).getTargetException() : e)
+					+ (e instanceof InvocationTargetException ie? ie.getTargetException() : e)
 					+ ")");
 		}
 	}
@@ -285,23 +306,27 @@ public class Ctx {
 		}
 
 	}
-
+	
 	private static Object[] buildArgs(String func, Node node, NodeIter[] nits) {
+		return buildArgs(func, node, nits, false);
+	}
+
+	private static Object[] buildArgs(String func, Node node, NodeIter[] nits, boolean nonPrimitives) {
 		
 		Object[] args = new Object[nits.length + 1];
 		args[0] = node.val();
-		for (int i = 0; i < nits.length; i++) args[i + 1] = buildArg(nits[i], func, i);
+		for (int i = 0; i < nits.length; i++) args[i + 1] = buildArg(nits[i], func, i, nonPrimitives);
 		return args;
 	}
 
-	private static Object buildArg(NodeIter nodeIter, String func, int i) {
+	private static Object buildArg(NodeIter nodeIter, String func, int i, boolean nonPrimitives) {
 
 		String messPrefix = "invoking js '" + func + "': " + (i + 1);
 
 		List<Object> ol = List.empty();
 		while (nodeIter.hasNext()) {
 			Node n = nodeIter.next();
-			if (!n.isLeaf())
+			if (!n.isLeaf() && !nonPrimitives)
 				throw new JapathException(messPrefix + "-th argument must be a primitive value (found " + n.woVal() + ")");
 			ol = ol.append(n == Node.nil || n.isNull() ? null : n.val());
 		}
@@ -333,12 +358,16 @@ public class Ctx {
 					throw new JapathException("only the root node is modifiable as a whole");
 				return single(node.setConstruct(true));
 			case "log":
-				System.out.println(">>>log: " + asList(buildArgs(func, node, nits)).toString());
+				System.out.println(">>>log: " + asList(buildArgs(func, node, nits, true)).toString());
 				return single(node);
 			case "nop":
 				return single(node);
 			case "error":
-				throw new JapathException("error at node " + node);
+				String mess = asList(nits).stream().map(x -> {
+					return x.val().toString();
+				}).collect(Collectors.joining(" "));
+				
+				throw new JapathException("error at node " + node + ": " + mess);
 			}
 			break;
 		}

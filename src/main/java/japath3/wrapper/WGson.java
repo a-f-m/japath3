@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Iterator;
 
+import org.apache.commons.lang3.StringUtils;
+
 //import org.json.JSONArray;
 //import org.json.JSONObject;
 
@@ -33,6 +35,10 @@ public class WGson extends Node {
 
 	public WGson(Object wo, Object selector, Node previousNode, Ctx ctx) { super(wo, selector, previousNode, ctx); }	
 	
+	public static Node w_(Object x) {
+		return new WGson(x, "", null, new Ctx());
+	}
+
 	@Override public Node create(Object wo, Object selector, Node previousNode, Ctx ctx) {
 		return new WGson(wo, selector, previousNode, ctx);
 	}
@@ -213,20 +219,24 @@ public class WGson extends Node {
 		
 		return "`" + selector
 				+ "`->"
-				+ (wo instanceof JsonElement ? pretty((JsonElement) wo) : wo.toString());
+				+ woString(pretty ? 3 : 0);
+	}
+	
+	@Override public String woString(int indent) { 
+		return (wo instanceof JsonElement ? prettyString((JsonElement) wo, indent) : wo.toString());
 	}
 
-	private String pretty(JsonElement je) throws AssertionError {
+	public static String prettyString(JsonElement je, int indent) throws AssertionError {
 		
 		
 		// extra string handling due to gson inadequate formatting
 		if (je.isJsonPrimitive() && ((JsonPrimitive) je).isString()) return ((JsonPrimitive) je).getAsString(); 
-		if (!pretty) return je.toString();
+		if (indent == 0) return je.toString();
 		try {
 			StringWriter stringWriter = new StringWriter();
 			JsonWriter jsonWriter = new JsonWriter(stringWriter);
 			jsonWriter.setLenient(true);
-			jsonWriter.setIndent("   ");
+			jsonWriter.setIndent(StringUtils.leftPad("", indent));
 			Streams.write(je, jsonWriter);
 			return stringWriter.toString();
 		} catch (IOException e) {
@@ -234,5 +244,9 @@ public class WGson extends Node {
 		}
 	}
 	
+	public static void main(String[] args) {
+		System.out.println( StringUtils.leftPad("", 0));
+		System.out.println(java.lang.String.format("$4s"));
+	}
 	
 }

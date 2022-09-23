@@ -32,7 +32,7 @@ stepExpr = x:(
 
 ////
 step = x:(
-    self / wild / selector / union / comparison / boolExpr / 
+    nil / self / wild / selector / union / comparison / boolExpr / 
     filter / cond  / optional / 
     type / text / var / argNumber / 
     exprDef / scriptDef / message /
@@ -43,6 +43,9 @@ step = x:(
 //-
 )
 { return {step: x}; }
+
+////
+nil = 'nil'!Identifier/*!*/ _ { return {nil: ''}; }
 
 ////
 self = ('_' / 'self')!Identifier/*!*/ _ { return {self: ''}; }
@@ -113,8 +116,19 @@ text = 'text' _ '(' _ ')' _
 var = '$' _  id:Identifier? { return {var: (id === null ? '$' : id)}; } 
 
 ////
-exprDef = 'def' _  '(' _ id:Identifier ',' _ e:simpleExpr ')' _
-    { return {def: {name: id , expr: e}}; }
+exprDef = 'def' _  '(' _ id:Identifier params:(  '(' _ parameters? ')' _ )? ',' _ e:simpleExpr ')' _
+    {   //if (params !== null) print('>>>' + params[2]);
+        return {def: {name: id, params: params === null || params[2] === null ? [] : params[2] , expr: e}}; }
+
+////
+parameters = x:(
+    parameter (',' _ parameter )* 
+)
+    { return skip(flatten(x), ','); }
+
+parameter = id:Identifier d:(':' _  simpleExpr)?
+    { return { param: { name: id, default: d !== null ? d[2] : null }}; }
+
 
 ////
 scriptDef = 'def-script' _  '(' _ s:MultilineString ')' _
@@ -158,7 +172,8 @@ property =
 ////
 subscript = 
     '[' _ '#' _ i:index upper:('..' _ index?)? ']' _ { return {subscript: i, seq: true, upper: upper === null ? null : (upper[2] === null ? -1 : upper[2]) }; } /
-    '[' _ i:index ']' _ { return {subscript: i}; } 
+    '[' _ i:index ']' _ { return {subscript: i}; } /
+    '[' _ '>' _ ']' _ { return {subscript: -1}; } 
 //-
 
 
@@ -179,6 +194,7 @@ structArgs = x:(
     assignment (',' _ assignment )* 
 )
     { return skip(flatten(x), ','); }
+
 
 
 ////

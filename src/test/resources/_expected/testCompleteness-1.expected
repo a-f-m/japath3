@@ -1,0 +1,11 @@
+{  // ← b.assert(c.type(Number),d.type(String))
+
+  "a": 1,
+  "b": {    // ← selectors [d1, cx] not covered by schema
+    // ← c.type(Number)
+
+    "cx": 1,
+    "d": "lolo",
+    "d1": "lolo"
+  }
+}

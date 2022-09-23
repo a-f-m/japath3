@@ -21,6 +21,8 @@ import japath3.core.Japath.Expr;
 import japath3.core.JapathException;
 import japath3.core.Node;
 import japath3.processing.Language;
+import japath3.schema.Schema.MessageHandling;
+import japath3.util.Testing;
 import japath3.wrapper.NodeFactory;
 
 
@@ -108,7 +110,7 @@ public class SchemaTest {
 		
 		System.out.println(av);
 		
-		assertEquals(expect1.replace("\r\n", "\n"), av);
+		Testing.assertEquals_("testSchema-1", av);
 		
 		schema.setSchema( 
 				"and( "
@@ -153,17 +155,7 @@ public class SchemaTest {
 		boolean valid = schema.checkValidity(n);
 		
 //		System.out.println(schema.annotatedViolations(n));
-		assertEquals("{   ← ← ← !!! possible correction: b.assert(c.type(Number),d.type(String))\n"
-				+ "  a: 1,\n"
-				+ "  b: {   ← ← ← !!! selectors [d1, cx] not covered by schema\n"
-				+ "!!! possible correction: c.type(Number)\n"
-				+ "\n"
-				+ "    cx: 1,\n"
-				+ "    d: 'lolo',\n"
-				+ "    d1: 'lolo'\n"
-				+ "  }\n"
-				+ "}\n"
-				+ "", schema.annotatedViolations(n));
+		Testing.assertEquals_("testCompleteness-1", schema.annotatedViolations(n));
 		assertEquals(false, valid);
 		
 		assertEquals(
@@ -174,37 +166,30 @@ public class SchemaTest {
 	
 	@Test public void testMessage() throws Exception {
 		
-		String jo =
-				"{a:1, b:{cx:1, d:'lolo', d1:'lolo'}}";
+		Schema schema = new Schema().genMessages(MessageHandling.Only);
+		schema.setSchema( 				
+				"""						
+				_{**.::complete}.
+				   assert(
+				   	a. assert(message('num exp'), type(Number)),
+				   	b
+				        .assert(
+				   		  message('c, d must exist and of type Number resp. String'),
+				   		  c.type(Number),
+				   		  d.type(String)))
+				"""
+		);
 		
-		Schema schema = new Schema().genMessages(true);
-		schema.setSchema( 
-				"_{**.::complete}."
-				+ "and(\n"
-				+ "	a.type(Number),\n"
-				+ "	b"
-				+ "     .assert(\n"
-				+ "		  message('c, d must exist and of type Number resp. String'),\n"
-				+ "		  c.type(Number),\n"
-				+ "		  d.type(String)))\n"
-				+ "");
-		
-		Node n = w_(jo);
+		Node n = w_("{a:1, b:{cx:1, d:'lolo', d1:'lolo'}}");
 		boolean valid = schema.checkValidity(n);
 		
-		assertEquals("{\n"
-				+ "  a: 1,\n"
-				+ "  b: {   ← ← ← !!! selectors [d1, cx] not covered by schema\n"
-				+ "!!! c, d must exist and of type Number resp. String\n"
-				+ "\n"
-				+ "    cx: 1,\n"
-				+ "    d: 'lolo',\n"
-				+ "    d1: 'lolo'\n"
-				+ "  }\n"
-				+ "}\n"
-				+ "", schema.annotatedViolations(n));
 		assertEquals(false, valid);
-
+		Testing.assertEquals_("testMessage-1", schema.annotatedViolations(n));
+		
+		n = w_("{a:'lili', b:{cx:1, d:'lolo', d1:'lolo'}}");
+		schema.genMessages(MessageHandling.Prefer);
+		schema.checkValidity(n);
+		Testing.assertEquals_("testMessage-2", schema.annotatedViolations(n));
 	}
 	
 	@Test public void testNulls() throws Exception {
@@ -275,7 +260,9 @@ public class SchemaTest {
 		assertEquals(null, Schema.checkValidity(n, "assert(b[0].cx.eq(3))"));
 		
 //		assertEquals(null, Schema.checkValidity(n, "assert(cond(a, assert(not(b.some(*, and(c.eq(88), or(cx.eq(5), not(cx))))))))"));
-		assertEquals(expect2, Schema.checkValidity(n, "assert(cond(a, assert(not(b.some(*, and(c.eq(88), cx.eq(4)))))))").toString());
+//		assertEquals(expect2, Schema.checkValidity(n, "assert(cond(a, assert(not(b.some(*, and(c.eq(88), cx.eq(4)))))))").toString());
+		Testing.assertEquals_("testNegation-1",
+				Schema.checkValidity(n, "assert(cond(a, assert(not(b.some(*, and(c.eq(88), cx.eq(4)))))))").toString());
 
 //		assertEquals(null, Schema.checkValidity(w_(new JSONObject(json1)), e2));
 	}
@@ -283,49 +270,50 @@ public class SchemaTest {
 	@SuppressWarnings("unused")
 	private String cr(String s) { return s.replace("\r", ""); }
 
-	String expect1 = "{   ← ← ← !!! possible correction: b.every(*,or(assert(every(*,&.match('c')),c.type(Number)),assert(every(*,&.match('d')),d.type(Number))))\n"
-			+ "!!! possible correction: a.type(Number)\n"
+	String expect1 = "{  // !!! possible correction: b.every(*,or(assert(every(*,&.match('c')),c.type(Number)),assert(every(*,&.match('d')),d.type(Number))))\n"
+			+ "  // !!! possible correction: a.type(Number)\n"
 			+ "\n"
-			+ "  a: '1',   ← ← ← !!! possible correction: type(Number)\n"
-			+ "  b: [\n"
-			+ "    {   ← ← ← !!! possible correction: every(*,or(assert(every(*,&.match('c')),c.type(Number)),assert(every(*,&.match('d')),d.type(Number))))\n"
-			+ "!!! possible correction: or(assert(every(*,&.match('c')),c.type(Number)),assert(every(*,&.match('d')),d.type(Number)))\n"
-			+ "!!! possible correction: d.type(Number)\n"
-			+ "!!! possible correction: every(*,&.match('d'))\n"
-			+ "!!! possible correction: c.type(Number)\n"
-			+ "!!! possible correction: every(*,&.match('c'))\n"
+			+ "  \"a\": \"1\",    // !!! possible correction: type(Number)\n"
 			+ "\n"
-			+ "      cx: 1   ← ← ← !!! possible correction: every(*,&.match('d'))\n"
-			+ "!!! possible correction: every(*,&.match('c'))\n"
+			+ "  \"b\": [\n"
+			+ "    {      // !!! possible correction: every(*,or(assert(every(*,&.match('c')),c.type(Number)),assert(every(*,&.match('d')),d.type(Number))))\n"
+			+ "      // !!! possible correction: or(assert(every(*,&.match('c')),c.type(Number)),assert(every(*,&.match('d')),d.type(Number)))\n"
+			+ "      // !!! possible correction: d.type(Number)\n"
+			+ "      // !!! possible correction: every(*,&.match('d'))\n"
+			+ "      // !!! possible correction: c.type(Number)\n"
+			+ "      // !!! possible correction: every(*,&.match('c'))\n"
+			+ "\n"
+			+ "      \"cx\": 1        // !!! possible correction: every(*,&.match('d'))\n"
+			+ "        // !!! possible correction: every(*,&.match('c'))\n"
 			+ "\n"
 			+ "    },\n"
-			+ "    {   ← ← ← !!! possible correction: every(*,or(assert(every(*,&.match('c')),c.type(Number)),assert(every(*,&.match('d')),d.type(Number))))\n"
-			+ "!!! possible correction: or(assert(every(*,&.match('c')),c.type(Number)),assert(every(*,&.match('d')),d.type(Number)))\n"
-			+ "!!! possible correction: d.type(Number)\n"
-			+ "!!! possible correction: every(*,&.match('d'))\n"
-			+ "!!! possible correction: c.type(Number)\n"
-			+ "!!! possible correction: every(*,&.match('c'))\n"
+			+ "    {      // !!! possible correction: every(*,or(assert(every(*,&.match('c')),c.type(Number)),assert(every(*,&.match('d')),d.type(Number))))\n"
+			+ "      // !!! possible correction: or(assert(every(*,&.match('c')),c.type(Number)),assert(every(*,&.match('d')),d.type(Number)))\n"
+			+ "      // !!! possible correction: d.type(Number)\n"
+			+ "      // !!! possible correction: every(*,&.match('d'))\n"
+			+ "      // !!! possible correction: c.type(Number)\n"
+			+ "      // !!! possible correction: every(*,&.match('c'))\n"
 			+ "\n"
-			+ "      dx: '4'   ← ← ← !!! possible correction: every(*,&.match('d'))\n"
-			+ "!!! possible correction: every(*,&.match('c'))\n"
+			+ "      \"dx\": \"4\"        // !!! possible correction: every(*,&.match('d'))\n"
+			+ "        // !!! possible correction: every(*,&.match('c'))\n"
 			+ "\n"
 			+ "    }\n"
 			+ "  ]\n"
 			+ "}\n"
 			+ "";
 	
-	String expect2 = "{   ← ← ← !!! possible correction: cond(a,assert(not(b.some(*,assert(c.eq(88),cx.eq(4))))))\n"
-			+ "!!! possible correction: not(b.some(*,assert(c.eq(88),cx.eq(4))))\n"
+	String expect2 = "{  // !!! possible correction: cond(a,assert(not(b.some(*,assert(c.eq(88),cx.eq(4))))))\n"
+			+ "  // !!! possible correction: not(b.some(*,assert(c.eq(88),cx.eq(4))))\n"
 			+ "\n"
-			+ "  a: 1,\n"
-			+ "  b: [\n"
+			+ "  \"a\": 1,\n"
+			+ "  \"b\": [\n"
 			+ "    {\n"
-			+ "      c: 88,\n"
-			+ "      cx: 3\n"
+			+ "      \"c\": 88,\n"
+			+ "      \"cx\": 3\n"
 			+ "    },\n"
 			+ "    {\n"
-			+ "      c: 88,\n"
-			+ "      cx: 4\n"
+			+ "      \"c\": 88,\n"
+			+ "      \"cx\": 4\n"
 			+ "    }\n"
 			+ "  ]\n"
 			+ "}\n"

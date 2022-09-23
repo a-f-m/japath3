@@ -56,15 +56,17 @@ public class LanguageTest extends Language {
 
 	@Test public void testLang() { 
 		
-		String input = "or(`x \" \"`, imply(a, b)). some(*, c). b$v.*. a[1][2][#8]. a[#1..]. a[#1..2] .?(a). x?(a). `c\\` \\` §$` . [a, b]. union(or(a, b), union(or(c, d)))."
+//		String input = "def(func2(v:99), $v.a.b)"  
+				;
+		String input = "eq(nil). or(`x \" \"`, imply(a, b)). some(*, c). b$v.*. a[1][2][#8]. a[#1..]. a[#1..2] .?(a). x?(a). `c\\` \\` §$` . [a, b]. union(or(a, b), union(or(c, d)))."
 				+ "**. * .union ( a, b ). $ x .* . eq ( 88 ). eq ( -1.44E11 ). eq ( \"lolo\" ). eq ( $x ). §. match('la\\'la'). cond(a, b, c). self. text(). "
-				+ "def(func, #1.a.b). func(x, y.z) { \"a\" :(c.d)}. a {x.y, z}. java::sys::func(a, b.c). {c : 0}. j::sys::func(). js::func(). ::complete"
+				+ "def(func, #1.a.b). def(func1(), #1.a.b). def(func2(u, v:99, w, z: {a: 1}), $v.a.b). func(x, y.z) { \"a\" :(c.d)}. a {x.y, z}. java::sys::func(a, b.c). {c : 0}. j::sys::func(). js::func(). ::complete"
 				+ ". def-script(\"\"\"function aaa(){ \n return bbb}\"\"\"). property(a.b). message('lala')"  
 				;
 		
 		Tuple2<JSONObject, String> ast = Language.getAst(input);
-		System.out.println(ast._2);
 		System.out.println(ast._1.toString(3));
+		System.out.println(ast._2);
 		assertEquals(astA.replace("\r", ""), ast._1.toString(3));
 		
 		Expr e = e_(input);
@@ -119,7 +121,9 @@ public class LanguageTest extends Language {
 
 	}
 	
-	String es = "or(\r\n"
+	String es = "eq(\r\n"
+			+ "	nil).\r\n"
+			+ "or(\r\n"
 			+ "	`x \" \"`,\r\n"
 			+ "	imply(\r\n"
 			+ "		a,\r\n"
@@ -173,8 +177,28 @@ public class LanguageTest extends Language {
 			+ "	)\r\n"
 			+ ".\r\n"
 			+ "def(\r\n"
-			+ "	func,\r\n"
+			+ "	func(\r\n"
+			+ "		),\r\n"
 			+ "	#1.\r\n"
+			+ "	a.\r\n"
+			+ "	b)\r\n"
+			+ ".\r\n"
+			+ "def(\r\n"
+			+ "	func1(\r\n"
+			+ "		),\r\n"
+			+ "	#1.\r\n"
+			+ "	a.\r\n"
+			+ "	b)\r\n"
+			+ ".\r\n"
+			+ "def(\r\n"
+			+ "	func2(\r\n"
+			+ "		u,\r\n"
+			+ "		v: 99,\r\n"
+			+ "		w,\r\n"
+			+ "		z: {\r\n"
+			+ "			a : (\r\n"
+			+ "				1)}),\r\n"
+			+ "	$v.\r\n"
 			+ "	a.\r\n"
 			+ "	b).\r\n"
 			+ "func(\r\n"
@@ -237,6 +261,10 @@ public class LanguageTest extends Language {
 			+ "	'lolo')";
 	
 	String astA = "{\"start\": {\"path\": [\r\n"
+			+ "   {\"step\": {\"compare\": {\r\n"
+			+ "      \"op\": \"eq\",\r\n"
+			+ "      \"arg\": {\"path\": [{\"step\": {\"nil\": \"\"}}]}\r\n"
+			+ "   }}},\r\n"
 			+ "   {\"step\": {\"boolExpr\": {\r\n"
 			+ "      \"op\": \"or\",\r\n"
 			+ "      \"args\": [\r\n"
@@ -348,8 +376,41 @@ public class LanguageTest extends Language {
 			+ "   {\"step\": {\"text\": \"\"}},\r\n"
 			+ "   {\"step\": {\"def\": {\r\n"
 			+ "      \"name\": \"func\",\r\n"
+			+ "      \"params\": [],\r\n"
 			+ "      \"expr\": {\"path\": [\r\n"
 			+ "         {\"step\": {\"argNumber\": 1}},\r\n"
+			+ "         {\"step\": {\"property\": \"a\"}},\r\n"
+			+ "         {\"step\": {\"property\": \"b\"}}\r\n"
+			+ "      ]}\r\n"
+			+ "   }}},\r\n"
+			+ "   {\"step\": {\"def\": {\r\n"
+			+ "      \"name\": \"func1\",\r\n"
+			+ "      \"params\": [],\r\n"
+			+ "      \"expr\": {\"path\": [\r\n"
+			+ "         {\"step\": {\"argNumber\": 1}},\r\n"
+			+ "         {\"step\": {\"property\": \"a\"}},\r\n"
+			+ "         {\"step\": {\"property\": \"b\"}}\r\n"
+			+ "      ]}\r\n"
+			+ "   }}},\r\n"
+			+ "   {\"step\": {\"def\": {\r\n"
+			+ "      \"name\": \"func2\",\r\n"
+			+ "      \"params\": [\r\n"
+			+ "         {\"param\": {\"name\": \"u\"}},\r\n"
+			+ "         {\"param\": {\r\n"
+			+ "            \"name\": \"v\",\r\n"
+			+ "            \"default\": {\"constant\": 99}\r\n"
+			+ "         }},\r\n"
+			+ "         {\"param\": {\"name\": \"w\"}},\r\n"
+			+ "         {\"param\": {\r\n"
+			+ "            \"name\": \"z\",\r\n"
+			+ "            \"default\": {\"path\": [{\"step\": {\"struct\": {\"args\": [{\"assignment\": {\r\n"
+			+ "               \"lhs\": {\"path\": [{\"step\": {\"property\": \"a\"}}]},\r\n"
+			+ "               \"rhs\": {\"constant\": 1}\r\n"
+			+ "            }}]}}}]}\r\n"
+			+ "         }}\r\n"
+			+ "      ],\r\n"
+			+ "      \"expr\": {\"path\": [\r\n"
+			+ "         {\"step\": {\"var\": \"v\"}},\r\n"
 			+ "         {\"step\": {\"property\": \"a\"}},\r\n"
 			+ "         {\"step\": {\"property\": \"b\"}}\r\n"
 			+ "      ]}\r\n"

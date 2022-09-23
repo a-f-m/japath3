@@ -3,7 +3,7 @@ package japath3.core;
 import static japath3.core.Japath.__;
 import static japath3.core.Japath.assign;
 import static japath3.core.Japath.bind_;
-import static japath3.core.Japath.c_;
+import static japath3.core.Japath.constExpr;
 import static japath3.core.Japath.create;
 import static japath3.core.Japath.empty;
 import static japath3.core.Japath.p_;
@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
 import org.graalvm.polyglot.Value;
-import org.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -94,6 +93,27 @@ public class JapathEnhTest {
 		
 		assertIt(n, "[{\"a\":null}]", "{a: null}");
 	}
+	
+	@Test public void testNil() {
+		
+		Node n = w_(" {a: {b: 1, c: [0]} }  ");
+		
+		assertIt(n, "[false]", "_{new $x: nil}.$x.eq(nil)");
+		
+		assertIt(n, "[[1,2]]", "[1, nil, 2]");
+		
+		assertIt(n, "[[]]", "[nil]");
+		
+		assertIt(n, "[{}]", "{x: nil}");
+		
+//		try {
+			assertIt(n, "[false]", "{x: 1}.x.eq(nil)");
+//			fail();
+//		} catch (JapathException e) {
+//			// ok
+//		}
+
+	}
 
 	
 	@Test 
@@ -115,11 +135,16 @@ public class JapathEnhTest {
 		}
 		
 		n = w_(" {a: {b: false, c: [2,3,4]} }  ").setConstruct(true);
-		assertIt(n, "[{\"a\":{\"b\":false,\"c\":[2,99,4]}} | ]", "a{c[1]:(99)}.$", true);
+		
+		assertIt(n, "[{\"a\":{\"b\":false,\"c\":[2,99,4],\"d\":[88]}} | ]", "a{c[1]:(99), d[>]:(88)}.$", true);
 		
 		n = w_("[2,3,4]");
 		
 		assertIt(n, "[[2,99,4] | ]", "::modifiable._{_[1]:(99)}.$", true);
+		
+		n = w_("[2,3,4]");
+		
+		assertIt(n, "[[2,3,4,99] | ]", "::modifiable._{_[>]:(99)}.$", true);
 		
 		n = w_(" {a: {b: {b1: 88}, c: 'lala'} }  ");
 		
@@ -154,7 +179,7 @@ public class JapathEnhTest {
 		JapathTest.assertIt(n, "[{\"a\":{\"b\":99,\"c\":\"lala\"}} | ]", 
 				
 				p_(Japath.externalCall("directive", "", "modifiable", null),
-				__("a"), subExpr(assign(p_(__("b")), c_(99))), varAppl("$")),
+				__("a"), subExpr(assign(p_(__("b")), constExpr(99))), varAppl("$")),
 				
 				true, false);
 	}
@@ -408,11 +433,11 @@ public class JapathEnhTest {
 		
 		Node select = Japath.select(n, e_(s));
 		System.out.println(
-				((JSONObject) select.wo).toString(3)
+				select.woString(3)
 				);
-		System.out.println(
-				((JSONObject) select.wo).getString("apath").replace("\\n", "\n")
-				);
+//		System.out.println(
+//				((JSONObject) select.wo).getString("apath").replace("\\n", "\n")
+//				);
 	}
 	
 	@Test public void testConstructMix() {
@@ -704,7 +729,7 @@ public class JapathEnhTest {
 		StringBuilder sb = new StringBuilder();
 		expr.visit(
 				(x, pre) -> {
-					if (x instanceof Selection) 
+					if (x instanceof Selection && pre) 
 						sb.append(pre + ">>> " + ((Selection) x).scope + " >>> " + x + "\r\n");
 				}
 				);
@@ -723,16 +748,16 @@ public class JapathEnhTest {
 		
 		String input = IOUtils.toString(new FileReader("src/test/resources/japath3/core/m1-input.json"));
 		
-		Node n = w_(new JSONObject(input));
+		Node n = w_(input);
 		
 		String e = IOUtils.toString(new FileReader("src/test/resources/japath3/core/m4.ap"));
 		
 		PathExpr e_ = e_(e);
 //		long t = System.currentTimeMillis();
-		JSONObject jo = select(n, e_).val();
+		Node n_ = select(n, e_);
 //		System.out.println(".. ms: " + (System.currentTimeMillis() - t));
 		
-		Testing.assertEquals_("specialDefs", jo.toString(3));
+		Testing.assertEquals_("specialDefs", n_.woString(0));
 		
 		
 	}
@@ -762,6 +787,15 @@ public class JapathEnhTest {
 		assertIt(n, "[x]", "def(f, g(88).g(#0)). def(g, js::conc($x, #0) $x. message($x)). _{new $x:'x'}.f(99).$x");
 		
 	}
+	
+	@Test 
+	public void testConstStruct() throws Exception {
+		
+		Node n = w_("{a: 1, b: '2'}");
+		
+		assertIt(n, "[{\"a\":1,\"b\":\"2\"}]",  Japath.constNodeExpr(n), false, false);
+	}
+
 	
 	public static void main(String[] args) throws Exception {
 		

@@ -2,6 +2,9 @@ package japath3.cli;
 
 import static japath3.core.Japath.walki;
 import static japath3.processing.Language.e_;
+import static japath3.schema.Schema.MessageHandling.None;
+import static japath3.schema.Schema.MessageHandling.Only;
+import static japath3.schema.Schema.MessageHandling.Prefer;
 import static japath3.util.Basics.stream;
 import static japath3.util.Basics.Switches.checkSwitches;
 import static japath3.util.Basics.Switches.switchEnabled;
@@ -210,7 +213,7 @@ public class Commands {
 		Node n = buildNode(body, oType);
 		n.ctx.setSalient(request.optBoolean("salient"));
 		// Implicitly throws exception at viol
-		checkSchema(oSchema, oType, n, request.optBoolean("genMessages"));
+		checkSchema(oSchema, oType, n, request.optBoolean("genMessages"), request.optBoolean("genMessagesOnly"));
 
 		JSONArray results = new JSONArray();
 		// for (Node node : nodes) {
@@ -266,9 +269,9 @@ public class Commands {
 	public static Node buildNode(Object body, String oType) {
 		
 		Node n = null;
-		if (body instanceof String && ((String) body).charAt(0) == '-') {
+		if (body instanceof String s && s.charAt(0) == '-') {
 			try {
-				body =  IOUtils.toString(new FileReader(((String) body).substring(1))).replace("/", "\\/")  ;
+				body =  IOUtils.toString(new FileReader(s.substring(1))).replace("/", "\\/")  ;
 			} catch (IOException e) {
 				throw new JapathException(e);
 			}
@@ -285,16 +288,20 @@ public class Commands {
 		return n;
 	}
 
-	private static void checkSchema(String oSchema, String oType, Node n, boolean genMessages) {
+	private static void checkSchema(String oSchema, String oType, Node n, boolean genMessages, boolean genMessagesOnly) {
 		if (oSchema != null) {
 			if (oType.equals("xml")) throw new JapathException("no schema for 'xml' allowed");
 			String viol = null;
 			try {
-				viol = new Schema().setSchema(oSchema).genMessages(genMessages).getValidityViolations(n).getOrNull();
+				viol = new Schema().setSchema(oSchema)
+						.genMessages(genMessages ? ( genMessagesOnly ? Only : Prefer) : None)
+						.getValidityViolations(n)
+						.getOrNull();
 			} catch (JapathException e) {
 				throw new JapathException("--constraints/schema: " + e.getMessage());
 			}
-			if (viol != null) throw new JapathException(Kind.ConstraintViolation, "Constraints violated. Possible corrections ('!!!'-annotations) below\n" + viol);
+//			if (viol != null) throw new JapathException(Kind.ConstraintViolation, "Constraints violated. Possible corrections ('!!!'-annotations) below\n" + viol);
+			if (viol != null) throw new JapathException(Kind.ConstraintViolation, "// Constraints violated. Possible corrections ('\u2190 ...') below\n" + viol);
 		}
 	}
 }

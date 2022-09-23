@@ -219,9 +219,9 @@ public class JapathTutorial2021Test {
 		
 		System.out.println(name.val().toString());
 		
-		JSONObject joPerson = person.val();
-		
-		System.out.println(joPerson);
+//		JSONObject joPerson = person.val();
+//		
+//		System.out.println(joPerson);
 		
 		System.out.println("---");
 		

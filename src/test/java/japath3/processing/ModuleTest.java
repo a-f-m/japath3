@@ -11,6 +11,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import io.vavr.Tuple;
+import io.vavr.collection.List;
 import japath3.core.JapathException;
 import japath3.core.Node;
 import japath3.core.Vars;
@@ -38,9 +39,7 @@ public class ModuleTest {
 	
 	@Test public void testParams() {
 		
-		String s = "def(h, [#0, #1, #2, #3, #4]) .def(g, h(88, #0, #1, #2, #3)) .def(f, g(#0, a.c, #1, #2))";
-		
-		Module m = new Module("test", s);
+		Module m = new Module("test", "def(h, [#0, #1, #2, #3, #4]) .def(g, h(88, #0, #1, #2, #3)) .def(f, g(#0, a.c, #1, #2))");
 		
 		Node n = w_(" {a: {b: false, c: 'lala', d: 'lolo'} }  ");
 
@@ -53,13 +52,33 @@ public class ModuleTest {
 			// ok
 		}
 		
-		s = "def(f, js::fconc('la', #0, #1))";
-		
-		m = new Module("test", s);
+		m = new Module("test", "def(f, js::fconc('la', #0, #1))");
 		
 		n = w_(" {a: {b: false, c: 'lala', d: 'lolo'} }  ");
 		
 		assertEquals("lalala123", m.trans(n, "f", e_("a.c"), e_("union(1,2,3)")).val().toString());
+		
+		// const struct
+		
+		assertEquals("{\"a\":1}", new Module("test", "def(f, #0)").trans(n, "f", w_("{a:1}")).val().toString());
+	}
+	
+	@Test public void testNodesAsParams() {
+		
+		Node n = w_(" {}  ");
+		
+		Module m = new Module("test", "def(f1, {a:#0}). def(f2, {b: #0})");
+		
+		Node n1 = m.trans(n, "f1", 99);
+		Node n2 = m.trans(n, "f2", n1);
+		
+		assertEquals("{\"b\":{\"a\":99}}", n2.val().toString());
+		
+		// node lists
+		
+		n2 = m.trans(n, "f2", List.of(m.trans(n, "f1", 99), m.trans(n, "f1", 88)));
+		
+		assertEquals("{\"b\":[{\"a\":99},{\"a\":88}]}", n2.val().toString());
 	}
 	
 	@Test public void testGlobalVars() {

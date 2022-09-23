@@ -1,0 +1,43 @@
+expression = x:( _ (definitionStatus _)? subExpression _ )
+  { return stringify(flatten(x)); }
+subExpression = focusConcept (_ ":" _ refinement)?
+definitionStatus = equivalentTo / subtypeOf
+equivalentTo = "==="
+subtypeOf = "<<<"
+focusConcept = conceptReference (_ "+" _ conceptReference)* 
+conceptReference = conceptId (_ "|" _ term _ "|")?
+conceptId = sctId
+term = nonwsNonPipe ( _ nonwsNonPipe )*
+refinement =  (attributeSet / attributeGroup) ( _ ("," _)? attributeGroup )*
+attributeGroup = "{" _ attributeSet _ "}"
+attributeSet = attribute (_ "," _ attribute)*
+attribute = attributeName _ "=" _ attributeValue
+attributeName = conceptReference
+attributeValue =  expressionValue / QM stringValue QM / "#" numericValue 
+expressionValue = conceptReference / "(" _ subExpression _ ")"
+stringValue = /*1*/  (anyNonEscapedChar / escapedChar)*
+numericValue = decimalValue / integerValue
+integerValue = (("-"/"+")? digitNonZero digit* ) / zero
+decimalValue = integerValue  "." /*1*/ digit*
+sctId = digitNonZero /*5*17*/( digit+ )
+  { return Number(text()); }
+HTAB = '\x09'
+CR = '\x0D'
+LF = '\x0A'
+QM = "'"
+BS = "\\"
+digit = [0-9]
+zero = '0'
+digitNonZero = [1-9] 
+nonwsNonPipe = [\x21-\x7B] / [\x7D-\x7E] / UTF8_2 / UTF8_3 / UTF8_4
+anyNonEscapedChar = HTAB / CR / LF / [\x20-\x21] / [\x23-\x5B] / [\x5D-\x7E] / UTF8_2 / UTF8_3 / UTF8_4
+escapedChar = BS QM /  BS BS
+UTF8_2 = [\xC2-\xDF] UTF8_tail
+UTF8_3 = '\xE0' [\xA0-\xBF] UTF8_tail / [\xE1-\xEC] ( UTF8_tail ) / '\xED' [\x80-\x9F] UTF8_tail / [\xEE-\xEF] ( UTF8_tail )
+UTF8_4 = '\xF0' [\x90-\xBF] ( UTF8_tail ) / [\xF1-\xF3] ( UTF8_tail ) / '\xF4' [\x80-\x8F] ( UTF8_tail )
+UTF8_tail = [\x80-\xBF]
+
+
+_ "whitespace"
+  = ([ \x09\x0A\x0D]+ / "//" (!([\r\n]/!.) .)* ([\r\n]/!.) )* 
+    {return null;}

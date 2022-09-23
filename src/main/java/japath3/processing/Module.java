@@ -4,7 +4,6 @@ import static japath3.processing.Language.e_;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 
 import org.apache.commons.io.IOUtils;
 
@@ -20,6 +19,7 @@ import japath3.core.Node;
 import japath3.core.Vars;
 import japath3.processing.Language.Env;
 import japath3.schema.Schema;
+import japath3.schema.Schema.MessageHandling;
 
 public class Module {
 	
@@ -27,7 +27,7 @@ public class Module {
 	private Env env;
 	private boolean isSchemaModule;
 	// if a schema module:
-	private boolean genMessages;// = true;
+//	private boolean genMessages;// = true;
 	
 	public Module(String name, String pathExprStr, boolean isSchemaModule) {
 		init(name, pathExprStr, isSchemaModule);
@@ -79,9 +79,13 @@ public class Module {
 	}
 	
 	public Expr getExpr(String exprName) {
+		return getParametricExprDef(exprName).exprs[0];
+	}
+	
+	public ParametricExprDef getParametricExprDef(String exprName) {
 		Option<ParametricExprDef> ped = env.defs.get(exprName);
 		if (ped.isEmpty()) throw new JapathException("expression '" + exprName + "' not defined in module '" + name + "'");
-		return ped.get().exprs[0];
+		return ped.get();
 	}
 
 	@SuppressWarnings("unused")
@@ -89,7 +93,7 @@ public class Module {
 		
 		Expr expr = getExpr(exprName);
 		try {
-			return expr.deepCopy(params, new HashMap<String, Japath.Bind>());
+			return expr.deepCopy(Expr.identity());
 		} catch (CloneNotSupportedException e) {
 			throw new JapathException(e);
 		}
@@ -104,13 +108,20 @@ public class Module {
 		prepare(n, vars);		
 		Expr[] params = List.of(paramObjs).map(x -> {
 			boolean primitive = x instanceof Number || x instanceof Boolean || x instanceof String;
-			if (!(x instanceof Expr || primitive)) {
-				throw new JapathException(x + " must be of primitive type");
+			if (!(x instanceof Expr || x instanceof Node || x instanceof List || primitive)) {
+				throw new JapathException(x + " must be primitive type or an expression or (list of) node");
 			}
-			return primitive ? Japath.constExpr(x) : (Expr) x;
+			return primitive ? Japath.constExpr(x)
+					: x instanceof Node n_ ? Japath.constNodeExpr(n_)
+							: x instanceof List l ? Japath.constNodeListExpr(l) : (Expr) x;
 		}).toJavaArray(Expr.class);
 		
-		return Japath.select(n, new Ctx.ParamAVarEnv(params), getExpr(exprName));
+		try {
+			ParametricExprDef ped = getParametricExprDef(exprName);
+			return Japath.select(n, new Ctx.ParamAVarEnv(params).cloneResolvedParams(params, ped), ped.exprs[0]);
+		} catch (JapathException e) {
+			throw new JapathException("error at module '" + name + "', evaluation tree beneath def '" + exprName + "': " + e.getMessage());
+		}
 	}
 	
 	public static record ValidationResult(String violations, String schema) {}
@@ -127,7 +138,7 @@ public class Module {
 		if (!isSchemaModule) throw new JapathException("'" + name + "' is not a schema module");
 		prepare(n, vars);
 		
-		Schema schema = new Schema().setSchema(getExpr(schemaName)).genMessages(genMessages);
+		Schema schema = new Schema().setSchema(getExpr(schemaName)).genMessages(MessageHandling.None);
 		Option<String> validityViolations = schema.getValidityViolations(n);
 
 		return validityViolations.isDefined()

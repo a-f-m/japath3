@@ -13,11 +13,14 @@ import org.json.JSONTokener;
 
 import io.vavr.collection.HashMap;
 import io.vavr.collection.Map;
+import japath3.core.Ctx;
 import japath3.core.JapathException;
 import japath3.schema.Schema;
 import japath3.wrapper.WJsonOrg;
 
 public class ModuleHandler {
+	
+	public static record NsFuncs(String ns, Object funcsObj) {};
 	
 	private Map<String, Module> moduleMap;
 	
@@ -28,11 +31,13 @@ public class ModuleHandler {
 			+ "			opt(imports).every(*,  "
 			+ "				type(String))))";
 	
-	public ModuleHandler(File configFile) {
-		init(configFile);
+	public ModuleHandler(File configFile, NsFuncs... nsFuncs) {
+		init(configFile, nsFuncs);
 	}
 	
-	private ModuleHandler init(File configFile) {
+	private ModuleHandler init(File configFile, NsFuncs... nsFuncs) {
+		
+		for (NsFuncs nsf : nsFuncs) Ctx.loadJInst(nsf.ns, nsf.funcsObj);
 		
 		moduleMap = HashMap.empty();
 		

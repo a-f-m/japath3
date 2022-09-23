@@ -1,0 +1,30 @@
+{  // ← b.every(*,or(assert(every(*,&.match('c')),c.type(Number)),assert(every(*,&.match('d')),d.type(Number))))
+  // ← a.type(Number)
+
+  "a": "1",    // ← type(Number)
+
+  "b": [
+    {      // ← every(*,or(assert(every(*,&.match('c')),c.type(Number)),assert(every(*,&.match('d')),d.type(Number))))
+      // ← or(assert(every(*,&.match('c')),c.type(Number)),assert(every(*,&.match('d')),d.type(Number)))
+      // ← d.type(Number)
+      // ← every(*,&.match('d'))
+      // ← c.type(Number)
+      // ← every(*,&.match('c'))
+
+      "cx": 1        // ← every(*,&.match('d'))
+        // ← every(*,&.match('c'))
+
+    },
+    {      // ← every(*,or(assert(every(*,&.match('c')),c.type(Number)),assert(every(*,&.match('d')),d.type(Number))))
+      // ← or(assert(every(*,&.match('c')),c.type(Number)),assert(every(*,&.match('d')),d.type(Number)))
+      // ← d.type(Number)
+      // ← every(*,&.match('d'))
+      // ← c.type(Number)
+      // ← every(*,&.match('c'))
+
+      "dx": "4"        // ← every(*,&.match('d'))
+        // ← every(*,&.match('c'))
+
+    }
+  ]
+}

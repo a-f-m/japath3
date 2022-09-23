@@ -34,6 +34,8 @@ import static japath3.core.Japath.varAppl;
 import static japath3.core.Node.nil;
 import static japath3.util.Basics.embraceEsc;
 import static japath3.util.Basics.it;
+import static japath3.util.Basics.stream;
+import static java.util.stream.Collectors.toList;
 
 import java.io.InputStreamReader;
 import java.io.StringReader;
@@ -41,7 +43,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import io.vavr.Tuple2;
@@ -67,6 +71,7 @@ import japath3.core.Japath.Idx;
 import japath3.core.Japath.Optional;
 import japath3.core.Japath.ParametricExprAppl;
 import japath3.core.Japath.ParametricExprDef;
+import japath3.core.Japath.ParametricExprDef.FormalParam;
 import japath3.core.Japath.PathAsProperty;
 import japath3.core.Japath.PathExpr;
 import japath3.core.Japath.Property;
@@ -87,7 +92,6 @@ import japath3.schema.Schema.SchemaBoolExpr;
 import japath3.schema.Schema.SchemaHasType;
 import japath3.schema.Schema.SchemaQuantifierExpr;
 import japath3.util.Basics;
-import japath3.wrapper.NodeFactory;
 import japath3.wrapper.WJsonOrg;
 
 /**
@@ -105,7 +109,7 @@ public class Language {
 	
 	private static String keywords = 
 			"selector|filter|and|assert|or|xor|not|true|false|cond|imply|optional|opt|every|union|"
-			+ "eq|neq|lt|gt|le|ge|call|type|self|def|def-script|new|java|j|js|match|null|error|message|property";
+			+ "eq|neq|lt|gt|le|ge|call|type|self|def|def-script|new|java|j|js|match|null|nil|error|message|property";
 	
 	private static PegjsEngineGraal pegjsEngine;
 	
@@ -155,7 +159,7 @@ public class Language {
 		if (ret._2 != null) {
 			throw new JapathException(ret._2);
 		}
-		List<Expr> pe = buildExpr(env, NodeFactory.w_(ret._1, WJsonOrg.class), schemaProc);
+		List<Expr> pe = buildExpr(env, WJsonOrg.w_(ret._1), schemaProc);
 		p = pe.head() instanceof PathExpr ? (PathExpr) pe.head() : path(pe.head());
 		
 		return p;
@@ -179,7 +183,10 @@ public class Language {
 		if ((x = ast.get("def").node()) != nil) {
 			String name = x.val("name");
 			if (name.matches(keywords)) throw new JapathException("def name '" + name + "' is reserved");
-			ParametricExprDef ped = paramExprDef(name, buildExpr(env, x.node("expr"), schemaProc).get(0));
+			JSONArray params = x.val("params");			
+			ParametricExprDef ped = paramExprDef(name,
+					buildParams(env, schemaProc, params),
+					buildExpr(env, x.node("expr"), schemaProc).get(0));
 			if (env.defs.containsKey(name)) throw new JapathException("parametric expression '" + name + "' already defined");
 			env.defs = env.defs.put(name, ped);
 			return List.of(ped);
@@ -277,6 +284,9 @@ public class Language {
 		if ((x = ast.get("message").node()) != nil) {
 			return List.of(message(buildExpr(env, x, schemaProc).get(0)));
 		}
+		if ((x = ast.get("nil").node()) != nil) {
+			return List.of(Expr.Nil);
+		}
 		
 		if ((x = ast.get("args").node()) != nil)  return buildExpr(env, x, schemaProc);
 		
@@ -292,23 +302,39 @@ public class Language {
 		throw new JapathException("no ast trans for " + ast);
 	}
 
-	private static boolean isNull(Object v) { return v instanceof JSONObject && ((JSONObject) v).isEmpty(); }
+	private static java.util.List<FormalParam> buildParams(Env env, boolean schemaProc, JSONArray params) {
+		return stream(params).map(y -> {
+			JSONObject param = ((JSONObject) y).getJSONObject("param");
+			JSONObject d = param.optJSONObject("default");
+//			return new Param(param.getString("name"), d != null ? Language.e_(d) : null);
+			return new FormalParam(param.getString("name"), d != null ? buildExpr(env, WJsonOrg.w_(d), schemaProc).get(0) : null);
+		}).collect(toList());
+	}
+
+	private static boolean isNull(Object v) { return v instanceof JSONObject jo && jo.isEmpty(); }
 	private static Expr[] subExprs(Env env, boolean schemaProc, Node x) { return buildExpr(env, x, schemaProc).toJavaArray(Expr.class); }
 	
 	// for flexibility reasons, e.g. other syntax forms, it is not defined 
 	// as (polymorphic) 'Expr'-method with tradeoff readability
 	private static String stringify0(Expr e) {
 		
-		if (e instanceof Bind) {
-			return "$" + ((Bind) e).vname;
-		} else if  (e instanceof VarAppl) {
-			return "$" + ((VarAppl) e).vname;
+		if (e instanceof Bind bind) {
+			return "$" + bind.vname;
+		} else if  (e instanceof VarAppl va) {
+			return "$" + va.vname;
 		} else if  (e instanceof PathExpr) {
 			return collect(e, ".");
-		} else if  (e instanceof ParametricExprDef) {
-			return "def(" + ((ParametricExprDef) e).name + ", " + stringify0(((ParametricExprDef) e).exprs[0]) + ")";
-		} else if  (e instanceof ParametricExprAppl) {
-			return ((ParametricExprAppl) e).name + "(" + collect(((ParametricExprAppl) e).exprs, ", ") + ")";
+		} else if  (e instanceof ParametricExprDef ped) {
+			return "def(" + ped.name
+					+ "("
+					+ (ped.formalParams.stream().map(p -> {
+						return p.name() + (p.default_() != null ? ": " + stringify0(p.default_()) : "");
+					}).collect(Collectors.joining(",")))
+					+ "), "
+					+ stringify0(ped.exprs[0])
+					+ ")";
+		} else if  (e instanceof ParametricExprAppl pea) {
+			return pea.name + "(" + collect(pea.exprs, ", ") + ")";
 		} else if  (e instanceof All) {
 			return "*";
 		} else if  (e instanceof Desc) {
@@ -319,34 +345,32 @@ public class Language {
 			return "new";
 		} else if  (e instanceof Text) {
 			return "text()";
-		} else if  (e instanceof Property) {
-//			return "`" + ((Property) e).name.replace("`", "\\`") + "`";
-			Property p = (Property) e;
+		} else if  (e instanceof Property p) {
 			return Language.nameForm(p.name, p.isTrueRegex);
-		} else if  (e instanceof PathAsProperty) {
-			return "property(" + stringify0(((PathAsProperty) e).expr) + ")";
-		} else if  (e instanceof Idx) {
-			String seqMark = ((Idx) e).seq ? "#" : "";
-			Integer upper = ((Idx) e).upper;
-			return "[" + seqMark + ((Idx) e).i + (upper != null ? ".." + ( upper != -1 ? upper : "" ) : "" ) + "]";
+		} else if  (e instanceof PathAsProperty p) {
+			return "property(" + stringify0(p.exprs[0]) + ")";
+		} else if  (e instanceof Idx idx) {
+			String seqMark = idx.seq ? "#" : "";
+			Integer upper = idx.upper;
+			return "[" + seqMark + idx.i + (upper != null ? ".." + ( upper != -1 ? upper : "" ) : "" ) + "]";
 		} else if (e instanceof Selector) {
 			return "&";
 		} else if (e instanceof Union) {
 			return "union(" + collect(e, ", ") + ")";
 		} else if (e instanceof Array) {
 			return "[" + collect(e, ", ") + "]";
-		} else if (e instanceof BoolExpr) {
-			Op op = ((BoolExpr) e).op;
+		} else if (e instanceof BoolExpr b) {
+			Op op = b.op;
 			return op != Op.constant ? ( e instanceof Schema.SchemaBoolExpr ? (op == BoolExpr.Op.and ? "assert" : op) : op ) + "(" + collect(e, ", ") + ")" : e.toString();
 		} else if (e instanceof SubExpr || e instanceof Struct) {
 			return "{" + collect(e, ", ") + "}";
-		} else if (e instanceof Optional) {
-			return "opt(" + stringify0(((Optional) e).exprs[0]) + ")";
-		} else if (e instanceof Cond) {
-			Expr elsePart = ((Cond) e).exprs[2];
-			return "cond(" + stringify0(((Cond) e).exprs[0])
+		} else if (e instanceof Optional opt) {
+			return "opt(" + stringify0(opt.exprs[0]) + ")";
+		} else if (e instanceof Cond cond) {
+			Expr elsePart = cond.exprs[2];
+			return "cond(" + stringify0(cond.exprs[0])
 					+ ", "
-					+ stringify0(((Cond) e).exprs[1])
+					+ stringify0(cond.exprs[1])
 					+ (elsePart == Expr.Nop ? "" : ", " + stringify0(elsePart))
 					+ ")";
 		} else if (e instanceof QuantifierExpr) {
@@ -354,14 +378,14 @@ public class Language {
 			return qe.op
 					+ "(" + (qe.exprs[0] instanceof Self ? "" : (stringify0(qe.exprs[0])
 					+ ", ")) + stringify0(qe.exprs[1]) + ")";
-		} else if (e instanceof Filter) {
-			return "?(" + stringify0(((Filter) e).exprs[0]) + ")";
-		} else if (e instanceof Assignment) {
-			return stringify0(((Assignment) e).exprs[0]) + " : (" + stringify0(((Assignment) e).exprs[1]) + ")";
-		} else if (e instanceof Comparison) {
-			return ((Comparison) e).op + "(" + stringify0(((Comparison) e).exprs[0]) + ")";
-		} else if (e instanceof HasType) {
-			return "type(" + ((HasType) e).t + ")";
+		} else if (e instanceof Filter f) {
+			return "?(" + stringify0(f.exprs[0]) + ")";
+		} else if (e instanceof Assignment ass) {
+			return stringify0(ass.exprs[0]) + " : (" + stringify0(ass.exprs[1]) + ")";
+		} else if (e instanceof Comparison cmp) {
+			return cmp.op + "(" + stringify0(cmp.exprs[0]) + ")";
+		} else if (e instanceof HasType h) {
+			return "type(" + h.t + ")";
 		} else if (e instanceof ExternalCall) {
 			ExternalCall c = (ExternalCall) e;
 			return (c.kind.equals("directive") ? "" : c.kind ) + "::" + (c.ns.equals("") ? "" : c.ns + "::") + c.func + "(" + collect(e, ", ") + ")";

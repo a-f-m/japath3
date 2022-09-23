@@ -41,21 +41,21 @@ public class WJsonOrg extends Node {
 	@Override
 	public NodeIter get(String name) {
 		
-		Object o = wo instanceof JSONObject ? ((JSONObject) wo).opt(name) : null; // TODO undef?
+		Object o = wo instanceof JSONObject jo ? jo.opt(name) : null;
 		return o == null ? empty : single(create(o, name));
 	}
 
 	@Override
 	public NodeIter get(int i) {
 		
-		Object o = wo instanceof JSONArray ?  ((JSONArray) wo).opt(i) : null; // TODO undef?
+		Object o = wo instanceof JSONArray ja ?  ja.opt(i) : null;
 		return o == null ? empty : single(create(o, i));
 	}
 	
 	@Override public boolean exists(Object selector) {
-		return wo instanceof JSONArray ? //
-				(selector instanceof Integer ? ((JSONArray) wo).opt((int) selector) != null : false)
-				: (wo instanceof JSONObject ? ((JSONObject) wo).has(selector.toString()) : false);
+		return wo instanceof JSONArray ja ? //
+				(selector instanceof Integer ? ja.opt((int) selector) != null : false)
+				: (wo instanceof JSONObject jo ? jo.has(selector.toString()) : false);
 	}
 	
 	@Override public Iterator<String> childrenSelectors() { return ((JSONObject) wo).keys(); }
@@ -65,8 +65,8 @@ public class WJsonOrg extends Node {
 		
 		Node prev = this;
 		
-		if (wjo instanceof JSONArray) {
-			Iterator<Object> jait = ((JSONArray) wjo).iterator();
+		if (wjo instanceof JSONArray ja) {
+			Iterator<Object> jait = ja.iterator();
 			return new NodeIter() {
 
 				int i = 0;
@@ -83,8 +83,8 @@ public class WJsonOrg extends Node {
 					return n;
 				}
 			};
-		} else if (wjo instanceof JSONObject) {
-			Iterator<String> keys = ((JSONObject) wjo).keys();
+		} else if (wjo instanceof JSONObject jo) {
+			Iterator<String> keys = jo.keys();
 			return new NodeIter() {
 
 				int i = 0;
@@ -107,12 +107,16 @@ public class WJsonOrg extends Node {
 	
 	@Override
 	public Node set(String name, Object o) {
-		((JSONObject) wo).put(name, o); // TODO overwrite
+		((JSONObject) wo).put(name, o);
 		return this;
 	}
 	@Override
 	public Node set(int idx, Object o) {
-		((JSONArray) wo).put(idx, o); // TODO overwrite
+		if (idx == -1) {
+			((JSONArray) wo).put(o);
+		} else {
+			((JSONArray) wo).put(idx, o);
+		}
 		return this; 
 	}
 	
@@ -159,13 +163,15 @@ public class WJsonOrg extends Node {
 	@Override public boolean isLeaf() { return !(wo instanceof JSONObject || wo instanceof JSONArray); } 
 	@Override public boolean isArray() { return wo instanceof JSONArray; } 
 	
+	@Override public String woString(int indent) { 
+		return (wo instanceof JSONObject jo ? jo.toString(indent)
+				: wo instanceof JSONArray ja ? ja.toString(indent) : wo.toString());
+	}
+	
 	@Override
 	public String toString() {
 		
-		return 
-				"`" + selector +
-				"`->" + (wo instanceof JSONObject ? ((JSONObject) wo).toString(pretty ? 3 : 0)
-				: wo instanceof JSONArray ? ((JSONArray) wo).toString(pretty ? 3 : 0) : wo.toString());
+		return "`" + selector + "`->" + woString(pretty ? 3 : 0);
 	}
 	
 	

@@ -1,32 +1,32 @@
 def(
-	h0,
+	h0(),
 	assert(
 		every(*,
 			&.match('a11|\Qa22"-§$%\E')),
 		a11.type(Number),
 		`a22"-§$%`.type(String)))
 .def(
-	h1,
+	h1(),
 	assert(
 		every(*,
 			&.match('Y|y')),
 		Y.type(String),
 		y.type(Number)))
 .def(
-	h2,
+	h2(),
 	assert(
 		every(*,
 			&.match('Z|y')),
 		Z.type(String),
 		y.type(Number)))
 .def(
-	h3,
+	h3(),
 	assert(
 		every(*,
 			&.match('end')),
 		end.type(String)))
 .def(
-	h4,
+	h4(),
 	assert(
 		every(*,
 			&.match('c|d')),
@@ -37,21 +37,21 @@ def(
 				h2(),
 				h3()))))
 .def(
-	h5,
+	h5(),
 	assert(
 		every(*,
 			&.match('u|v')),
 		u.type(String),
 		v.type(Number)))
 .def(
-	h6,
+	h6(),
 	assert(
 		every(*,
 			&.match('u|v')),
 		u.type(String),
 		v.type(Number)))
 .def(
-	h7,
+	h7(),
 	assert(
 		every(*,
 			&.match('c|c_|f')),
@@ -63,7 +63,7 @@ def(
 				h5(),
 				h6()))))
 .def(
-	h8,
+	h8(),
 	assert(
 		every(*,
 			&.match('a|a1|b')),

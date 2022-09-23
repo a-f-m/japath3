@@ -122,19 +122,17 @@ public abstract class Node {
 
 	private NodeIter determRet(Object selector, NodeIter nit, Selection sel) {
 		
-		String ssel = " (selection: '" + stringify(sel, 0) + "'; node: '" + this + "')";
-				
 		NodeIter ret;
 		if (construct) {
 			if (wo == undefWo) {
 				if (sel.scope != Scope.lhs) 
-					throw new JapathException("only construction at lhs allowed" + ssel);
+					throw new JapathException("only construction at lhs allowed" + selectionLog(sel));
 				ret = undef(selector);
 			} else if (nit != empty) {
 				ret = nit;
 			} else {
 				if (sel.scope == Scope.rhs) 
-					throw new JapathException("rhs has undef value" + ssel);
+					throw new JapathException("rhs has undef value" + selectionLog(sel));
 				ret = undef(selector);
 			}
 		} else {
@@ -148,6 +146,8 @@ public abstract class Node {
 		}
 		return ret;
 	}
+
+	private String selectionLog(Selection sel) { return " (selection: '" + stringify(sel, 0) + "'; node: '" + this + "')"; }
 	
 	public abstract NodeIter get(String name);
 	public abstract NodeIter get(int i);
@@ -210,7 +210,7 @@ public abstract class Node {
 		// TODO not for parents
 //		else if (exists(selector)) throw new JapathException("'" + selector + "' already set: " + this);
 		if (o == nullo) o = nullWo();
-		return selector instanceof Integer ? set((Integer) selector, o) : set((String) selector, o);
+		return selector instanceof Integer i ? set(i, o) : set((String) selector, o);
 	}
 	public Node node(String name) { return get(name).node(); };
 	public Node node(int i) { return get(i).node(); };
@@ -318,6 +318,8 @@ public abstract class Node {
 		
 		return ctx.getVars().val(name);
 	}
+	
+	public String woString(int indent)  { throw new UnsupportedOperationException("'toString(int indent)' not supported for '" + this + "'"); };
 
 	@Override public String toString() { return wo.toString(); }
 }

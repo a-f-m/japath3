@@ -34,6 +34,8 @@ public class Basics {
 		@Override public String toString() { return r == null ? "null" : "^" + r.toString(); }
 	}
 	
+	public static record NestingSpec(int indent, String regexDelims, String regexSkipWSAfter, String noBreakToken) {}
+	
 	public static <T> T option(T o, T defaultVal) { return o == null ? defaultVal : o; }
 
 	public static <T> Stream<T> stream(Iterable<T> it) { return StreamSupport.stream(it.spliterator(), false); }
@@ -122,7 +124,7 @@ public class Basics {
 		return prettyNesting(s, 1, regexDelims, regexSkipWSAfter, "");
 	}
 	
-	public static String prettyNesting(String s, int indent, String regexDelims, String regexSkipWSAfter, String noBreakToken) {
+	public static String prettyNesting(String s, NestingSpec spec) {
 		
 		// TODO ugly, but dev time constraints
 		s = s.replace("..", "\0");
@@ -138,7 +140,7 @@ public class Basics {
 				if (cs.matches("\\s")) continue;
 				else skipWS = false;
 			}
-			boolean matchSkip = cs.matches(regexSkipWSAfter);
+			boolean matchSkip = cs.matches(spec.regexSkipWSAfter);
 			if (matchSkip) {
 				skipWS = true;
 //				pCnt++;
@@ -146,15 +148,15 @@ public class Basics {
 			if (c == '(' || c == '{') {
 				pCnt++;
 				ret += c;
-				boolean br = noBreakToken.equals("") || !ret.matches("(?s).*" + noBreakToken + "\\s*\\(");
-				if (br) ret += pad(indent, pCnt);
+				boolean br = spec.noBreakToken.equals("") || !ret.matches("(?s).*" + spec.noBreakToken + "\\s*\\(");
+				if (br) ret += pad(spec.indent, pCnt);
 				skipWS = true;
 			} else if (c == ')' || c == '}') {
 				pCnt--;
 				ret += c;
-			} else if (String.valueOf(c).matches(regexDelims)) {
+			} else if (String.valueOf(c).matches(spec.regexDelims)) {
 				ret += c;
-				ret += pad(indent, pCnt);
+				ret += pad(spec.indent, pCnt);
 				skipWS = true;
 			} else {
 				ret += c;				
@@ -164,6 +166,12 @@ public class Basics {
 			}
 		}
 		return ret.replace("\0", "..");
+	}
+	
+	public static String prettyNesting(String s, int indent, String regexDelims, String regexSkipWSAfter, String noBreakToken) {
+		
+		return prettyNesting(s, new NestingSpec(indent, regexDelims, regexSkipWSAfter, noBreakToken));
+		
 	}
 
 	private static String pad(int indent, int level) {
@@ -254,11 +262,12 @@ public class Basics {
 	}
 	
 	public static String embraceEsc(String s, char c) {
-		return embrace(s.replace(String.valueOf(c), "\\" + c), c);
+		String cs = String.valueOf(c);
+		return embrace(s.replace(cs, "\\" + cs), cs);
 	}
 	
-	public static String embrace(Object o, char c) {
-		return o instanceof String ? c + o.toString() + c : o.toString();
+	public static String embrace(Object o, String s) {
+		return o instanceof String ? s + o.toString() + s : o.toString();
 	}
 	
 	public static int toInt(String s) {

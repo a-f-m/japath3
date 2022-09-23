@@ -15,6 +15,8 @@ import static japath3.core.Japath.BoolExpr.Op.not;
 import static japath3.core.Japath.Expr.Nop;
 import static japath3.processing.Language.e_;
 import static japath3.processing.Language.stringify;
+import static japath3.schema.Schema.MessageHandling.None;
+import static japath3.schema.Schema.MessageHandling.Prefer;
 import static japath3.schema.Schema.Mode.SchemaMode;
 import static japath3.schema.Schema.ViolationKind.AndOp;
 import static japath3.schema.Schema.ViolationKind.OrOp;
@@ -81,8 +83,8 @@ public class Schema {
 				String mess = null;
 				for (Expr e : exprs) {
 					boolean b_;
-					if (i == 0 && e instanceof Message) {
-						mess = ((Message) e).getMessage(node, envx);
+					if (i == 0 && e instanceof Message m) {
+						mess = m.getMessage(node, envx);
 						b_ = true;
 					} else {
 						b_ = testIt(e.eval(node, envx));
@@ -159,6 +161,10 @@ public class Schema {
 		AndOp, OrOp, Completeness
 	}
 
+	public static enum MessageHandling {
+		None, Only, Prefer
+	}
+
 	public static enum Mode {
 		SchemaMode, SelectMode
 	}
@@ -172,9 +178,11 @@ public class Schema {
 	boolean genOpt;
 	boolean genSelectorRestriction;
 	boolean genCompleteness = true;
-	boolean genMessages;
+	MessageHandling genMessages = None;
 	boolean modular = true;
 //	boolean modular;
+	boolean jsonOutput = true;
+	boolean jsonOutputErrorAsProperty;
 	int defCnt;
 
 	public void extendPropHits(Node node) {
@@ -206,16 +214,26 @@ public class Schema {
 		return this;
 	}
 
-	public Schema genMessages(boolean b) {
-		this.genMessages = b;
+	public Schema genMessages(MessageHandling h) {
+		this.genMessages = h;
 		return this;
 	}
 	
-	public Schema modular(boolean modular) {
-		this.modular = modular;
+	public Schema modular(boolean b) {
+		this.modular = b;
 		return this;
 	}
 	
+	public Schema jsonOutput(boolean b) {
+		this.jsonOutput = b;
+		return this;
+	}
+	
+	public Schema jsonOutputErrorAsProperty(boolean b) {
+		this.jsonOutputErrorAsProperty = b;
+		return this;
+	}
+
 	public Schema setSchema(Expr schemaExpr) {
 		violations = List.empty();
 		this.schemaExpr = schemaExpr;
@@ -320,23 +338,30 @@ public class Schema {
 	public String annotatedViolations(Node n) {
 
 		StringBuilder sb = new StringBuilder();
+		Ref<Integer> cnt = Ref.of(0);
 
 		Japath.walkr(n,
 
 				(Node x, Kind kind, int level, int orderNo, boolean isLast) -> {
 
 					if (kind == Kind.Pre) {
-						sb.append(pad(level) + key(x));
+						sb.append(pad(level) + key(x, x.selector));
 						if (x.isStruct() || x.isCheckedArray()) {
 							sb.append((x.isStruct() ? "{" : "["));
 						} else if (x.isCheckedLeaf()) {
-							sb.append(StringUtils.abbreviate(embrace(x.val(), '\'') + (!isLast ? "," : ""), 40));
+							sb.append(StringUtils.abbreviate(embrace(x.val(), jsonOutput ? "\"" : "'") + (!isLast ? "," : ""), 40));
 						}
 						List v = getViolations(x);
 						if (v.nonEmpty()) {
-							String s = violText1(v);
-
-							if (!s.isEmpty()) sb.append("   \u2190 \u2190 \u2190 " + s + (s.contains("\n") ? "\n" : ""));
+							for (String s : (List<String>) violList(v, genMessages)) {
+								if (jsonOutputErrorAsProperty) {
+									cnt.r = cnt.r + 1;
+									sb.append("\n" + pad(level) + key(x, "_error" + cnt.r));
+									sb.append(embrace(s, "\""));
+								} else {
+									sb.append(pad(level + 1) + "// \u2190 " + s + "\n");
+								}
+							}
 						}
 						sb.append('\n');
 					} else if (kind == Kind.Post) {
@@ -350,24 +375,30 @@ public class Schema {
 		return sb.toString();
 	}
 	
-	private String violText1(List<Tuple2<ViolationKind, List<Object>>> v) {
+	private List<String> violList(List<Tuple2<ViolationKind, List<Object>>> v, MessageHandling messageHandling) {
 		
-		String mkString = v.reverse().map(x -> {
+		List<String> l = v.reverse().map(x -> {
 			Object mess = x._2.size() == 3 ? x._2.get(2) : null;
 			Object constr = x._2.get(0);
-			return genMessages ? mess : constr;
+			return messageHandling != None ? mess : constr;
 		}).filter(x -> {
 			return x != null;
 		}).map(x -> {
-			return "!!! " + (x instanceof Expr ? "possible correction: " + stringify((Expr) x, 0) : x.toString());
-		}).distinct().mkString("\n");
-		
-		return mkString;
+			return (x instanceof Expr e ? 
+//					"possible correction: " + 
+					stringify(e, 0) : x.toString());
+		}).distinct() ;
+		return messageHandling == Prefer && l.isEmpty() ? violList(v, None) : l;
 	}
 
 	private String pad(int level) { return repeat("  ", level); }
 
-	private String key(Node x) { return x.previousNode == null || x.previousNode.isCheckedArray() ? "" : x.selector + ": "; }
+	private String key(Node x, Object keyString) {
+		return x.previousNode == null || x.previousNode.isCheckedArray() ? ""
+				: embrace(keyString, jsonOutput ? "\"" : "") + ": ";
+	}
+	
+	
 
 	public String buildConstraintText(Node n) {
 		return Language.stringify(buildConstraintExpr(n), 1);
@@ -398,8 +429,8 @@ public class Schema {
 				if (genOpt) opt = Japath.opt(opt);
 
 				Expr e_;
-				if (ex instanceof PathExpr) {
-					e_ = path(Basics.prepend(opt, ((PathExpr) ex).exprs, Expr.class));
+				if (ex instanceof PathExpr pe) {
+					e_ = path(Basics.prepend(opt, pe.exprs, Expr.class));
 				} else {
 					e_ = path(opt, ex);
 				}
@@ -471,4 +502,5 @@ public class Schema {
 		this.mode = mode;
 		return this;
 	}
+
 }
