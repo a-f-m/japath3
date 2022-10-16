@@ -98,6 +98,8 @@ public class JapathEnhTest {
 		
 		Node n = w_(" {a: {b: 1, c: [0]} }  ");
 		
+		assertIt(n, "[{\"a\":{\"c\":[0]}}]", "::modifiable._{a.b: nil}");
+		
 		assertIt(n, "[false]", "_{new $x: nil}.$x.eq(nil)");
 		
 		assertIt(n, "[[1,2]]", "[1, nil, 2]");
@@ -401,18 +403,12 @@ public class JapathEnhTest {
 		
 		
 		n.ctx.clearVars();
-		try {
-			assertIt(n, "[17]", 
-					
-					"{ \"pers\": {\r\n"
-							+ "    \"name\": \"Miller\",\r\n"
-							+ "    \"age\": 17\r\n"
-							+ "}}.x");
-			fail();
-		} catch (JapathException e) {
-			System.out.println(e);
-		}
-
+		assertIt(n, "[]", 
+				
+				"{ \"pers\": {\r\n"
+						+ "    \"name\": \"Miller\",\r\n"
+						+ "    \"age\": 17\r\n"
+						+ "}}.x");
 		
 	}
 	
@@ -551,8 +547,8 @@ public class JapathEnhTest {
 		assertIt(n, "[{\"b\":\"lala\"}]", "j::it::project('b')");
 		
 		assertIt(n, "[{\"a\":{\"a1\":false},\"b\":\"lala\"}]", "j::gen::project(['a', 'b'].*)");
-		
-		
+
+		assertIt(n, "[{\"a\":{\"a1\":false},\"b\":\"lala\",\"c\":99,\"d\":null}]", "clone()");
 	}
 	
 	@Test public void testRawScript() throws Exception {
@@ -749,6 +745,7 @@ public class JapathEnhTest {
 		String input = IOUtils.toString(new FileReader("src/test/resources/japath3/core/m1-input.json"));
 		
 		Node n = w_(input);
+//		Node n = NodeFactory.w_(input, WGson.class);
 		
 		String e = IOUtils.toString(new FileReader("src/test/resources/japath3/core/m4.ap"));
 		
@@ -799,7 +796,7 @@ public class JapathEnhTest {
 	
 	public static void main(String[] args) throws Exception {
 		
-		JapathEnhTest t = new JapathEnhTest();
+		JapathEnhTest japt = new JapathEnhTest();
 		
 //		new Thread() {
 //			@Override public void run() {
@@ -815,12 +812,22 @@ public class JapathEnhTest {
 		
 		Runnable r = new Runnable() {
 			
-			@Override public void run() { // TODO Auto-generated method stub
+			@Override public void run() { 
+				int cnt = 0;
+				long t = 0;
 				while (true) {
 					try {
-						t.testStackFail();
-						t.testSpecialDefs();
-						Thread.sleep(20);
+//						t.testStackFail();
+						japt.testSpecialDefs();
+//						Thread.sleep(20);
+						
+						if (cnt++ % 10000 == 0) {
+							System.out.println(cnt);
+							long h = System.currentTimeMillis();
+							System.out.println(".. ms: " + (h - t));
+							t = h;
+						}
+						
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();

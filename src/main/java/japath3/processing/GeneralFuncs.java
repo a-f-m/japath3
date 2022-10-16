@@ -60,4 +60,9 @@ public class GeneralFuncs { // available by ns 'it' or 'gen'
 
 		return Japath.single(p);
 	}
+	
+	public NodeIter clone(Node ctxNode) throws CloneNotSupportedException {
+		
+		return Japath.single((Node) ctxNode.clone());
+	}
 }

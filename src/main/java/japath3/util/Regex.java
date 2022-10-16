@@ -1,6 +1,7 @@
 package japath3.util;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.florianingerl.util.regex.CaptureTreeNode;
 import com.florianingerl.util.regex.Matcher;
@@ -77,6 +78,18 @@ public class Regex {
 			if (specialChar.indexOf(r.charAt(i)) != -1) return true;
 		}
 		return false;
+	}
+	
+	/**
+	 * Returns the error message otherwise, if ok, returns empty.
+	 */
+	public static Optional<String> isRegex(String r) {
+		try {
+			Pattern.compile(r);
+			return Optional.empty();			
+		} catch (PatternSyntaxException e) {
+			return Optional.of(e.getMessage());
+		}
 	}
 
 	public static String extract(String input, String regex, String def) {

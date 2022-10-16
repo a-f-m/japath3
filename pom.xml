@@ -130,11 +130,11 @@
 			<version>20190722</version>
 		</dependency>
 		<!-- JSON Binding API (JSR-367) -->
-		<dependency>
+		<!-- dependency>
 			<groupId>org.eclipse</groupId>
 			<artifactId>yasson</artifactId>
 			<version>1.0.1</version>
-		</dependency>
+		</dependency -->
 		<dependency>
 			<groupId>org.glassfish</groupId>
 			<artifactId>javax.json</artifactId>

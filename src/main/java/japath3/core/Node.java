@@ -30,7 +30,7 @@ import japath3.util.Basics.Ref;
  * @author andreas-fm
  *
  */
-public abstract class Node {
+public abstract class Node implements Cloneable {
 
 	public static class DefaultNode extends Node {
 
@@ -133,7 +133,7 @@ public abstract class Node {
 			} else {
 				if (sel.scope == Scope.rhs) 
 					throw new JapathException("rhs has undef value" + selectionLog(sel));
-				ret = undef(selector);
+				ret = sel.scope != Scope.lhs ? nit : undef(selector);
 			}
 		} else {
 			if (nit != empty) {
@@ -166,14 +166,14 @@ public abstract class Node {
 	public boolean isAttribute(String name) { return false; };
 	public Node set(String name, Object o) { throw new UnsupportedOperationException("'set(name)' not supported for '" + this + "'"); };
 	public Node set(int idx, Object o) { throw new UnsupportedOperationException("'set(i)' not supported for '" + this + "'"); };
-	public void remove(String name) { throw new UnsupportedOperationException("'remove(name)' not supported for '" + this + "'"); };
+	public void remove(Object selector) { throw new UnsupportedOperationException("'remove(name)' not supported for '" + this + "'"); };
 	public Iterator<String> childrenSelectors() { throw new UnsupportedOperationException("'childrenSelectors' not supported for '" + this + "'"); }
 	public NodeIter all() { return all(wo); };
 	public abstract NodeIter all(Object o);
 //	public abstract NodeIter desc();
 	public NodeIter desc() {
 		ArrayList<Node> descs = new ArrayList<Node>();
-		gatherDesc(descs, create(wo, selector, previousNode, ctx));
+		gatherDesc(descs, create(wo, selector, previousNode, ctx).setConstruct(construct));
 		return nodeIter(descs.iterator());
 	}
 //	public abstract NodeIter text();
@@ -317,6 +317,13 @@ public abstract class Node {
 	public <T> T v(String name) {
 		
 		return ctx.getVars().val(name);
+	}
+	
+	@Override public Object clone() throws CloneNotSupportedException { 
+
+		Node clone = (Node) super.clone();
+		clone.wo = woCopy();
+		return clone; 
 	}
 	
 	public String woString(int indent)  { throw new UnsupportedOperationException("'toString(int indent)' not supported for '" + this + "'"); };

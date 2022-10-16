@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Iterator;
 
+import javax.json.Json;
+
 import org.apache.commons.lang3.StringUtils;
 
 //import org.json.JSONArray;
@@ -29,18 +31,18 @@ import japath3.core.Japath.NodeIter;
 import japath3.core.JapathException;
 import japath3.core.Node;
 
-public class WGson extends Node {
+public class WXJson extends Node {
 	
 	public static boolean pretty = false;
 
-	public WGson(Object wo, Object selector, Node previousNode, Ctx ctx) { super(wo, selector, previousNode, ctx); }	
+	public WXJson(Object wo, Object selector, Node previousNode, Ctx ctx) { super(wo, selector, previousNode, ctx); }	
 	
 	public static Node w_(Object x) {
-		return new WGson(x, "", null, new Ctx());
+		return new WXJson(x, "", null, new Ctx());
 	}
 
 	@Override public Node create(Object wo, Object selector, Node previousNode, Ctx ctx) {
-		return new WGson(wo, selector, previousNode, ctx);
+		return new WXJson(wo, selector, previousNode, ctx);
 	}
 	
 	@Override public Object createWo(boolean array) { 
@@ -254,6 +256,12 @@ public class WGson extends Node {
 	public static void main(String[] args) {
 		System.out.println( StringUtils.leftPad("", 0));
 		System.out.println(java.lang.String.format("$4s"));
+		
+		javax.json.JsonArray ja = Json.createArrayBuilder().build();
+		
+		System.out.println(ja.getInt(0));
+		
+		System.out.println(ja.toString());
 	}
 	
 }

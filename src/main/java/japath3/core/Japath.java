@@ -980,30 +980,33 @@ public class Japath {
 
 			List<Node> ret = new ArrayList<>();
 			
+			boolean isNil = exprs[1] == Nil;
 			NodeIter nit = exprs[1].eval(rhsCtxNode, envx);
 			io.vavr.collection.List<Node> nl = ofAll(nit);
 			boolean single = nl.size() == 1;
 			
-			Expr expr = exprs[0];
-			// if a var treat it as a selection
-//			if (expr instanceof VarAppl) {
-//				expr = __(expr.eval(lhsCtxNode).val().toString());
-//			}
-			//
-			NodeIter e0 = expr.eval(lhsCtxNode, envx);
+			NodeIter e0 = exprs[0].eval(lhsCtxNode, envx);
 			e0.forEachRemaining(lhNode -> {
 				
 				int i = 0;
-				for (Node n : nl) {
-					if (single && !nit.arrayFlag()) {
-//						lhNode.wo = n.woCopy(); re-think
-						lhNode.wo = n.woVal();
-						lhNode.setAncestors(this);
-					} else {
-//						lhNode.create(n.woCopy(), i, lhNode, lhNode.ctx).setAncestors(this); re-think
-						lhNode.create(n.woVal(), i, lhNode, lhNode.ctx).setAncestors(this);
+				if (isNil) {
+					if (lhNode.previousNode != null) {
+						if (!lhNode.previousNode.construct) throw new JapathException("node '" + lhNode + "' not modifiable");
+						lhNode.previousNode.remove(lhNode.selector);
 					}
-					i++;
+				} else {
+					for (Node n : nl) {
+						if (single && !nit.arrayFlag()) {
+							// lhNode.wo = n.woCopy(); re-think
+							lhNode.wo = n.woVal();
+							lhNode.setAncestors(this);
+						} else {
+							// lhNode.create(n.woCopy(), i, lhNode,
+							// lhNode.ctx).setAncestors(this); re-think
+							lhNode.create(n.woVal(), i, lhNode, lhNode.ctx).setAncestors(this);
+						}
+						i++;
+					}
 				}
 				ret.add(lhNode);
 			});

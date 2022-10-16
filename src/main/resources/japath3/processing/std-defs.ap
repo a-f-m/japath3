@@ -2,6 +2,8 @@ def(orElse, cond (#0, #0, #1)).
 
 def(distinct, j::it::distinct(#0)).
 
+def(clone, j::it::clone()).
+
 def(lift, 
     _{ new $lifted,
        *.*._{ selector $p, $lifted.property($p): _ }

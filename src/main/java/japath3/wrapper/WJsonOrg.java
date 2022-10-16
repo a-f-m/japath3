@@ -121,9 +121,13 @@ public class WJsonOrg extends Node {
 	}
 	
 	@Override
-	public void remove(String name) {
+	public void remove(Object selector) {
+		if (selector instanceof String name) {
+			if (wo instanceof JSONObject) set(name, null);
+		} else if (selector instanceof Integer i) {
+			if (wo instanceof JSONArray ja) ja.remove(i);
+		}
 //		if (selector.equals(s)) previousNode.set(s, null);
-		if (wo instanceof JSONObject) set(name, null);
 	}
 	
 	@Override public Object woCopy() {
