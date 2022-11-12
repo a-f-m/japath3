@@ -1,0 +1,13 @@
+def(trans,
+    _.cond(
+        f.and(
+            [0] $x,
+            [1] $y
+        ),
+        _{::log(&).asProperty(&) : 99, ::log(_)},
+        nop
+    )
+
+).
+
+r[1]._{::log(&), asProperty(&): 99}.$

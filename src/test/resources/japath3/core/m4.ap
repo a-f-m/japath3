@@ -23,7 +23,7 @@ def(irTransform,
         .* { _[0] $lang, _[1] $use, 
              js::conc('ir_', $use.mapUse(), '_', $lang.mapLang()) $prop }
         .{ 
-            property($prop) :
+            asProperty($prop) :
                 [ $d.*?( 
                     and (
                         cond ($lang.eq('_no-lang'), 

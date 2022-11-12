@@ -7,7 +7,7 @@ public final class Var<T> implements Expr {
 
 	private Node node_;
 	// for direct programmatic use (instead of via language expressions)  
-	boolean preventClearing;
+	boolean globalPreventClearing;
 	
 	public Var() {}
 
@@ -36,12 +36,12 @@ public final class Var<T> implements Expr {
 	public boolean bound() { return node_ != null; }
 	
 	public Var<T> clear() {
-		if (!preventClearing) node_ = null;
+		if (!globalPreventClearing) node_ = null;
 		return this;
 	}
 	
 	@Override public void clearVars(Ctx ctx) { if (!ctx.preventClearing) clear(); }
-	public Var<T> preventClearing(boolean preventClearing) { this.preventClearing = preventClearing; return this;}
+	public Var<T> preventClearing(boolean preventClearing) { this.globalPreventClearing = preventClearing; return this;}
 	
 	@Override public String toString() { return "^" + (node_ == null ? "null" : node_.toString()); }
 }

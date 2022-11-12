@@ -427,10 +427,14 @@ public class Japath {
 		@Override public String toString() { return "all" ; }
 	}
 
-	public static Expr desc = new Desc();
+	public static Expr desc = new Desc(false);
 	public static class Desc extends AExpr {
-		@Override public NodeIter eval(Node node, Object... envx) { return node.desc(); }
-		@Override public String toString() { return "desc" ; }
+		public boolean bottomUp;
+		public Desc(boolean bottomUp) {
+			this.bottomUp = bottomUp;
+		}
+		@Override public NodeIter eval(Node node, Object... envx) { return node.descWalk(bottomUp); }
+		@Override public String toString() { return "desc" + (bottomUp ? "-bu" : "") ; }
 	}
 	
 	public static Expr self = new Self();
@@ -579,10 +583,10 @@ public class Japath {
 			NodeIter nit = exprs[0].eval(node, envx);
 			
 			if (nit.hasNext()) {
-				if (nit.hasNext()) {
-					new JapathException("single evaluation item expected at node '" + node + "' (expr: " + exprs[0] + ")");
-				}
 				Object s = nit.next().val();
+				if (nit.hasNext()) {
+					throw new JapathException("single evaluation item expected at node '" + node + "' (expr: " + exprs[0] + ")");
+				}
 				if (!(s instanceof String)) {
 					throw new JapathException(
 							"evaluation to string expected, found '" + s + "' (at node '" + node + "', expr: " + exprs[0] + ")");
@@ -744,7 +748,7 @@ public class Japath {
 			NodeIter[] nits = new NodeIter[exprs.length];
 			for (int i = 0; i < nits.length; i++) nits[i] = exprs[i].eval(node, envx);
 			if (kind.equals("directive")) {
-				return node.ctx.handleDirective(ns, func, node, nits);
+				return node.ctx.invokeDirective(ns, func, node, nits);
 			} else if (kind.equals("java")) {
 				return Ctx.invoke(ns, func, node, nits);
 			} else if (kind.equals("javascript")) {
@@ -1166,8 +1170,7 @@ public class Japath {
 
 		np.process(n, Kind.Pre, level, orderNo, isLast);
 		
-		String envx = "root";
-		Iterator<Node> it = path(all).eval(n, envx);
+		Iterator<Node> it = n.all();
 		int i = 0;
 		boolean b = it.hasNext();
 		while (b) {

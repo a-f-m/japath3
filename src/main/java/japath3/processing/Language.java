@@ -11,7 +11,6 @@ import static japath3.core.Japath.cmp;
 import static japath3.core.Japath.cond;
 import static japath3.core.Japath.constExpr;
 import static japath3.core.Japath.create;
-import static japath3.core.Japath.desc;
 import static japath3.core.Japath.externalCall;
 import static japath3.core.Japath.filter;
 import static japath3.core.Japath.message;
@@ -109,7 +108,7 @@ public class Language {
 	
 	private static String keywords = 
 			"selector|filter|and|assert|or|xor|not|true|false|cond|imply|optional|opt|every|union|"
-			+ "eq|neq|lt|gt|le|ge|call|type|self|def|def-script|new|java|j|js|match|null|nil|error|message|property";
+			+ "eq|neq|lt|gt|le|ge|call|type|self|def|def-script|new|java|j|js|match|null|nil|error|message|asProperty";
 	
 	private static PegjsEngineGraal pegjsEngine;
 	
@@ -216,7 +215,10 @@ public class Language {
 			return List.of(pathAsProperty(buildExpr(env, x, schemaProc).get(0)));
 		if ((x = ast.get("subscript").node()) != nil) 
 			return List.of( __((Integer) x.val(), ast.val("upper", null), ast.val("seq", false)));
-		if ((x = ast.get("wild").node()) != nil)  return List.of(x.val().equals("all") ? all : desc);
+		if ((x = ast.get("wild").node()) != nil) {
+			Object val = x.val();
+			return List.of(val.equals("all") ? all : new Desc(val.equals("desc-bu")));
+		}
 		if ((x = ast.get("self").node()) != nil) return List.of(self);
 		if ((x = ast.get("create").node()) != nil) return List.of(create);
 		if ((x = ast.get("text").node()) != nil) return List.of(text);
@@ -337,8 +339,8 @@ public class Language {
 			return pea.name + "(" + collect(pea.exprs, ", ") + ")";
 		} else if  (e instanceof All) {
 			return "*";
-		} else if  (e instanceof Desc) {
-			return "**";
+		} else if  (e instanceof Desc desc) {
+			return "**" + (desc.bottomUp ? "^" : "");
 		} else if  (e instanceof Self) {
 			return "self";
 		} else if  (e instanceof Create) {
@@ -348,7 +350,7 @@ public class Language {
 		} else if  (e instanceof Property p) {
 			return Language.nameForm(p.name, p.isTrueRegex);
 		} else if  (e instanceof PathAsProperty p) {
-			return "property(" + stringify0(p.exprs[0]) + ")";
+			return "asProperty(" + stringify0(p.exprs[0]) + ")";
 		} else if  (e instanceof Idx idx) {
 			String seqMark = idx.seq ? "#" : "";
 			Integer upper = idx.upper;

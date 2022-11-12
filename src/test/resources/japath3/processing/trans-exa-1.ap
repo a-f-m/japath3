@@ -1,0 +1,15 @@
+def(trans,
+    _.cond(
+        f.and(
+            [0] $x,
+            [1] $y
+        ),
+        //_{::log(&).asProperty(&) : 99, ::log(_)},
+        f[0] : 88,
+        nop
+    )
+
+).
+
+//**.trans()
+_{new $r : clone(), $r.**.trans()}.$r

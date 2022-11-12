@@ -52,7 +52,7 @@ self = ('_' / 'self')!Identifier/*!*/ _ { return {self: ''}; }
 
 ////
 wild = 
-    '**' _ { return {wild: 'desc'}; } / 
+    '**' _ bu:('^' _)? { return {wild: 'desc' + (bu !== null ? '-bu' : '')}; } / 
     '*' _ { return {wild: 'all'}; }
 //-
 
@@ -142,7 +142,7 @@ message = 'message' _  '(' _ e:simpleExpr ')' _
 argNumber = '#' i:index
     { return {argNumber: i}; }
 
-exprAppl = !('property') id:Identifier '(' _ a:args? ')' _
+exprAppl = !('asProperty') id:Identifier '(' _ a:args? ')' _
     { return {exprAppl: {name: id, args: a}}; }
 
 ////
@@ -166,7 +166,7 @@ funcCall =
 
 ////
 property = 
-    'property'!Identifier _ '(' _ p:path ')' _ { return {pathAsProperty: p}; } /
+    'asProperty'!Identifier _ '(' _ p:path ')' _ { return {pathAsProperty: p}; } /
     x:(Identifier / QIdentifier) { return {property: x}; }
 
 ////

@@ -338,7 +338,7 @@ public class Ctx {
 	private static void check(String func, Integer i, Object o) { 
 	}
 
-	public NodeIter handleDirective(String ns, String func, Node node, NodeIter[] nits) {
+	public NodeIter invokeDirective(String ns, String func, Node node, NodeIter[] nits) {
 
 		switch (ns) {
 		case "": // e.g. d:complete

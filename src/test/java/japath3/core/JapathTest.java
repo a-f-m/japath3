@@ -558,11 +558,11 @@ public class JapathTest {
 
 		assertIt(n, "[99, lala]", "a.*. filter( §.match('b|c') )");
 		
-		assertIt(n, "[lala]", "a.property(e)");
+		assertIt(n, "[lala]", "a.asProperty(e)");
 		
-		assertIt(n, "[lala]", "_{a.e $x}.a.property($x)");
+		assertIt(n, "[lala]", "_{a.e $x}.a.asProperty($x)");
 		
-		assertIt(n, "[lala]", "a.property(cond(true, 'c'))");
+		assertIt(n, "[lala]", "a.asProperty(cond(true, 'c'))");
 	}
 	
 	@Test

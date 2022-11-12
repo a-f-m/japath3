@@ -6,7 +6,7 @@ def(clone, j::it::clone()).
 
 def(lift, 
     _{ new $lifted,
-       *.*._{ selector $p, $lifted.property($p): _ }
+       *.*._{ selector $p, $lifted.asProperty($p): _ }
      }
      . $lifted
 ).
@@ -15,6 +15,6 @@ def(embed,
     _ $root{ 
        #0.*
        ._{ selector $p,
-           $root.property($p) : _ } 
+           $root.asProperty($p) : _ } 
     }    
 )

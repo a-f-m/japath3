@@ -59,9 +59,9 @@ public class LanguageTest extends Language {
 //		String input = "def(func2(v:99), $v.a.b)"  
 				;
 		String input = "eq(nil). or(`x \" \"`, imply(a, b)). some(*, c). b$v.*. a[1][2][#8]. a[#1..]. a[#1..2] .?(a). x?(a). `c\\` \\` §$` . [a, b]. union(or(a, b), union(or(c, d)))."
-				+ "**. * .union ( a, b ). $ x .* . eq ( 88 ). eq ( -1.44E11 ). eq ( \"lolo\" ). eq ( $x ). §. match('la\\'la'). cond(a, b, c). self. text(). "
+				+ "**. ** ^. * .union ( a, b ). $ x .* . eq ( 88 ). eq ( -1.44E11 ). eq ( \"lolo\" ). eq ( $x ). §. match('la\\'la'). cond(a, b, c). self. text(). "
 				+ "def(func, #1.a.b). def(func1(), #1.a.b). def(func2(u, v:99, w, z: {a: 1}), $v.a.b). func(x, y.z) { \"a\" :(c.d)}. a {x.y, z}. java::sys::func(a, b.c). {c : 0}. j::sys::func(). js::func(). ::complete"
-				+ ". def-script(\"\"\"function aaa(){ \n return bbb}\"\"\"). property(a.b). message('lala')"  
+				+ ". def-script(\"\"\"function aaa(){ \n return bbb}\"\"\"). asProperty(a.b). message('lala')"  
 				;
 		
 		Tuple2<JSONObject, String> ast = Language.getAst(input);
@@ -151,6 +151,7 @@ public class LanguageTest extends Language {
 			+ "			c,\r\n"
 			+ "			d))).\r\n"
 			+ "**.\r\n"
+			+ "**^.\r\n"
 			+ "*.\r\n"
 			+ "union(\r\n"
 			+ "	a,\r\n"
@@ -225,7 +226,7 @@ public class LanguageTest extends Language {
 			+ "	).\r\n"
 			+ "::complete(\r\n"
 			+ "	).\r\n"
-			+ "property(\r\n"
+			+ "asProperty(\r\n"
 			+ "	a.\r\n"
 			+ "	b).\r\n"
 			+ "message(\r\n"
@@ -336,6 +337,7 @@ public class LanguageTest extends Language {
 			+ "      ]\r\n"
 			+ "   }}},\r\n"
 			+ "   {\"step\": {\"wild\": \"desc\"}},\r\n"
+			+ "   {\"step\": {\"wild\": \"desc-bu\"}},\r\n"
 			+ "   {\"step\": {\"wild\": \"all\"}},\r\n"
 			+ "   {\"step\": {\"union\": {\r\n"
 			+ "      \"arrayFlag\": false,\r\n"

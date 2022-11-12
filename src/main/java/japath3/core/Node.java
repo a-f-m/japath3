@@ -4,6 +4,8 @@ import static japath3.core.Japath.empty;
 import static japath3.core.Japath.nodeIter;
 import static japath3.core.Japath.single;
 import static japath3.core.Japath.walkr;
+import static japath3.core.Japath.NodeProcessing.Kind.Post;
+import static japath3.core.Japath.NodeProcessing.Kind.Pre;
 import static japath3.processing.Language.stringify;
 
 import java.util.ArrayList;
@@ -172,8 +174,20 @@ public abstract class Node implements Cloneable {
 	public abstract NodeIter all(Object o);
 //	public abstract NodeIter desc();
 	public NodeIter desc() {
+//		old way:
+//		ArrayList<Node> descs = new ArrayList<Node>();
+//		gatherDesc(descs, create(wo, selector, previousNode, ctx).setConstruct(construct));
+//		return nodeIter(descs.iterator());
+		return descWalk(false);
+	}
+	public NodeIter descWalk(boolean bottomUp) {
 		ArrayList<Node> descs = new ArrayList<Node>();
-		gatherDesc(descs, create(wo, selector, previousNode, ctx).setConstruct(construct));
+		Japath.walkr(this, (x, kind, level, orderNo, isLast) -> {
+			if ( !bottomUp && kind == Pre)
+				descs.add(x);
+			if ( bottomUp && kind == Post)
+				descs.add(x);
+		});
 		return nodeIter(descs.iterator());
 	}
 //	public abstract NodeIter text();

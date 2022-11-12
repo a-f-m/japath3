@@ -14,6 +14,7 @@ import static java.util.stream.Collectors.joining;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -83,16 +84,30 @@ public class Commands {
 						.build())
 				.addOption(Option.builder()
 						.longOpt("type")
-						.desc("source language type")
+						.desc("language type of input")
 						.hasArg()
 						.argName("d:json|xml")
 						.build())
 				.addOption(Option.builder().longOpt("stdin").desc("input (json, ...) read from stdin").build())
 				.addOption(Option.builder().longOpt("salient").desc("salient mode: checking selector usage").build())
-				.addOption(Option.builder().longOpt("text").desc("input if --stdin not set").hasArg().argName("text").build())
+				.addOption(Option.builder()
+						.longOpt("text")
+						.desc("input if --stdin not set. "
+								+ "if <text> has the form '^<file-name>' then the input contained in file <file-name> is processed")
+						.hasArg()
+						.argName("text")
+						.build())
+				.addOption(Option.builder()
+						.longOpt("out")
+						.desc("write result to file. "
+								+ "if not present, stdout is used")
+						.hasArg()
+						.argName("file-name")
+						.build())
 				.addOption(Option.builder()
 						.longOpt("apathExpr")
-						.desc("apath expression. if missing the input itself will be processed")
+						.desc("apath expression. if missing the input itself will be processed. "
+								+ "if <apathExpr> has the form '^<file-name>' then the expression contained in file <file-name> is processed")
 						.hasArg()
 						.argName("apath-expr")
 						// .required()
@@ -167,14 +182,17 @@ public class Commands {
 						.put("salient", cmd.hasOption("salient"))
 						;
 
-				BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
+				String out = cmd.getOptionValue("out", null);
+				BufferedWriter bw = new BufferedWriter(out == null ? new OutputStreamWriter(System.out) : new FileWriter(out));
 				String output = exec(request);
 				bw.write(output);
 				bw.close();
 
 			}
 		} catch (Exception e) {
-			System.err.println(e.getLocalizedMessage());
+//			System.out.println("lololo");
+			System.err.println("---");
+			System.err.println(e.getMessage().replace("\r", " "));
 			// CliBase.help(options, command);
 			System.exit(1);
 		}
@@ -219,7 +237,15 @@ public class Commands {
 		// for (Node node : nodes) {
 		Iterable<Node> walki = null;
 		try {
-			walki = walki(n, e_(request.optString("apathExpr", "?(true)")));
+			String apathExpr = request.optString("apathExpr", "?(true)");
+			if (apathExpr.startsWith("^")) {
+				try {
+					apathExpr = IOUtils.toString(new FileReader(apathExpr.substring(1)));
+				} catch (IOException e) {
+					throw new JapathException(e);
+				}
+			}
+			walki = walki(n, e_(apathExpr));
 		} catch (JapathException e) {
 			throw new JapathException("--apathExpr: " + e.getMessage());
 		}
@@ -269,7 +295,7 @@ public class Commands {
 	public static Node buildNode(Object body, String oType) {
 		
 		Node n = null;
-		if (body instanceof String s && s.charAt(0) == '-') {
+		if (body instanceof String s && s.charAt(0) == '^') {
 			try {
 				body =  IOUtils.toString(new FileReader(s.substring(1))).replace("/", "\\/")  ;
 			} catch (IOException e) {
