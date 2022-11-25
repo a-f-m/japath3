@@ -25,7 +25,7 @@ public class WJsonOrg extends Node {
 	
 	public static Node w_(Object x) {
 //		return new WJsonOrg(x, "", null, new Ctx());
-		return NodeFactory.w_(x);
+		return NodeFactory.w_(x, WJsonOrg.class);
 	}
 	
 	@Override public Node create(Object wo, Object selector, Node previousNode, Ctx ctx) {

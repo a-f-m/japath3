@@ -5,9 +5,12 @@ function stringify(obj) {
         return value(obj);
     }
 
-    return '{' + Object.keys(obj).filter(function (k) { return obj[k] !== null; }).map(function (k) {
+    return '{' + Object.keys(obj)
+    	.filter(function (k) { return obj[k] !== null; })
+    	.map(function (k) {
             return (typeof obj[k] === 'function') ? null : '"' + k + '":' + value(obj[k]);
-        }).filter(function (i) { return i; }) + '}';
+        })
+        .filter(function (i) { return i; }) + '}';
 }
 
 function value(val) {
@@ -22,7 +25,10 @@ function value(val) {
         case 'function':
             return 'null';
         case 'object':
-            if (val instanceof Array) return '[' + val.filter(function (v) { return v !== null; }).map(value).join(',') + ']';
+            if (val instanceof Array) 
+            	return '[' + val
+            		.filter(function (v) { return v !== null; })
+            		.map(value).join(',') + ']';
             if (val === null) return 'null';
             return stringify(val);
     }

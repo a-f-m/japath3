@@ -16,6 +16,7 @@ import io.vavr.collection.Map;
 import japath3.core.Ctx;
 import japath3.core.JapathException;
 import japath3.schema.Schema;
+import japath3.wrapper.NodeFactory;
 import japath3.wrapper.WJsonOrg;
 
 public class ModuleHandler {
@@ -48,7 +49,7 @@ public class ModuleHandler {
 			throw new JapathException(e);
 		}
 		
-		String mess = Schema.checkValidity(WJsonOrg.w_(joConfig), configSchema);
+		String mess = Schema.checkValidity(NodeFactory.w_(joConfig, WJsonOrg.class) , configSchema);
 		if (mess != null) throw new JapathException(mess);
 		
 		JSONArray joModules = joConfig.getJSONArray("modules");

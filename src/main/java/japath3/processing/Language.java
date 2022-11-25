@@ -91,6 +91,7 @@ import japath3.schema.Schema.SchemaBoolExpr;
 import japath3.schema.Schema.SchemaHasType;
 import japath3.schema.Schema.SchemaQuantifierExpr;
 import japath3.util.Basics;
+import japath3.wrapper.NodeFactory;
 import japath3.wrapper.WJsonOrg;
 
 /**
@@ -158,7 +159,7 @@ public class Language {
 		if (ret._2 != null) {
 			throw new JapathException(ret._2);
 		}
-		List<Expr> pe = buildExpr(env, WJsonOrg.w_(ret._1), schemaProc);
+		List<Expr> pe = buildExpr(env, NodeFactory.w_(ret._1, WJsonOrg.class), schemaProc);
 		p = pe.head() instanceof PathExpr ? (PathExpr) pe.head() : path(pe.head());
 		
 		return p;
@@ -309,7 +310,7 @@ public class Language {
 			JSONObject param = ((JSONObject) y).getJSONObject("param");
 			JSONObject d = param.optJSONObject("default");
 //			return new Param(param.getString("name"), d != null ? Language.e_(d) : null);
-			return new FormalParam(param.getString("name"), d != null ? buildExpr(env, WJsonOrg.w_(d), schemaProc).get(0) : null);
+			return new FormalParam(param.getString("name"), d != null ? buildExpr(env, NodeFactory.w_(d, WJsonOrg.class) , schemaProc).get(0) : null);
 		}).collect(toList());
 	}
 
@@ -462,7 +463,11 @@ public class Language {
 ////				: isIdentifier(id) && !id.matches(keywords) ? id : embrace(id, '"');
 	}
 	
-	public static boolean isIdentifier(String id) { return id.matches("[a-zA-Z_][a-zA-Z0-9_]*"); }
+	public static boolean isIdentifier(String id) { return isIdentifier(id, false); }
+	
+	public static boolean isIdentifier(String id, boolean allowDash) {
+		return id.matches("[a-zA-Z_][a-zA-Z0-9_" + (allowDash ? "\\-" : "") + "]*");
+	}
 	
 	public static void main(String[] args) {
 

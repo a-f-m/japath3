@@ -1,5 +1,9 @@
 package japath3.wrapper;
 
+import java.io.StringReader;
+
+import javax.json.Json;
+
 import com.google.gson.JsonParser;
 
 import japath3.core.Ctx;
@@ -12,6 +16,7 @@ public class NodeFactory {
 	static public boolean test = false;
 	static Class<?> defaultClass = WJsonOrg.class;
 //	static Class<?> defaultClass = WGson.class;
+//	static Class<?> defaultClass = WJsonB.class;
 
 	public static Node w_(Object x) {
 		
@@ -20,9 +25,15 @@ public class NodeFactory {
 	public static Node w_(Object x, Class<?> clazz) {
 		
 		if (clazz == WJsonOrg.class) {
-			return new WJsonOrg(x instanceof String ? (test ? JoeUtil.createJoe(x.toString()) : WJsonOrg.parse(x.toString())) : x, "", null, new Ctx());
+			return new WJsonOrg(
+					x instanceof String ? (test ? JoeUtil.createJoe(x.toString()) : WJsonOrg.parse(x.toString())) : x,
+					"", null, new Ctx());
 		} else if (clazz == WGson.class) {
 			return new WGson(x instanceof String ? JsonParser.parseString(x.toString()) : x, "", null, new Ctx());
+		} else if (clazz == WJsonB.class) {
+			return new WJsonB(x instanceof String ? Json.createReader(new StringReader(
+					WJsonOrg.parse(x.toString()).toString()
+					)).read() : x, "", null, new Ctx());
 		} else {
 			throw new JapathException("no class wrapper");
 		}

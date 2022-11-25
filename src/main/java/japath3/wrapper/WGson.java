@@ -10,8 +10,11 @@ import static japath3.core.Node.PrimitiveType.String;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 //import org.json.JSONArray;
 //import org.json.JSONObject;
@@ -36,6 +39,7 @@ public class WGson extends Node {
 	public WGson(Object wo, Object selector, Node previousNode, Ctx ctx) { super(wo, selector, previousNode, ctx); }	
 	
 	public static Node w_(Object x) {
+		if (x instanceof String s) return NodeFactory.w_(s, WGson.class);
 		return new WGson(x, "", null, new Ctx());
 	}
 
@@ -50,21 +54,21 @@ public class WGson extends Node {
 	@Override
 	public NodeIter get(String name) {
 		
-		Object o = wo instanceof JsonObject ? ((JsonObject) wo).get(name) : null; // TODO undef?
+		Object o = wo instanceof JsonObject jo ? jo.get(name) : null; // TODO undef?
 		return o == null ? empty : single(create(o, name));
 	}
 
 	@Override
 	public NodeIter get(int i) {
 		
-		Object o = wo instanceof JsonArray && i < ((JsonArray) wo).size() ? ((JsonArray) wo).get(i) : null; // TODO undef?
+		Object o = wo instanceof JsonArray ja && i >= 0 && i < ja.size() ? ja.get(i) : null; // TODO undef?
 		return o == null ? empty : single(create(o, i));
 	}
 	
 	@Override public boolean exists(Object selector) {
-		return wo instanceof JsonArray ? //
-				(selector instanceof Integer ? ((JsonArray) wo).get((int) selector) != null : false)
-				: (wo instanceof JsonObject ? ((JsonObject) wo).has(selector.toString()) : false);
+		return wo instanceof JsonArray ja ? //
+				(selector instanceof Integer ? ja.get((int) selector) != null : false)
+				: (wo instanceof JsonObject jo ? jo.has(selector.toString()) : false);
 	}
 	
 	@Override public Iterator<String> childrenSelectors() { return ((JsonObject) wo).keySet().iterator(); }
@@ -74,8 +78,8 @@ public class WGson extends Node {
 		
 		Node prev = this;
 		
-		if (wjo instanceof JsonArray) {
-			Iterator<JsonElement> jait = ((JsonArray) wjo).iterator();
+		if (wjo instanceof JsonArray ja) {
+			Iterator<JsonElement> jait = ja.iterator();
 			return new NodeIter() {
 
 				int i = 0;
@@ -92,8 +96,8 @@ public class WGson extends Node {
 					return n;
 				}
 			};
-		} else if (wjo instanceof JsonObject) {
-			Iterator<String> keys = ((JsonObject) wjo).keySet().iterator();
+		} else if (wjo instanceof JsonObject jo) {
+			Iterator<String> keys = jo.keySet().iterator();
 			return new NodeIter() {
 
 				int i = 0;
@@ -106,7 +110,7 @@ public class WGson extends Node {
 				@Override
 				public Node next() {
 					String key = keys.next();
-					return create(((JsonObject) wjo).get(key), key, prev, ctx).setOrder(i++);
+					return create(jo.get(key), key, prev, ctx).setOrder(i++);
 				}
 			};
 		} else {
@@ -125,19 +129,16 @@ public class WGson extends Node {
 	public Node set(int idx, Object o) {
 		
 		JsonArray ja = (JsonArray) wo;
-		if (idx >= ja.size()) {
+		
+		if (idx == -1) {
+			ja.add(toJsonElm(o));
 			
-			// unfortunately, gson does not allow for extension
+		} else if (idx >= ja.size()) {
 			
-			JsonArray ja_ = new JsonArray();
-			for (JsonElement je : ja) {
-				ja_.add(je);
-			}
+			List<JsonElement> jal = ja.asList();
 			for (int i = ja.size(); i <= idx; i++) {
-				ja_.add(i == idx ? toJsonElm(o) : JsonNull.INSTANCE);
+				jal.add(i == idx ? toJsonElm(o) : JsonNull.INSTANCE);
 			}			
-			wo = ja_;
-			setAncestors(null);
 		} else {			
 			ja.set(idx, toJsonElm(o));
 		}
@@ -173,8 +174,8 @@ public class WGson extends Node {
 	
 	@Override public Object woVal() {
 		
-		if (wo instanceof JsonPrimitive) {
-			JsonPrimitive jp = (JsonPrimitive) wo;
+		if (wo instanceof JsonPrimitive jp) {
+//			JsonPrimitive jp = (JsonPrimitive) wo;
 			return jp.isBoolean() ? jp.getAsBoolean()
 					: jp.isNumber() ? determNumber(jp)
 							: jp.isString() ? jp.getAsString()
@@ -230,7 +231,7 @@ public class WGson extends Node {
 	}
 	
 	@Override public String woString(int indent) { 
-		return (wo instanceof JsonElement ? prettyString((JsonElement) wo, indent) : wo.toString());
+		return (wo instanceof JsonElement je ? prettyString(je, indent) : wo.toString());
 	}
 
 	public static String prettyString(JsonElement je, int indent) throws AssertionError {
@@ -251,9 +252,25 @@ public class WGson extends Node {
 		}
 	}
 	
+	public static String jsOrgPrettyString(JsonElement je, int indent) {
+		
+		
+		String s = je.toString();
+		try {
+			String ret = je.isJsonArray() ? new JSONArray(s).toString(indent) : je.isJsonObject() ? new JSONObject(s).toString(indent) : null;
+			if (ret == null) throw new JapathException("json array or object expected");
+			return ret;
+			
+		} catch (Exception e) {
+			throw new JapathException(e);
+		}
+	}
+	
 	public static void main(String[] args) {
 		System.out.println( StringUtils.leftPad("", 0));
 		System.out.println(java.lang.String.format("$4s"));
+		
+		new JsonArray().asList().add(0, null);
 	}
 	
 }
