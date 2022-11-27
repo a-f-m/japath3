@@ -718,6 +718,12 @@ public class JapathTest {
 		
 		Node n = w_(" {a: {b: false, c: 'lala'}, d:[1, 2] }  ");
 
+		n.ctx.clearDefs();
+		assertIt(n, "[lala]", "def(f(x), $x). def(g, _{new $a: a.c}.f($a)). g()");
+//		
+		n.ctx.clearDefs();
+		assertIt(n, "[lala]", "def(f(x), $x). def(g, a.c$a.f($a)). g()");
+		
 		// only const
 		// param $y bind trial
 		n.ctx.clearDefs();
@@ -735,25 +741,6 @@ public class JapathTest {
 		// no param use
 		n.ctx.clearDefs();
 		assertIt(n, "[{\"a\":{\"b\":false,\"c\":\"lala\"}}]", "def(f(a, b), {a: a, b: b}). f(88, 99)");
-		
-		try {
-			assertIt(n, "", "def(f(x:{a: $v}), a)");
-			fail();
-		} catch (JapathException e) {
-			System.out.println(e + "");
-		}
-		try {
-			assertIt(n, "", "def(f(x:{a: #0}), a)");
-			fail();
-		} catch (JapathException e) {
-			System.out.println(e + "");
-		}
-		try {
-			assertIt(n, "", "def(f(x:{a: b $c}), a)");
-			fail();
-		} catch (JapathException e) {
-			System.out.println(e + "");
-		}
 		
 	}
 	
@@ -774,6 +761,27 @@ public class JapathTest {
 		
 		n.ctx.clearDefs();
 		assertIt(n, "[77]", "def(f(a), $a). def(g(b: 77), f($b)). g()");
+		
+		try {
+			assertIt(n, "", "def(f(x:{a: $v}), a)");
+			fail();
+		} catch (JapathException e) {
+			System.out.println(e + "");
+		}
+		try {
+			assertIt(n, "", "def(f(x:{a: #0}), a)");
+			fail();
+		} catch (JapathException e) {
+			System.out.println(e + "");
+		}
+		try {
+			assertIt(n, "", "def(f(x:{a: b $c}), a)");
+			fail();
+		} catch (JapathException e) {
+			System.out.println(e + "");
+		}
+		
+
 	}
 
 	

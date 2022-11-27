@@ -27,6 +27,7 @@ import japath3.core.Japath.NodeIter;
 import japath3.core.Japath.ParamAppl;
 import japath3.core.Japath.ParametricExprDef;
 import japath3.core.Japath.ParametricExprDef.FormalParam;
+import japath3.core.Japath.VarAppl;
 import japath3.processing.EngineGraal;
 import japath3.processing.GeneralFuncs;
 import japath3.processing.StandardDefs;
@@ -64,7 +65,7 @@ public class Ctx {
 			if (envx == null || envx.length == 0 || !(envx[0] instanceof ParamAVarEnv p)) return new ParamAVarEnv();			
 			return p;
 		}
-		public Ctx.ParamAVarEnv cloneResolvedParams(Expr[] exprs, ParametricExprDef ped, Object... envx) {
+		public Ctx.ParamAVarEnv cloneResolvedParams(Node node, Expr[] exprs, ParametricExprDef ped, Object... envx) {
 			
 			params = new Expr[max(exprs.length, ped.formalParams.size())];
 			try {
@@ -80,6 +81,9 @@ public class Ctx {
 								if (pa.i >= env.params.length) throw new JapathException(
 										"bad (zero-based) parameter number " + pa.i + " (parameter expressions: " + asList(env.params) + ")");
 								return env.params[pa.i];
+							} else if (e instanceof VarAppl va) {
+								// it is ensured that it exists:
+								return Japath.constNodeExpr(va.eval(node, envx).node());
 							}
 							return e;
 						});
@@ -101,7 +105,7 @@ public class Ctx {
 
 		@Override
 		public String toString() {
-			return asList(params).toString() + vars;
+			return asList(params).toString() + ", " + vars;
 		}
 	}
 

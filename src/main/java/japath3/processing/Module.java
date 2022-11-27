@@ -118,7 +118,7 @@ public class Module {
 		
 		try {
 			ParametricExprDef ped = getParametricExprDef(exprName);
-			return Japath.select(n, new Ctx.ParamAVarEnv(params).cloneResolvedParams(params, ped), ped.exprs[0]);
+			return Japath.select(n, new Ctx.ParamAVarEnv(params).cloneResolvedParams(n, params, ped), ped.exprs[0]);
 		} catch (JapathException e) {
 			throw new JapathException("error at module '" + name + "', evaluation tree beneath def '" + exprName + "': " + e.getMessage());
 		}

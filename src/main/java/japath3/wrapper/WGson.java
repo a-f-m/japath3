@@ -39,8 +39,7 @@ public class WGson extends Node {
 	public WGson(Object wo, Object selector, Node previousNode, Ctx ctx) { super(wo, selector, previousNode, ctx); }	
 	
 	public static Node w_(Object x) {
-		if (x instanceof String s) return NodeFactory.w_(s, WGson.class);
-		return new WGson(x, "", null, new Ctx());
+		return NodeFactory.w_(x, WGson.class);
 	}
 
 	@Override public Node create(Object wo, Object selector, Node previousNode, Ctx ctx) {
@@ -257,8 +256,10 @@ public class WGson extends Node {
 		
 		String s = je.toString();
 		try {
-			String ret = je.isJsonArray() ? new JSONArray(s).toString(indent) : je.isJsonObject() ? new JSONObject(s).toString(indent) : null;
-			if (ret == null) throw new JapathException("json array or object expected");
+			String ret = je.isJsonArray() ? new JSONArray(s).toString(indent)
+					: je.isJsonObject() ? new JSONObject(s).toString(indent) : null;
+			if (ret == null)
+				throw new JapathException("json array or object expected");
 			return ret;
 			
 		} catch (Exception e) {

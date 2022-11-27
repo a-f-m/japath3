@@ -390,7 +390,7 @@ public class Japath {
 			
 			try {
 				ParametricExprDef ped = node.ctx.getPed(name);
-				return ped.exprs[0].eval(node, new Ctx.ParamAVarEnv().cloneResolvedParams(exprs, ped, envx));
+				return ped.exprs[0].eval(node, new Ctx.ParamAVarEnv().cloneResolvedParams(node, exprs, ped, envx));
 				
 			} catch (Exception e) {
 				throw new JapathException(e);

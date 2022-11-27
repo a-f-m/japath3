@@ -45,8 +45,7 @@ public class WJsonB extends Node {
 	public WJsonB(Object wo, Object selector, Node previousNode, Ctx ctx) { super(wo, selector, previousNode, ctx); }	
 	
 	public static Node w_(Object x) {
-		if (x instanceof String s) return NodeFactory.w_(s, WJsonB.class);
-		return new WJsonB(x, "", null, new Ctx());
+		return NodeFactory.w_(x, WJsonB.class);
 	}
 
 	@Override public Node create(Object wo, Object selector, Node previousNode, Ctx ctx) {

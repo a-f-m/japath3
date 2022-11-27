@@ -168,6 +168,7 @@ public abstract class Node implements Cloneable {
 	public boolean isAttribute(String name) { return false; };
 	public Node set(String name, Object o) { throw new UnsupportedOperationException("'set(name)' not supported for '" + this + "'"); };
 	public Node set(int idx, Object o) { throw new UnsupportedOperationException("'set(i)' not supported for '" + this + "'"); };
+	public Node add(Object o) { return set(-1, o); };
 	public void remove(Object selector) { throw new UnsupportedOperationException("'remove(name)' not supported for '" + this + "'"); };
 	public Iterator<String> childrenSelectors() { throw new UnsupportedOperationException("'childrenSelectors' not supported for '" + this + "'"); }
 	public NodeIter all() { return all(wo); };
@@ -313,6 +314,9 @@ public abstract class Node implements Cloneable {
 		
 	}
 	
+	public Node freshNode() {
+		return freshNode(false);
+	}
 	public Node freshNode(boolean array) {
 		return create(createWo(array), "");
 	}
