@@ -14,6 +14,12 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
+
 import io.vavr.collection.Set;
 import io.vavr.collection.TreeSet;
 import japath3.core.Japath.Assignment;
@@ -23,6 +29,7 @@ import japath3.core.Japath.NodeProcessing.Kind;
 import japath3.core.Japath.Selection;
 import japath3.schema.Schema;
 import japath3.util.Basics.Ref;
+import japath3.wrapper.WJsonOrg;
 
 /**
  *
@@ -36,7 +43,22 @@ public abstract class Node implements Cloneable {
 
 	public static class DefaultNode extends Node {
 
-		public DefaultNode(Object wo, Ctx ctx) { super(wo, "", null, ctx); }
+		public DefaultNode(Object wo, Ctx ctx) {
+			//!!!test
+			//
+			super(wo, "", null, ctx); 
+		}
+		//!!!test
+		@SuppressWarnings("unused")
+		private static Object xcheck(Object wo) {
+			if ((wo instanceof JsonElement || wo instanceof JSONObject
+					|| wo instanceof JSONArray) && wo != WJsonOrg.nullo && !(wo instanceof JsonNull) ) {
+				System.out.println();
+			}
+
+			return wo;
+			
+		}
 
 		@Override public NodeIter get(String name) {
 			throw new UnsupportedOperationException("get('" + name + "') not supported for '" + this + "'");
@@ -120,6 +142,7 @@ public abstract class Node implements Cloneable {
 		throw new UnsupportedOperationException("'create()' not supported for '" + this + "'");
 	};
 	public Object createWo(boolean array) { throw new UnsupportedOperationException("'createWo()' not supported for '" + this + "'"); };
+	public Object createLeafWo(Object o) { throw new UnsupportedOperationException("'createLeafWo' not supported for '" + this + "'"); };
 	public NodeIter undef(Object sel) { return single(create(undefWo, sel, this, ctx)); }
 
 	private NodeIter determRet(Object selector, NodeIter nit, Selection sel) {

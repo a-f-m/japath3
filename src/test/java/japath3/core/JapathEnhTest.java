@@ -705,7 +705,16 @@ public class JapathEnhTest {
 		
 		// non-primitive
 		try {
-			assertIt(n, "[1+2, 3+4]", "*.js::join('+', *)");
+			assertIt(n, "", "*.js::join('+', *)");
+			fail();
+		} catch (JapathException e) {
+			assertEquals("invoking js 'join': 2-th argument must be a primitive value (found [\"1\",\"2\"])", e.getMessage());
+		}
+
+		assertIt(n, "[{\"a\":[\"1\",\"2\"]}]", "_[0].a.parent()");
+		
+		try {
+			assertIt(n, "", "*.js::join('+', *)");
 			fail();
 		} catch (JapathException e) {
 			assertEquals("invoking js 'join': 2-th argument must be a primitive value (found [\"1\",\"2\"])", e.getMessage());

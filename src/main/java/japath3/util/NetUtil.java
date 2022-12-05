@@ -1,6 +1,11 @@
 package japath3.util;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Handler;
@@ -12,6 +17,8 @@ import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 
 import japath3.core.JapathException;
+import japath3.core.Node;
+import japath3.wrapper.NodeFactory;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -65,11 +72,15 @@ public class NetUtil {
 		public String entity;
 		public int status;
 		public Response(String entity, int status) {
-			super();
 			this.entity = entity;
 			this.status = status;
 		}
-		
+		public Node entityAsJson(Class<?> wrapperClass) {
+			return NodeFactory.w_(entity, wrapperClass);
+		}
+		public Node entityAsJson() {
+			return NodeFactory.w_(entity);
+		}
 	}
 
 	public static Response httpPostJson(OkHttpClient client, String url, JSONObject jo) {
@@ -106,5 +117,27 @@ public class NetUtil {
 		}
 	}
 
+	public static InputStream getStreamFromUrlOrFile(String spec) {
+		
+		InputStream is;
+		try {
+			URL url = new URL(spec);
+			
+			try {
+				is = url.openStream();
+			} catch (IOException e) {
+				throw new JapathException(e);
+			}
+			
+		} catch (MalformedURLException e1) {
+			try {
+				is = new FileInputStream(spec);
+			} catch (FileNotFoundException e) {
+				throw new JapathException(e);
+			}
+		}
+		return is;
+	}
+	
 
 }

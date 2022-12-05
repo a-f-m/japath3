@@ -6,8 +6,7 @@ import static japath3.processing.Language.e_;
 //import static japath3.wrapper.WJsonOrg.w_;
 import static japath3.wrapper.NodeFactory.w_;
 
-import org.json.JSONObject;
-import org.json.JSONTokener;
+import org.apache.commons.io.IOUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -30,40 +29,41 @@ public class JapathTutorial2021Test {
 	}
 
 	@Test
-	public void doEval() {
+	public void doEval() throws Exception {
 
-		JSONObject jo = new JSONObject(new JSONTokener(JapathTutorial2021Test.class.getResourceAsStream("person-1.json")));
+//		JSONObject jo = new JSONObject(new JSONTokener(JapathTutorial2021Test.class.getResourceAsStream("person-1.json")));
+		String joStr = IOUtils.toString(JapathTutorial2021Test.class.getResourceAsStream("person-1.json"), "utf-8");
 		
-		System.out.println(jo.toString(3));
+//		System.out.println(jo.toString(3));
 
-		for (Node node : walki(w_(jo), e_("address.city"))) {
+		for (Node node : walki(w_(joStr), e_("address.city"))) {
 			System.out.println(node.val().toString());
 		}
-		for (Node node : walki(w_(jo), e_("address.`postal-code`"))) {
+		for (Node node : walki(w_(joStr), e_("address.`postal-code`"))) {
 			System.out.println(node.val().toString());
 		}
-		for (Node node : walki(w_(jo), e_("address.*"))) {
+		for (Node node : walki(w_(joStr), e_("address.*"))) {
 			System.out.println(node.val().toString());
 		}
-		for (Node node : walki(w_(jo), e_("telecom.*.value"))) {
+		for (Node node : walki(w_(joStr), e_("telecom.*.value"))) {
 			System.out.println(node.val().toString());
 		}
-		for (Node node : walki(w_(jo), e_("telecom[0].value"))) {
+		for (Node node : walki(w_(joStr), e_("telecom[0].value"))) {
 			System.out.println(node.val().toString());
 		}
-		for (Node node : walki(w_(jo), e_("address.*.§"))) {
+		for (Node node : walki(w_(joStr), e_("address.*.§"))) {
 			System.out.println(node.val().toString());
 		}
-		for (Node node : walki(w_(jo), e_("**.use"))) {
+		for (Node node : walki(w_(joStr), e_("**.use"))) {
 			System.out.println(node.val().toString());
 		}
-		for (Node node : walki(w_(jo), e_("address.union(city, `postal-code`)"))) {
+		for (Node node : walki(w_(joStr), e_("address.union(city, `postal-code`)"))) {
 			System.out.println(node.val().toString());
 		}
-		for (Node node : walki(w_(jo), e_("telecom.*.?( use.eq('hidden') ).value" ))) {
+		for (Node node : walki(w_(joStr), e_("telecom.*.?( use.eq('hidden') ).value" ))) {
 			System.out.println(node.val().toString());
 		}
-		for (Node node : walki(w_(jo), e_(
+		for (Node node : walki(w_(joStr), e_(
 				"?(and(\r\n"
 				+ "    age.lt(18),\r\n"
 				+ "    driverLic .or(eq(3), eq(4))))\r\n"
@@ -71,13 +71,13 @@ public class JapathTutorial2021Test {
 //		for (Node node : walki(w_(jo), e_("telecom.*.?( uste.eq('hidden') || use.eq('home')  ).value"))) {
 			System.out.println(node.val().toString());
 		}
-		for (Node node : walki(w_(jo), e_(
+		for (Node node : walki(w_(joStr), e_(
 				"telecom.*"
 				+ "  .?( value.match('.*5555 1.*') )"
 				+ "  .use"))) {
 			System.out.println(node.val().toString());
 		}
-		for (Node node : walki(w_(jo), e_(
+		for (Node node : walki(w_(joStr), e_(
 				"shopping.*.*"
 						+ "  .?( §.match('p#1.*') )"
 						+ "  .status"))) {
@@ -89,7 +89,7 @@ public class JapathTutorial2021Test {
 //						+ "  .§"))) {
 //			System.out.println(node.val().toString());
 //		}
-		for (Node node : walki(w_(jo), e_(
+		for (Node node : walki(w_(joStr), e_(
 				"address"
 				+ "   .cond( "
 				+ "      absent, "
@@ -98,7 +98,7 @@ public class JapathTutorial2021Test {
 			System.out.println(node.val().toString());
 		}
 		// !!! note 'every' semantics
-		for (Node node : walki(w_(jo), e_("cond( every( telecom.*.value, match('.*5555.*') ), name )  "))) {
+		for (Node node : walki(w_(joStr), e_("cond( every( telecom.*.value, match('.*5555.*') ), name )  "))) {
 			System.out.println(node.val().toString());
 			System.out.println(new Ctx().getVars());
 		}
@@ -107,13 +107,13 @@ public class JapathTutorial2021Test {
 //		Var<String> c = vs.of("c");
 //		Var<Boolean> p = vs.of("p");
 		Ctx ctx = new Ctx().setVars(vs);
-		for (@SuppressWarnings("unused") Node node : walki(w_(jo).setCtx(ctx), e_("address.?( and( city$c, `postal-code`$p ) )"))) {
+		for (@SuppressWarnings("unused") Node node : walki(w_(joStr).setCtx(ctx), e_("address.?( and( city$c, `postal-code`$p ) )"))) {
 			System.out.println(ctx.getVars());
 //			System.out.println(c.val());
 //			System.out.println(p.val());
 		}
 		
-		for (Node node : walki(w_(jo), e_("?(true)"))) {
+		for (Node node : walki(w_(joStr), e_("?(true)"))) {
 			System.out.println(node.val().toString());
 			System.out.println(new Ctx().getVars());
 		}

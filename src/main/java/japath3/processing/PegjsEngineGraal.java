@@ -19,6 +19,8 @@ import japath3.wrapper.NodeFactory;
 import japath3.wrapper.WJsonOrg;
 
 public class PegjsEngineGraal {
+	
+	public static record PegSetting(boolean ignoreLoc) {} 
 
 	Context cx = Context.create();
 
@@ -56,7 +58,7 @@ public class PegjsEngineGraal {
 	
 	public Tuple2<JSONObject, String> getAst(String text) {
 		
-		Tuple2<Node, Node> astNodes = getAstNodes(text, WJsonOrg.class);
+		Tuple2<Node, Node> astNodes = getAstNodes(text, WJsonOrg.class, new PegSetting(true));
 		
 		if (astNodes._2 != null) {
 			
@@ -84,25 +86,27 @@ public class PegjsEngineGraal {
 		}
 	}
 	
-	public Tuple2<Node, Node> getAstNodes(String text, Class<?> jsonClassWrapper) {
-		return getAstNodes(getAstObjectsAsStrings(text), jsonClassWrapper);
+	public Tuple2<Node, Node> getAstNodes(String text, Class<?> jsonClassWrapper, PegSetting pegSetting) {
+		return getAstNodes(getAstObjectsAsStrings(text, pegSetting), jsonClassWrapper);
 	}
 	
-	public Tuple2<Node, Node> getAstNodes(Tuple2<String, String> t, Class<?> jsonClassWrapper) {
+	private Tuple2<Node, Node> getAstNodes(Tuple2<String, String> t, Class<?> jsonClassWrapper) {
 		
 		return Tuple.of(t._1 == null ? null : NodeFactory.w_(t._1, jsonClassWrapper), //
 				t._2 == null ? null : NodeFactory.w_(t._2, jsonClassWrapper));
 		
 	}
-
-	private Tuple2<String, String> getAstObjectsAsStrings(String text) {
+	
+	private Tuple2<String, String> getAstObjectsAsStrings(String text, PegSetting pegSetting) {
 
 		synchronized (this) { // TODO no shared context in graal possible (->thread local)
 			
 			String astStr;
 			try {
 				cx.enter();
-				Value func = cx.getBindings("js").getMember("peg$parse");
+				Value bindings = cx.getBindings("js");
+				bindings.putMember("ignoreLoc", pegSetting.ignoreLoc);
+				Value func = bindings.getMember("peg$parse");
 				if (func == null) throw new JapathException("fatal error eval pegjs");
 				
 				Value v = func.execute(text);

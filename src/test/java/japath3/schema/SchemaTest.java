@@ -14,6 +14,7 @@ import java.io.Writer;
 import org.apache.commons.io.IOUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import japath3.core.Japath;
@@ -192,7 +193,9 @@ public class SchemaTest {
 		Testing.assertEquals_("testMessage-2", schema.annotatedViolations(n));
 	}
 	
-	@Test public void testNulls() throws Exception {
+	@Test
+	@Ignore
+	public void testNulls() throws Exception {
 		
 		Node n = NodeFactory.w_(createJoe("{a: 1, b: null, c: [1, null]}"));
 		System.out.println(n);

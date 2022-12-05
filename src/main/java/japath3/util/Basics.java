@@ -42,6 +42,9 @@ public class Basics {
 
 	public static <T> Stream<T> stream(Iterator<T> itr) { return stream(it(itr)); }
 	
+	// for ambiguities
+	public static <T> Stream<T> streamIt(Iterator<T> itr) { return stream(itr); }
+	
 	public static String decomment(String text) { return text.replaceAll("(?m)^(\\#|//).*", " "); }
 	
 	public static <T> Iterable<T> it(Iterator<T> it) {

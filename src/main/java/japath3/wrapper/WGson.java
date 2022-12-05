@@ -36,7 +36,22 @@ public class WGson extends Node {
 	
 	public static boolean pretty = false;
 
-	public WGson(Object wo, Object selector, Node previousNode, Ctx ctx) { super(wo, selector, previousNode, ctx); }	
+	public WGson(Object wo, Object selector, Node previousNode, Ctx ctx) {
+		super(createLeafWoHelper(wo), selector, previousNode, ctx); 
+	}
+	//!!!test
+	@SuppressWarnings("unused")
+	private static Object xcheck(Object wo) {
+		if (wo instanceof JsonElement || wo == undefWo || wo instanceof JsonNull ) {
+			System.out.println();
+		} else {
+			System.out.println();
+		}
+
+		return wo;
+		
+	}
+
 	
 	public static Node w_(Object x) {
 		return NodeFactory.w_(x, WGson.class);
@@ -50,6 +65,24 @@ public class WGson extends Node {
 		
 		return array ? new JsonArray() : new JsonObject(); }
 		
+	@Override
+	public Object createLeafWo(Object o) {
+
+		return createLeafWoHelper(o);
+	}
+	
+	public static Object createLeafWoHelper(Object o) {
+
+		Object je = o instanceof Number n ? new JsonPrimitive(n)
+				: o instanceof Boolean b ? new JsonPrimitive(b)
+						: o instanceof String s ? new JsonPrimitive(s)
+//								: o instanceof Number ? new JsonPrimitive((Number) o)
+										: o instanceof JsonElement ? o
+												: o == null ? JsonNull.INSTANCE : o == undefWo ? o : null;
+		if (je == null) throw new JapathException("unknown wrapper type of object'" + o + "'");
+		return je;
+	}
+	
 	@Override
 	public NodeIter get(String name) {
 		
@@ -120,7 +153,7 @@ public class WGson extends Node {
 	@Override
 	public Node set(String name, Object o) {
 		
-		((JsonObject) wo).add(name, toJsonElm(o));
+		((JsonObject) wo).add(name, (JsonElement) createLeafWo(o));
 		return this;
 	}
 	
@@ -130,29 +163,18 @@ public class WGson extends Node {
 		JsonArray ja = (JsonArray) wo;
 		
 		if (idx == -1) {
-			ja.add(toJsonElm(o));
+			ja.add((JsonElement) createLeafWo(o));
 			
 		} else if (idx >= ja.size()) {
 			
 			List<JsonElement> jal = ja.asList();
 			for (int i = ja.size(); i <= idx; i++) {
-				jal.add(i == idx ? toJsonElm(o) : JsonNull.INSTANCE);
+				jal.add(i == idx ? (JsonElement) createLeafWo(o) : JsonNull.INSTANCE);
 			}			
 		} else {			
-			ja.set(idx, toJsonElm(o));
+			ja.set(idx, (JsonElement) createLeafWo(o));
 		}
 		return this; 
-	}
-
-	private JsonElement toJsonElm(Object o) {
-		
-		JsonElement je = o instanceof Number ? new JsonPrimitive((Number) o)
-				: o instanceof Boolean ? new JsonPrimitive((Boolean) o)
-						: o instanceof String ? new JsonPrimitive((String) o)
-								: o instanceof Number ? new JsonPrimitive((Number) o)
-										: o instanceof JsonElement ? (JsonElement) o : null;
-		if (je == null) throw new JapathException("unknown type '" + o.getClass() + "'");
-		return je;
 	}
 	
 	@Override
@@ -173,6 +195,11 @@ public class WGson extends Node {
 	
 	@Override public Object woVal() {
 		
+		return woValHelper(wo);
+	}
+	
+	public static Object woValHelper(Object wo) {
+		
 		if (wo instanceof JsonPrimitive jp) {
 //			JsonPrimitive jp = (JsonPrimitive) wo;
 			return jp.isBoolean() ? jp.getAsBoolean()
@@ -183,12 +210,12 @@ public class WGson extends Node {
 			return wo;
 		}
 	}
-	
-	
+
 	// !!! unfortunately it is necessary due to insufficient primitives handling of Gson
-	private Number determNumber(JsonPrimitive jp) { 
+	// lookup '.' is sufficient acc. to json syntax
+	private static Number determNumber(JsonPrimitive jp) { 
 		String asString = jp.getAsString();
-		if (asString.contains(".") || asString.contains("E") || asString.contains("e")) {
+		if (asString.contains(".")) {
 			return jp.getAsDouble(); 
 		} else {
 			return jp.getAsInt();  

@@ -4,6 +4,8 @@ def(distinct, j::it::distinct(#0)).
 
 def(clone, j::it::clone()).
 
+def(parent, j::it::parent()).
+
 def(lift, 
     _{ new $lifted,
        *.*._{ selector $p, $lifted.asProperty($p): _ }

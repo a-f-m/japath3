@@ -67,6 +67,9 @@ public class Japath {
 		public <T> T val(T d) { T val = node().val(); return val == nilo ? d : val; };
 		public Node node() { return hasNext() ? next() : nil;};
 		
+		public NodeIter node(String name) { return node().get(name); }
+		public NodeIter node(int i) { return node().get(i); }
+		
 		public boolean arrayFlag() { return false; }
 		@Override public Iterator<Node> iterator() { return this; }
 	}

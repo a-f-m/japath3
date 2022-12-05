@@ -28,8 +28,12 @@ public class WJsonOrg extends Node {
 	}
 	
 	@Override public Node create(Object wo, Object selector, Node previousNode, Ctx ctx) {
-//		return new WJsonOrg(wo == null ? nullWo() : wo, selector, previousNode, ctx);
-		return new WJsonOrg(wo, selector, previousNode, ctx);
+		return new WJsonOrg(createLeafWo(wo), selector, previousNode, ctx);
+	}
+	
+	@Override
+	public Object createLeafWo(Object o) {
+		return o == null ? nullWo() : o;
 	}
 	
 	@Override public Object createWo(boolean array) { return array ? new JSONArray() : 

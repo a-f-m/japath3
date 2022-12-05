@@ -4,6 +4,7 @@ import java.io.StringReader;
 
 import javax.json.Json;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -16,15 +17,16 @@ public class NodeFactory {
 	
 	// const for generating empty objects; should be migrated in future
 	static public Object emptyObject = new Object(); 
+	static public Object emptyArray = new Object(); 
 
 	static public boolean test = false;
-	static Class<?> defaultClass = WJsonOrg.class;
-//	static Class<?> defaultClass = WGson.class;
-//	static Class<?> defaultClass = WJsonB.class;
+	static Class<?> defaultWrapperClass = WJsonOrg.class;
+//	static private Class<?> defaultWrapperClass = WGson.class;
+//	static Class<?> defaultWrapperClass = WJsonB.class;
 
 	public static Node w_(Object x) {
 		
-		return w_(x, defaultClass);
+		return w_(x, defaultWrapperClass);
 	}
 	public static Node w_(Object x, Class<?> wclass) {
 		
@@ -35,7 +37,7 @@ public class NodeFactory {
 					"", null, new Ctx());
 		} else if (wclass == WGson.class) {
 			return new WGson(x instanceof String ? JsonParser.parseString(x.toString())
-					: x == emptyObject ? new JsonObject() : x, "", null, new Ctx());
+					: x == emptyObject ? new JsonObject() : x == emptyArray ? new JsonArray() : x, "", null, new Ctx());
 		} else if (wclass == WJsonB.class) {
 			return new WJsonB(x instanceof String
 					? Json.createReader(new StringReader(WJsonOrg.parse(x.toString()).toString())).read()
@@ -43,6 +45,9 @@ public class NodeFactory {
 		} else {
 			throw new JapathException("no class wrapper");
 		}
+	}
+	public static void setDefaultWrapperClass(Class<?> defaultWrapperClass_) {
+		defaultWrapperClass = defaultWrapperClass_;
 	}
 
 }
