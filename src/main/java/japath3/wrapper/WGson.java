@@ -7,8 +7,6 @@ import static japath3.core.Node.PrimitiveType.Boolean;
 import static japath3.core.Node.PrimitiveType.Number;
 import static japath3.core.Node.PrimitiveType.String;
 
-import java.io.IOException;
-import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.List;
 
@@ -24,8 +22,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.google.gson.internal.Streams;
-import com.google.gson.stream.JsonWriter;
 
 import japath3.core.Ctx;
 import japath3.core.Japath.NodeIter;
@@ -34,10 +30,8 @@ import japath3.core.Node;
 
 public class WGson extends Node {
 	
-	public static boolean pretty = false;
-
-	public WGson(Object wo, Object selector, Node previousNode, Ctx ctx) {
-		super(createLeafWoHelper(wo), selector, previousNode, ctx); 
+	WGson(Object wo, Object selector, Node previousNode, Ctx ctx) {
+		super(createWoHelper(wo), selector, previousNode, ctx); 
 	}
 	//!!!test
 	@SuppressWarnings("unused")
@@ -66,12 +60,12 @@ public class WGson extends Node {
 		return array ? new JsonArray() : new JsonObject(); }
 		
 	@Override
-	public Object createLeafWo(Object o) {
+	public Object createWo(Object o) {
 
-		return createLeafWoHelper(o);
+		return createWoHelper(o);
 	}
 	
-	public static Object createLeafWoHelper(Object o) {
+	public static Object createWoHelper(Object o) {
 
 		Object je = o instanceof Number n ? new JsonPrimitive(n)
 				: o instanceof Boolean b ? new JsonPrimitive(b)
@@ -103,6 +97,7 @@ public class WGson extends Node {
 				: (wo instanceof JsonObject jo ? jo.has(selector.toString()) : false);
 	}
 	
+	// TODO	...Properties
 	@Override public Iterator<String> childrenSelectors() { return ((JsonObject) wo).keySet().iterator(); }
 
 	@Override
@@ -153,7 +148,7 @@ public class WGson extends Node {
 	@Override
 	public Node set(String name, Object o) {
 		
-		((JsonObject) wo).add(name, (JsonElement) createLeafWo(o));
+		((JsonObject) wo).add(name, (JsonElement) createWo(o));
 		return this;
 	}
 	
@@ -163,16 +158,16 @@ public class WGson extends Node {
 		JsonArray ja = (JsonArray) wo;
 		
 		if (idx == -1) {
-			ja.add((JsonElement) createLeafWo(o));
+			ja.add((JsonElement) createWo(o));
 			
 		} else if (idx >= ja.size()) {
 			
 			List<JsonElement> jal = ja.asList();
 			for (int i = ja.size(); i <= idx; i++) {
-				jal.add(i == idx ? (JsonElement) createLeafWo(o) : JsonNull.INSTANCE);
+				jal.add((JsonElement) (i == idx ? createWo(o) : nullWo()));
 			}			
 		} else {			
-			ja.set(idx, (JsonElement) createLeafWo(o));
+			ja.set(idx, (JsonElement) createWo(o));
 		}
 		return this; 
 	}
@@ -223,7 +218,7 @@ public class WGson extends Node {
 	}
 
 	@Override public Object nullWo() { return JsonNull.INSTANCE; }
-	@Override public boolean isNull() { return wo == JsonNull.INSTANCE; }
+	@Override public boolean isNull() { return wo == nullWo(); }
 		
 	@Override
 	public boolean type(PrimitiveType t) {
@@ -253,7 +248,7 @@ public class WGson extends Node {
 		
 		return "`" + selector
 				+ "`->"
-				+ woString(pretty ? 3 : 0);
+				+ woString(NodeFactory.prettyStringifying ? 3 : 0);
 	}
 	
 	@Override public String woString(int indent) { 
@@ -262,20 +257,22 @@ public class WGson extends Node {
 
 	public static String prettyString(JsonElement je, int indent) throws AssertionError {
 		
+		// we use the best pretty stringer of json.org
+		return jsOrgPrettyString(je, indent);
 		
-		// extra string handling due to gson inadequate formatting
-		if (je.isJsonPrimitive() && ((JsonPrimitive) je).isString()) return ((JsonPrimitive) je).getAsString(); 
-		if (indent == 0) return je.toString();
-		try {
-			StringWriter stringWriter = new StringWriter();
-			JsonWriter jsonWriter = new JsonWriter(stringWriter);
-			jsonWriter.setLenient(true);
-			jsonWriter.setIndent(StringUtils.leftPad("", indent));
-			Streams.write(je, jsonWriter);
-			return stringWriter.toString();
-		} catch (IOException e) {
-			throw new AssertionError(e);
-		}
+//		// extra string handling due to gson inadequate formatting
+//		if (je.isJsonPrimitive() && ((JsonPrimitive) je).isString()) return ((JsonPrimitive) je).getAsString(); 
+//		if (indent == 0) return je.toString();
+//		try {
+//			StringWriter stringWriter = new StringWriter();
+//			JsonWriter jsonWriter = new JsonWriter(stringWriter);
+//			jsonWriter.setLenient(true);
+//			jsonWriter.setIndent(StringUtils.leftPad("", indent));
+//			Streams.write(je, jsonWriter);
+//			return stringWriter.toString();
+//		} catch (IOException e) {
+//			throw new AssertionError(e);
+//		}
 	}
 	
 	public static String jsOrgPrettyString(JsonElement je, int indent) {
@@ -284,7 +281,7 @@ public class WGson extends Node {
 		String s = je.toString();
 		try {
 			String ret = je.isJsonArray() ? new JSONArray(s).toString(indent)
-					: je.isJsonObject() ? new JSONObject(s).toString(indent) : null;
+					: je.isJsonObject() ? new JSONObject(s).toString(indent) : je.isJsonPrimitive() ? je.getAsString() : null ;
 			if (ret == null)
 				throw new JapathException("json array or object expected");
 			return ret;

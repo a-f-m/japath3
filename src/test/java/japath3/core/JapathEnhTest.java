@@ -16,6 +16,7 @@ import static japath3.processing.Language.e_;
 import static japath3.wrapper.NodeFactory.w_;
 //import static japath3.wrapper.WGson.w_;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import java.io.FileReader;
@@ -362,6 +363,20 @@ public class JapathEnhTest {
 		} catch (JapathException e) {
 			System.out.println(e);
 		}
+		
+		Node n1 = select(n, e_(
+				"""
+				{
+				  a: {
+				    b: 99
+				  }
+				}.a.b
+				"""
+				));
+		
+		assertEquals("a", n1.previousNode.selector);
+		assertEquals("", n1.previousNode.previousNode.selector);
+		assertNull(n1.previousNode.previousNode.previousNode);
 		
 	}
 	

@@ -39,7 +39,7 @@ import japath3.wrapper.WJsonOrg;
  * @author andreas-fm
  *
  */
-public abstract class Node implements Cloneable {
+public abstract class Node extends NodeBase implements Cloneable {
 
 	public static class DefaultNode extends Node {
 
@@ -61,19 +61,19 @@ public abstract class Node implements Cloneable {
 		}
 
 		@Override public NodeIter get(String name) {
-			throw new UnsupportedOperationException("get('" + name + "') not supported for '" + this + "'");
+			throw new UnsupportedOperationException();
 		}
 		@Override public NodeIter get(int i) {
-			throw new UnsupportedOperationException("get(" + i + ") not supported for '" + this + "'");
+			throw new UnsupportedOperationException();
 		}
 		@Override public NodeIter all(Object o) {
-			throw new UnsupportedOperationException("'all' not supported for '" + this + "'");
+			throw new UnsupportedOperationException();
 		}
 		@Override public NodeIter desc() {
-			throw new UnsupportedOperationException("'desc' not supported for '" + this + "'");
+			throw new UnsupportedOperationException();
 		};
 		@Override public PrimitiveType type() {
-			throw new UnsupportedOperationException("'type' not supported for '" + this + "'");
+			throw new UnsupportedOperationException();
 		};
 		@Override public boolean isLeaf() { return true; };
 		@Override public boolean isArray() { return false; }
@@ -87,6 +87,9 @@ public abstract class Node implements Cloneable {
 		@Override public Object woCopy() {
 			return wo;
 		}
+		@Override public Node set(String name, Object o) { throw new UnsupportedOperationException(); }
+		@Override public Node set(int idx, Object o) { throw new UnsupportedOperationException(); }
+		@Override public void remove(Object selector) { throw new UnsupportedOperationException(); }
 	}
 
 	public static enum PrimitiveType {
@@ -135,15 +138,15 @@ public abstract class Node implements Cloneable {
 	// TODO deferred
 //	public Node copy() { return create(woCopy(), selector, previousNode, ctx).setConstruct(construct).setOrder(order); }
 	
-	public Node create(Object x, Object selector) {
+	final public Node create(Object x, Object selector) {
 		return create(x, selector, this, ctx);
 	}
 	public Node create(Object wo, Object selector, Node previousNode, Ctx ctx) {
-		throw new UnsupportedOperationException("'create()' not supported for '" + this + "'");
+		throw new UnsupportedOperationException();
 	};
-	public Object createWo(boolean array) { throw new UnsupportedOperationException("'createWo()' not supported for '" + this + "'"); };
-	public Object createLeafWo(Object o) { throw new UnsupportedOperationException("'createLeafWo' not supported for '" + this + "'"); };
-	public NodeIter undef(Object sel) { return single(create(undefWo, sel, this, ctx)); }
+	public Object createWo(boolean array) { throw new UnsupportedOperationException(); };
+	public Object createWo(Object o) { throw new UnsupportedOperationException(); };
+	final public NodeIter undef(Object sel) { return single(create(undefWo, sel, this, ctx)); }
 
 	private NodeIter determRet(Object selector, NodeIter nit, Selection sel) {
 		
@@ -172,38 +175,27 @@ public abstract class Node implements Cloneable {
 		return ret;
 	}
 
-	private String selectionLog(Selection sel) { return " (selection: '" + stringify(sel, 0) + "'; node: '" + this + "')"; }
+	final private String selectionLog(Selection sel) { return " (selection: '" + stringify(sel, 0) + "'; node: '" + this + "')"; }
 	
-	public abstract NodeIter get(String name);
-	public abstract NodeIter get(int i);
-	
-	public NodeIter getChecked(String name, Selection sel) {
+	final public NodeIter getChecked(String name, Selection sel) {
 		Schema schema = ctx.getSchema();
 		if (schema != null && schema.genCompleteness()) {
 			schema.addPropHit(this, name);
 		}
 		return determRet(name, get(name), sel);
 	}
-	public NodeIter getChecked(int i, Selection sel) {
+	final public NodeIter getChecked(int i, Selection sel) {
 		return determRet(i, get(i), sel);
 	}
 
 	public boolean isAttribute(String name) { return false; };
-	public Node set(String name, Object o) { throw new UnsupportedOperationException("'set(name)' not supported for '" + this + "'"); };
-	public Node set(int idx, Object o) { throw new UnsupportedOperationException("'set(i)' not supported for '" + this + "'"); };
+	public Node setNode(String name, Node n) { return set(name, n.val()); };
+	public Node setNode(int idx, Node n) { return set(idx, n.val()); };
 	public Node add(Object o) { return set(-1, o); };
-	public void remove(Object selector) { throw new UnsupportedOperationException("'remove(name)' not supported for '" + this + "'"); };
-	public Iterator<String> childrenSelectors() { throw new UnsupportedOperationException("'childrenSelectors' not supported for '" + this + "'"); }
+	public Node addNode(Node n) { return add(n.val()); };
+	public Iterator<String> childrenSelectors() { throw new UnsupportedOperationException(); }
 	public NodeIter all() { return all(wo); };
-	public abstract NodeIter all(Object o);
-//	public abstract NodeIter desc();
-	public NodeIter desc() {
-//		old way:
-//		ArrayList<Node> descs = new ArrayList<Node>();
-//		gatherDesc(descs, create(wo, selector, previousNode, ctx).setConstruct(construct));
-//		return nodeIter(descs.iterator());
-		return descWalk(false);
-	}
+	public NodeIter desc() { return descWalk(false); }
 	public NodeIter descWalk(boolean bottomUp) {
 		ArrayList<Node> descs = new ArrayList<Node>();
 		Japath.walkr(this, (x, kind, level, orderNo, isLast) -> {
@@ -214,27 +206,26 @@ public abstract class Node implements Cloneable {
 		});
 		return nodeIter(descs.iterator());
 	}
-//	public abstract NodeIter text();
 	public NodeIter text() { return Japath.singleObject(wo.toString(), previousNode); }
-	public boolean isCheckedLeaf() {
+	final public boolean isCheckedLeaf() {
 		if (wo == undefWo) throw new JapathException("operation on undef node '" + this + "' (assign value first)");
 		else return isLeaf();
 	}
-	public abstract boolean isLeaf();
-	public boolean isStruct() { return !isCheckedArray() && !isCheckedLeaf(); };
-	public boolean isCheckedArray() {
+	final public boolean isStruct() { return !isCheckedArray() && !isCheckedLeaf(); };
+	final public boolean isCheckedArray() {
 		if (wo == undefWo) throw new JapathException("operation on undef node '" + this + "' (assign value first)");
 		else return isArray();
 	}
-	public abstract boolean isArray();
-	public boolean isNull() { throw new UnsupportedOperationException("'isNull()' not supported for '" + this + "'"); }
-	public Object nullWo() { throw new UnsupportedOperationException("'nullWo()' not supported for '" + this + "'"); }
-	public boolean hasIdxSelector() { return selector instanceof Integer; }	
-	public boolean type(PrimitiveType t) { throw new UnsupportedOperationException("'type(t)' not supported for '" + this + "'"); };
-	public PrimitiveType type() { throw new UnsupportedOperationException("'type()' not supported for '" + this + "'"); };
-	public abstract Object woCopy();
+	public boolean isNull() { throw new UnsupportedOperationException(); }
+	public boolean isEmpty() {
+		return !all().hasNext();
+	}
+	public Object nullWo() { throw new UnsupportedOperationException(); }
+	final public boolean hasIdxSelector() { return selector instanceof Integer; }	
+	public boolean type(PrimitiveType t) { throw new UnsupportedOperationException(); };
+	public PrimitiveType type() { throw new UnsupportedOperationException(); };
 
-	public void gatherDesc(List<Node> descs, Node node) {
+	final public void gatherDesc(List<Node> descs, Node node) {
 		// TODO here we materialize all descendants. future work should iterate.
 		descs.add(node);
 		all(node.val()).forEachRemaining(x -> {
@@ -242,26 +233,26 @@ public abstract class Node implements Cloneable {
 		});
 	}
 	
-	public boolean exists(Object selector) {throw new UnsupportedOperationException("'exists(sel)' not supported for '" + this + "'"); }; // TODO use it in set
-	public Node seto(Object selector, Object o) { // TODO undef/overwritable?
+	public boolean exists(Object selector) {throw new UnsupportedOperationException(); }; // TODO use it in set
+	final public Node seto(Object selector, Object o) { // TODO undef/overwritable?
 		if (!construct) throw new JapathException("input node not modifyable: " + this);
 		// TODO not for parents
 //		else if (exists(selector)) throw new JapathException("'" + selector + "' already set: " + this);
 		if (o == nullo) o = nullWo();
 		return selector instanceof Integer i ? set(i, o) : set((String) selector, o);
 	}
-	public Node node(String name) { return get(name).node(); };
-	public Node node(int i) { return get(i).node(); };
+	final public Node node(String name) { return get(name).node(); };
+	final public Node node(int i) { return get(i).node(); };
 	public <T> T val(String name) { return get(name).val(); };
-	public <T> T val(String name, T d) { return get(name).val(d); };
-	public <T> T val(int i) { return get(i).val(); };
-	public <T> T val(int i, T d) { return get(i).val(d); };
+	final public <T> T val(String name, T d) { return get(name).val(d); };
+	final public <T> T val(int i) { return get(i).val(); };
+	final public <T> T val(int i, T d) { return get(i).val(d); };
 	public <T> T val() {
 		if (wo == undefWo) throw new JapathException("operation on undef node '" + this + "' (assign value first)");
 		return (T) woVal(); 
 	}
 	public Object woVal() { return wo; }
-	public Node setCtx(Ctx ctx) {
+	final public Node setCtx(Ctx ctx) {
 		this.ctx = ctx;
 		return this;
 	}
@@ -272,16 +263,21 @@ public abstract class Node implements Cloneable {
 			set(newName, h);
 		}
 	}
-	public Node setPreviousNode(Node n) {
+	public void removeAll(String... props) {
+		Japath.walki(this, Japath.desc).forEach(x -> {
+			for (int i = 0; i < props.length; i++) x.remove(props[i]);
+		});
+	}
+	final public Node setPreviousNode(Node n) {
 		this.previousNode = n;
 		return this;
 	}
-	public Node setOrder(int order) {
+	final public Node setOrder(int order) {
 		this.order = order;
 		return this;
 	}
 
-	public Node setConstruct(boolean construct) {
+	final public Node setConstruct(boolean construct) {
 		this.construct = construct;
 		return this;
 	}
@@ -306,7 +302,7 @@ public abstract class Node implements Cloneable {
 		}).collect(Collectors.toList());
 	}
 	
-	public void setAncestors(Assignment assignment) {
+	final public void setAncestors(Assignment assignment) {
 		
 		for (Node x: io.vavr.collection.List.ofAll(this.nodePath()).reverse()) {
 			// recursion failure
@@ -355,7 +351,7 @@ public abstract class Node implements Cloneable {
 	}
 
 
-	public <T> T v(String name) {
+	final public <T> T v(String name) {
 		
 		return ctx.getVars().val(name);
 	}
@@ -367,7 +363,7 @@ public abstract class Node implements Cloneable {
 		return clone; 
 	}
 	
-	public String woString(int indent)  { throw new UnsupportedOperationException("'toString(int indent)' not supported for '" + this + "'"); };
+	public String woString(int indent)  { throw new UnsupportedOperationException(); };
 
 	@Override public String toString() { return wo.toString(); }
 }

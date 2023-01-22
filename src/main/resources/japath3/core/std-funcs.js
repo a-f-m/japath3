@@ -7,3 +7,6 @@ function fconc(x, ...a) {
 function conc(x, ...a) {
 	return  a.join('')
 }
+function incr(x) {
+	return  x + 1
+}

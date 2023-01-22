@@ -5,6 +5,8 @@ import java.util.Iterator;
 import japath3.core.JapathException;
 
 public class Pager<T> implements Iterable<T> {
+	
+	public static class AbortException extends RuntimeException {};
 
 	@FunctionalInterface
 	public static interface PageFunc<T> {

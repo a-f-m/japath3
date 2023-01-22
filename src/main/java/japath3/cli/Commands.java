@@ -305,7 +305,8 @@ public class Commands {
 		}
 
 		if (oType.equals("json")) {
-			n = NodeFactory.w_(body instanceof JSONObject ? body : createJoe(body.toString()), WJsonOrg.class);
+			n = NodeFactory.w_(body, WJsonOrg.class);
+//			n = NodeFactory.w_(body instanceof JSONObject ? body : createJoe(body.toString()), WJsonOrg.class);
 		} else { // xml
 			Document doc = Jsoup.parse(body.toString(), "", Parser.xmlParser());
 			if (doc.children().isEmpty()) throw new JapathException("no tags given");

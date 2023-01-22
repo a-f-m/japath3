@@ -39,9 +39,20 @@ public class ModuleTest {
 	
 	@Test public void testParams() {
 		
-		Module m = new Module("test", "def(h, [#0, #1, #2, #3, #4]) .def(g, h(88, #0, #1, #2, #3)) .def(f, g(#0, a.c, #1, #2))");
+		Module m;
+		Node n;
 		
-		Node n = w_(" {a: {b: false, c: 'lala', d: 'lolo'} }  ");
+		n = w_(" {a: 99 }  ");
+		
+		m = new Module("test", "def(f, a.eq(#0))");
+		
+		assertEquals("true", m.trans(n, "f", 99).val().toString());
+		
+		
+		n = w_(" {a: {b: false, c: 'lala', d: 'lolo'} }  ");
+		
+		m = new Module("test", "def(h, [#0, #1, #2, #3, #4]) .def(g, h(88, #0, #1, #2, #3)) .def(f, g(#0, a.c, #1, #2))");
+		
 
 		assertEquals("[88,77.1,\"lala\",\"lili\",true]", m.trans(n, "f", 77.1, "lili", true).val().toString());
 		

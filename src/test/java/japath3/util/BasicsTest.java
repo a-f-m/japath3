@@ -20,6 +20,9 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import io.vavr.collection.HashMap;
+import io.vavr.collection.List;
+import io.vavr.collection.Map;
 import io.vavr.control.Option;
 
 public class BasicsTest {
@@ -51,6 +54,11 @@ public class BasicsTest {
 		System.out.println(es1);
 		assertEquals(s1, Basics.decode_(es1));
 
+		s1 = "_a_b_c_";
+		es1 = Basics.encode_(s1);
+		System.out.println(es1);
+		assertEquals(s1, Basics.decode_(es1));
+		
 		
 	}
 
@@ -199,5 +207,18 @@ public class BasicsTest {
 		
 		assertEquals(23, (int) Basics.align(o) + 1);
 	}
+	
+	@Test
+	public void testVavr() {
+		
+		Map<String, List<String>> m = HashMap.empty() ;
+		
+		m = Basics.putExtend(m, "a", "lala");
+		m = Basics.putExtend(m, "a", "lolo");
+		
+		assertEquals("HashMap((a, List(lala, lolo)))", m.toString());
+
+	}
+
 
 }

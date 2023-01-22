@@ -262,7 +262,7 @@ public class Japath {
 			if (vname.equals("$")) return;
 			isLocalCanditate = true;
 			if (vmap.putIfAbsent(vname, this) != null)
-				throw new JapathException("variable '" + vname + "' already assigned within def '" + defName + "'");
+				;//throw new JapathException("variable '" + vname + "' already assigned within def '" + defName + "'");
 		}
 
 		@Override public String toString() { return "bind_(" + embrace(vname, "\"") + ")"; }

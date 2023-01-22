@@ -116,4 +116,9 @@ public class WJsoup extends Node {
 	@Override public boolean isArray() { return false; }
 	
 	@Override public PrimitiveType type() { return PrimitiveType.String; }
+	
+	@Override public Node set(String name, Object o) { throw new UnsupportedOperationException(); }
+	@Override public Node set(int idx, Object o) { throw new UnsupportedOperationException(); }
+	@Override public void remove(Object selector) { throw new UnsupportedOperationException(); }
+
 }

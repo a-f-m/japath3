@@ -1,10 +1,10 @@
-def-script(
-    """
-    function incr(x) {
-        return x+1
-    }
-    """
-).
+// def-script(
+//     """
+//     function incr(x) {
+//         return x+1
+//     }
+//     """
+// ).
 
 def(f,
     self $x

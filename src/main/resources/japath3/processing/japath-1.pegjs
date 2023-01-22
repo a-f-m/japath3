@@ -10,7 +10,7 @@ start = _ p:simpleExpr _ !. { return stringify({start: p}); }
 simpleExpr = 
     '(' _ s:simpleExpr ')' _ {return s;} /
     'null'!Identifier/*!*/ _ {return {constant: {}};} /
-    c:(pi:Number {return pi;} / s:String!(_ ':') {return s;} ) 
+    c:(pi:Number _ {return pi;} / s:String!(_ ':') {return s;} ) 
             {return {constant: c};} /
     p:path!(_ ':') {return p;} /
     assignment
@@ -202,7 +202,7 @@ structArgs = x:(
 index = int _ { return parseInt(text(), 10); }
 
 /* equivalent to json spec */
-Number = "-"? int frac? exp? _ { return Number(text()); }
+Number = "-"? int frac? exp? { return Number(text()); }
 exp           = [eE] ("-" / "+")? digit+
 frac          = "." digit+
 int           = "0" / (digit1_9 digit*)

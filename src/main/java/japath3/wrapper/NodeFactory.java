@@ -4,6 +4,8 @@ import java.io.StringReader;
 
 import javax.json.Json;
 
+import org.json.JSONArray;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -14,6 +16,8 @@ import japath3.core.Node;
 import japath3.util.JoeUtil;
 
 public class NodeFactory {
+	
+	public static boolean prettyStringifying = false;
 	
 	// const for generating empty objects; should be migrated in future
 	static public Object emptyObject = new Object(); 
@@ -33,7 +37,7 @@ public class NodeFactory {
 		if (wclass == WJsonOrg.class) {
 			return new WJsonOrg(
 					x instanceof String ? (test ? JoeUtil.createJoe(x.toString()) : WJsonOrg.parse(x.toString()))
-							: x == emptyObject ? JoeUtil.createJoe() : x,
+							: x == emptyObject ? JoeUtil.createJoe() : x == emptyArray ? new JSONArray() : x,
 					"", null, new Ctx());
 		} else if (wclass == WGson.class) {
 			return new WGson(x instanceof String ? JsonParser.parseString(x.toString())
@@ -48,6 +52,9 @@ public class NodeFactory {
 	}
 	public static void setDefaultWrapperClass(Class<?> defaultWrapperClass_) {
 		defaultWrapperClass = defaultWrapperClass_;
+	}
+	public static void setPrettyStringifying(boolean prettyStringifying_) {
+		prettyStringifying = prettyStringifying_;
 	}
 
 }

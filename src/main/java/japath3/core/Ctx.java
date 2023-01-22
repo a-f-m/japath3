@@ -34,6 +34,7 @@ import japath3.processing.StandardDefs;
 import japath3.processing.StringFuncs;
 import japath3.processing.TimeFuncs;
 import japath3.schema.Schema;
+import japath3.util.Basics;
 import japath3.util.Basics.Ref;
 
 public class Ctx {
@@ -362,7 +363,12 @@ public class Ctx {
 					throw new JapathException("only the root node is modifiable as a whole");
 				return single(node.setConstruct(true));
 			case "log":
-				System.out.println(">>>log: " + asList(buildArgs(func, node, nits, true)).toString());
+				System.out.println(">>>log: " + node + " | " + asList(nits).stream().map(x -> {
+					return Basics.streamIt(x).map(y -> {
+						return y.toString();
+					}).collect(Collectors.joining(","));
+				}).collect(Collectors.joining(";")));
+//				System.out.println(">>>log: " + asList(buildArgs(func, node, nits, true)).toString());
 				return single(node);
 			case "nop":
 				return single(node);

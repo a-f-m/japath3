@@ -19,20 +19,18 @@ import japath3.util.JoeUtil;
 
 public class WJsonOrg extends Node {
 	
-	public static boolean pretty = false;
-	
-	public WJsonOrg(Object wo, Object selector, Node previousNode, Ctx ctx) { super(wo, selector, previousNode, ctx); }	
+	WJsonOrg(Object wo, Object selector, Node previousNode, Ctx ctx) { super(wo, selector, previousNode, ctx); }	
 	
 	public static Node w_(Object x) {
 		return NodeFactory.w_(x, WJsonOrg.class);
 	}
 	
 	@Override public Node create(Object wo, Object selector, Node previousNode, Ctx ctx) {
-		return new WJsonOrg(createLeafWo(wo), selector, previousNode, ctx);
+		return new WJsonOrg(createWo(wo), selector, previousNode, ctx);
 	}
 	
 	@Override
-	public Object createLeafWo(Object o) {
+	public Object createWo(Object o) {
 		return o == null ? nullWo() : o;
 	}
 	
@@ -178,7 +176,7 @@ public class WJsonOrg extends Node {
 	@Override
 	public String toString() {
 		
-		return "`" + selector + "`->" + woString(pretty ? 3 : 0);
+		return "`" + selector + "`->" + woString(NodeFactory.prettyStringifying ? 3 : 0);
 	}
 	
 	

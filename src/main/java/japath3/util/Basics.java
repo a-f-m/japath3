@@ -4,6 +4,7 @@ import static io.vavr.control.Option.none;
 import static org.apache.commons.lang3.StringUtils.repeat;
 
 import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -13,6 +14,7 @@ import java.util.stream.StreamSupport;
 
 import com.florianingerl.util.regex.Pattern;
 
+import io.vavr.collection.List;
 import io.vavr.control.Option;
 import japath3.core.JapathException;
 
@@ -20,7 +22,7 @@ import japath3.core.JapathException;
 public class Basics {
 	
 	
-	public static final class Ref<T> {
+	public static class Ref<T> {
 
 		public T r;
 
@@ -222,6 +224,13 @@ public class Basics {
 		}
 	}
 	
+	public static <K, V> io.vavr.collection.Map<K, List<V>> putExtend(io.vavr.collection.Map<K, List<V>> map, K key, V value) {
+		
+		return map.put(key, List.of(value), (x, y) -> {
+			return x.append(y.head());
+		});
+	}
+	
 	public static <T> T getAt(int idx, T[] a, T defaultValue) {
 		return idx >= a.length ? defaultValue : a[idx];
 	}
@@ -255,6 +264,13 @@ public class Basics {
 	
 	public static <T> T align(Object o) {
 		return (T) o;
+	}
+	
+	public static Object checkType(Object o, Class<?>... classes) {
+		boolean b = false;
+		for (Class<?> clazz : classes) b = b || clazz.isInstance(o); 
+		if (!b) throw new JapathException(o + " is not an instance of " + Arrays.asList(classes));
+		return o;
 	}
 	
 	public static String[] makeArgs(String args) {

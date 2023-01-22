@@ -42,7 +42,7 @@ public class WJsonB extends Node {
 	
 	public static boolean pretty = false;
 
-	public WJsonB(Object wo, Object selector, Node previousNode, Ctx ctx) { super(wo, selector, previousNode, ctx); }	
+	WJsonB(Object wo, Object selector, Node previousNode, Ctx ctx) { super(wo, selector, previousNode, ctx); }	
 	
 	public static Node w_(Object x) {
 		return NodeFactory.w_(x, WJsonB.class);
@@ -259,6 +259,8 @@ public class WJsonB extends Node {
 		return wo.toString();
 	}
 
+	@Override public Node set(int idx, Object o) { throw new UnsupportedOperationException(); }
+	
 	
 	public static void main(String[] args) {
 		System.out.println( StringUtils.leftPad("", 0));

@@ -17,12 +17,20 @@ public class Testing {
 	public static String dir = "src/test/resources/_expected";
 
 	// !!!!!!!!!!!!!!!!!!!!!!
-	public static boolean overwrite;
+	public static boolean overwrite = false;
 //	public static boolean overwrite = true;
 	// !!!!!!!!!!!!!!!!!!!!!!
 	
+	public static void assertEquals_(Class clazz, String expectedFile, String actual, boolean overwriteOnlyThisboolean ) {
+		assertEquals_("c-" + clazz.getTypeName() + "-" + expectedFile, actual, overwriteOnlyThisboolean);
+	}
+	
 	public static void assertEquals_(String expectedFile, String actual, boolean overwriteOnlyThisboolean ) {
 		assertEquals_("", expectedFile, actual, overwriteOnlyThisboolean);
+	}
+	
+	public static void assertEquals_(Class clazz, String expectedFile, String actual) {
+		assertEquals_(clazz, expectedFile, actual, false);
 	}
 	
 	public static void assertEquals_(String expectedFile, String actual) {
