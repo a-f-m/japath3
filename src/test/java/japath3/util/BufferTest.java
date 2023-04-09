@@ -43,7 +43,7 @@ public class BufferTest {
 		buffer.add(1, 2);
 		buffer.flush();
 		
-		assertEquals("[1, 2][]", sb.toString());
+		assertEquals("[1, 2]", sb.toString());
 		
 
 	}

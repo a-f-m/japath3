@@ -29,10 +29,10 @@ public class Buffer<T> implements Iterable<T> {
 
 	public Buffer<T> add(T x, Consumer<List<T>> puncher) {
 
+		flush(puncher, false);
 		cnt++;
 		total++;
 		buffer.add(x);
-		flush(puncher, false);
 		return this;
 	}
 
@@ -50,5 +50,13 @@ public class Buffer<T> implements Iterable<T> {
 	}
 
 	public int getTotal() { return total; }
+	
+	@Override public String toString() {
+		
+		String s = "size: " + buffer.size() + "\n";
+		for (int i = 0; i < Math.min(buffer.size(), 10); i++) s += buffer.get(i) + "\n";
+		s += "...\n";
+		return s; 
+	}
 
 }

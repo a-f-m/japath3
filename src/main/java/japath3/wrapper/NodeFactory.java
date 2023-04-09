@@ -28,6 +28,9 @@ public class NodeFactory {
 //	static private Class<?> defaultWrapperClass = WGson.class;
 //	static Class<?> defaultWrapperClass = WJsonB.class;
 
+	public static Node w_() {
+		return w_(emptyObject);
+	}
 	public static Node w_(Object x) {
 		
 		return w_(x, defaultWrapperClass);

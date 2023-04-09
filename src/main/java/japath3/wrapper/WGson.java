@@ -145,6 +145,24 @@ public class WGson extends Node {
 		}
 	}
 	
+	@Override public int length() {
+		
+		if (wo instanceof JsonArray ja) {
+			return ja.size();
+		} else {
+			throw new JapathException("length() is only for arrays");
+		}
+	}
+
+	@Override public boolean containsWo(Object o) {
+		
+		if (wo instanceof JsonArray ja) {
+			return ja.contains((JsonElement) createWoHelper(o));
+		} else {
+			throw new JapathException("length() is only for arrays");
+		}
+	}
+
 	@Override
 	public Node set(String name, Object o) {
 		

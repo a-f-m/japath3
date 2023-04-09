@@ -33,7 +33,7 @@ public class Basics {
 		public static <T> Ref<T> of(T t) { return new Ref<T>(t); }
 		public static <T> Ref<T> of() { return new Ref<T>(); }
 
-		@Override public String toString() { return r == null ? "null" : "^" + r.toString(); }
+		@Override public String toString() { return "^" + (r == null ? "null" : r.toString()); }
 	}
 	
 	public static record NestingSpec(int indent, String regexDelims, String regexSkipWSAfter, String noBreakToken) {}
@@ -86,7 +86,14 @@ public class Basics {
 	public static <T> T whenNull(T t, T whenNull) {
 		return t == null ? whenNull : t;
 	}
-	
+
+	public static <T> T checkEqual(T curr, T last) {
+		if (last != null) {
+			if (!last.equals(curr)) return null;
+		}
+		return curr;
+	}
+
 	/**
 	 * this extra non-standard encoding is needed to avoid ' '->'+' (at URL encoding). Used in situation where 
 	 * '+' leads to errors, e.g. jena fuseki.

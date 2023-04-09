@@ -220,6 +220,8 @@ public abstract class Node extends NodeBase implements Cloneable {
 	public boolean isEmpty() {
 		return !all().hasNext();
 	}
+	public int length() { throw new UnsupportedOperationException(); }
+	public boolean containsWo(Object o) { throw new UnsupportedOperationException(); }
 	public Object nullWo() { throw new UnsupportedOperationException(); }
 	final public boolean hasIdxSelector() { return selector instanceof Integer; }	
 	public boolean type(PrimitiveType t) { throw new UnsupportedOperationException(); };

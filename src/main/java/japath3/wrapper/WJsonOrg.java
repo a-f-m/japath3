@@ -14,6 +14,7 @@ import org.json.JSONObject;
 
 import japath3.core.Ctx;
 import japath3.core.Japath.NodeIter;
+import japath3.core.JapathException;
 import japath3.core.Node;
 import japath3.util.JoeUtil;
 
@@ -103,6 +104,15 @@ public class WJsonOrg extends Node {
 			};
 		} else {
 			return empty;
+		}
+	}
+
+	@Override public int length() {
+		
+		if (wo instanceof JSONArray ja) {
+			return ja.length();
+		} else {
+			throw new JapathException("length() is only for arrays");
 		}
 	}
 	
