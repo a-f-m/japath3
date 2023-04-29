@@ -38,13 +38,13 @@ public class Module {
 		this(name, pathExprStr, false);
 	}
 	
-	public Module(String name, InputStream pathExprStr) {
-		this(name, pathExprStr, false);
+	public Module(String name, InputStream is) {
+		this(name, is, false);
 	}
 
-	public Module(String name, InputStream pathExprStr, boolean isSchemaModule) {
+	public Module(String name, InputStream is, boolean isSchemaModule) {
 		try {
-			init(name, IOUtils.toString(pathExprStr, "utf-8"), isSchemaModule);
+			init(name, IOUtils.toString(is, "utf-8"), isSchemaModule);
 		} catch (IOException e) {
 			throw new JapathException(e);
 		}

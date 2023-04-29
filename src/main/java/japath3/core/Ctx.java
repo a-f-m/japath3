@@ -400,7 +400,7 @@ public class Ctx {
 		}
 		
 		Option<ParametricExprDef> d = defs.get(name);
-		if (!d.isDefined()) throw new JapathException("parametric expression '" + name + "' not defined");
+		if (!d.isDefined()) throw new JapathException("parametric expression '" + name + "' not defined or wrong parameters");
 		return d.get();
 	}
 

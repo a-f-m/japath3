@@ -1,0 +1,33 @@
+{
+   "graphNode": "<exa:e#g1>",
+   "triples": {"triples": [
+      {
+         "subj": "?s1",
+         "pred": "<exa:e#p2>",
+         "obj": "true"
+      },
+      {
+         "subj": "?s1",
+         "pred": 777,
+         "obj": "?o1_p1",
+         "lili": 111
+      },
+      {
+         "subj": "?s1",
+         "pred": "<exa:e#p3>",
+         "obj": "?o_p3"
+      },
+      {
+         "subj": "?s",
+         "pred": 888,
+         "obj": "?s1"
+      },
+      {
+         "subj": "?s",
+         "pred": 777,
+         "obj": "?o_p1",
+         "lili": 111
+      }
+   ]},
+   "type": "OpQuadPattern"
+}

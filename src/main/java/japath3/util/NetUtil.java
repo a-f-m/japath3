@@ -99,6 +99,15 @@ public class NetUtil {
 		
 		public String entity;
 		public int status;
+		public okhttp3.Response origResponse;
+		public Request origRequest;
+		
+		public Response(Request origRequest, okhttp3.Response origResponse, String entity, int status) {
+			this.entity = entity;
+			this.status = status;
+			this.origResponse = origResponse;
+			this.origRequest = origRequest;
+		}
 		public Response(String entity, int status) {
 			this.entity = entity;
 			this.status = status;
@@ -121,7 +130,7 @@ public class NetUtil {
 		RequestBody body = RequestBody.create(s, JSON);
 		Request request = new Request.Builder().url(url).post(body).build();
 		try (okhttp3.Response response = client.newCall(request).execute()) {
-			return new Response(getResponseString(response), response.code());
+			return new Response(request, response, getResponseString(response), response.code());
 		} catch (IOException e) {
 			throw new JapathException(e);
 		}
@@ -142,7 +151,7 @@ public class NetUtil {
 						: (url.contains("?") ? "" : "?") + Param.urlFormList(params, !url.endsWith("&"))))
 				.build();
 		try (okhttp3.Response response = client.newCall(request).execute()) {
-			return new Response(getResponseString(response), response.code());
+			return new Response(request, response, getResponseString(response), response.code());
 		} catch (IOException e) {
 			throw new JapathException(e);
 		}

@@ -24,6 +24,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 import japath3.core.Ctx;
+import japath3.core.Japath;
 import japath3.core.Japath.NodeIter;
 import japath3.core.JapathException;
 import japath3.core.Node;
@@ -260,6 +261,12 @@ public class WGson extends Node {
 
 	@Override public boolean isLeaf() { return !(wo instanceof JsonObject || wo instanceof JsonArray); } 
 	@Override public boolean isArray() { return wo instanceof JsonArray; } 
+	
+	@Override public NodeIter text() {
+		// due to strange toString behavior
+		return (wo instanceof JsonElement je ? Japath.singleObject(je.getAsString(), previousNode)
+				: null /* cannot happen */);
+	}
 	
 	@Override
 	public String toString() {

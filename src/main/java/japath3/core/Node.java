@@ -304,7 +304,7 @@ public abstract class Node extends NodeBase implements Cloneable {
 		}).collect(Collectors.toList());
 	}
 	
-	final public void setAncestors(Assignment assignment) {
+	final public void setAncestors0(Assignment assignment) {
 		
 		for (Node x: io.vavr.collection.List.ofAll(this.nodePath()).reverse()) {
 			// recursion failure
@@ -320,6 +320,31 @@ public abstract class Node extends NodeBase implements Cloneable {
 //				prev.setConstruct(true);
 			}
 //			x.setConstruct(true);
+		}
+	}
+	
+	final public void setAncestors(Assignment assignment) {
+		
+		Node x = this;
+		boolean undefs = false;
+		int level = 0;
+		while (x != null) {
+			// recursion failure
+			if (x != null && x != this && x.wo == this.wo) {
+				throw new JapathException("resursion caused by " + (assignment == null ? "internal" : assignment));
+			}
+			if (!undefs && level == 1) // it is ensured that refs are up to date
+				break;
+			Node prev;
+			if ((prev = x.previousNode) != null) {
+				if (prev.wo == undefWo) {
+					prev.wo = prev.createWo(x.hasIdxSelector());
+					undefs = true;
+				}
+				prev.seto(x.selector, x.wo);
+			}
+			x = x.previousNode;
+			level++;
 		}
 	}
 	

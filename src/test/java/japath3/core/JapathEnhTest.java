@@ -162,6 +162,7 @@ public class JapathEnhTest {
 			assertIt(n, "[{\"a\":{\"b\":{\"b1\":88},\"c\":{\"b\":{\"b1\":88},\"c\":\"lala\"}}} | ]", "::modifiable.a{c:$.a}.$", true);
 			fail();
 		} catch (Exception e) {
+			System.out.println(e);
 		}
 		
 		n = w_(" {a: [null, null] }  ");
@@ -817,6 +818,76 @@ public class JapathEnhTest {
 		
 		assertIt(n, "[{\"a\":1,\"b\":\"2\"}]",  Japath.constNodeExpr(n), false, false);
 	}
+	
+	@Test 
+	public void testTransformWcopy() throws Exception {
+		
+		String s = """
+				{
+				   "graphNode": "<exa:e#g1>",
+				   "triples": {"triples": [
+				      {
+				         "subj": "?s1",
+				         "pred": "<exa:e#p2>",
+				         "obj": "true"
+				      },
+				      {
+				         "subj": "?s1",
+				         "pred": "<exa:e#p1>",
+				         "obj": "?o1_p1"
+				      },
+				      {
+				         "subj": "?s1",
+				         "pred": "<exa:e#p3>",
+				         "obj": "?o_p3"
+				      },
+				      {
+				         "subj": "?s",
+				         "pred": "<exa:e#p6>",
+				         "obj": "?s1"
+				      },
+				      {
+				         "subj": "?s",
+				         "pred": "<exa:e#p1>",
+				         "obj": "?o_p1"
+				      }
+				   ]},
+				   "type": "OpQuadPattern"
+				}
+				""";
+		
+		Node n = w_(s);
+		
+		System.out.println(n.woString(3));
+		
+		String apath = """				
+				def(copy,
+				
+				    cond(
+				        pred.eq("<exa:e#p6>"),
+				        _{
+				            pred: 888
+				        },
+				    cond(
+				        pred.eq("<exa:e#p1>"),
+				        _{
+				            pred: 777,
+				            lili: 111
+				        },
+				        999
+				    )
+				    )
+				).
+				
+				//_{new $x: clone(), $x.**^.copy()}.$x
+				_{::modifiable, $.**^.copy()}.$
+				""";
+		
+		Node n_ = select(n, e_(apath));
+		
+		Testing.assertEquals_("testTransformWcopy", n_.woString(3));
+	}
+
 
 	
 	public static void main(String[] args) throws Exception {

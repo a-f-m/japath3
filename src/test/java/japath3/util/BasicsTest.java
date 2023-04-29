@@ -63,7 +63,7 @@ public class BasicsTest {
 	}
 
 	@Test
-	public void testPretty() {
+	public void doPretty() {
 		
 		String s = "( aa,    b, ff(cc, d), g(e))";
 		System.out.println(s);
@@ -183,7 +183,11 @@ public class BasicsTest {
 		
 		String s = "custom((((fullContent:secur)^0.06124861) ((fullContent:research)^0.06124861) ((fullContent:secur)^0.06124861) ((fullContent:forc)^0.06124861) ((fullContent:secur)^0.06124861) ((fullContent:societi)^0.06124861) ((fullContent:secur)^0.06124861) ((fullContent:econom)^0.06124861)) (((fullContent:border)^0.06541875) ((fullContent:manag)^0.06541875)) (((fullContent:secur)^0.06832233) ((fullContent:emerg)^0.06832233) ((fullContent:forc)^0.06832233)) (((fullContent:organis)^0.064585656) ((fullContent:structur)^0.064585656) ((fullContent:cultur)^0.064585656) ((fullContent:public)^0.064585656) ((fullContent:user)^0.064585656)) (((fullContent:secur)^0.08486665) ((fullContent:manag)^0.08486665)) (((fullContent:crisi)^0.062369432) ((fullContent:manag)^0.062369432) ((fullContent:system)^0.062369432)) (((fullContent:secur)^0.06659906) ((fullContent:commun)^0.06659906)) (((fullContent:foresight)^0.1) ((fullContent:scenario)^0.1) ((fullContent:secur)^0.1) ((fullContent:evolv)^0.1) ((fullContent:concept)^0.1)) (((fullContent:secur)^0.09778378) ((fullContent:manag)^0.09778378) ((fullContent:practic)^0.09778378)) (((fullContent:border)^0.07721507) ((fullContent:secur)^0.07721507)) (((fullContent:design)^0.07404166) ((fullContent:plan)^0.07404166) ((fullContent:build)^0.07404166) ((fullContent:urban)^0.07404166) ((fullContent:area)^0.07404166)) (((fullContent:urban)^0.07070461) ((fullContent:secur)^0.07070461)) (((fullContent:urban)^0.08362174) ((fullContent:secur)^0.08362174) ((fullContent:solut)^0.08362174)) (((fullContent:surveil)^0.09548265) ((fullContent:border)^0.09548265) ((fullContent:secur)^0.09548265)) (((fullContent:secur)^0.07416575) ((fullContent:suppli)^0.07416575) ((fullContent:chain)^0.07416575) ((fullContent:data)^0.07416575) ((fullContent:secur)^0.07416575) ((fullContent:privaci)^0.07416575)) (((fullContent:emerg)^0.07869532) ((fullContent:disast)^0.07869532) ((fullContent:manag)^0.07869532)) ((fullContent:enppf)^1.0 (fit_number_std:enppf)^1.5))";
 
-		System.out.println(Basics.prettyNesting(s , "", "fullContent"));
+//		System.out.println(Basics.prettyNesting(s , "", ""));
+		System.out.println(Basics.prettyNesting_1(s));
+		System.out.println("---");
+		System.out.println(Basics.prettyNesting_1("(ff..((gg..(xx),h(yy)))"));
+		System.out.println(Basics.prettyNesting_1("f(g(x),h(y))"));
 	}
 	
 	@Test

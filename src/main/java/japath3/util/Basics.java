@@ -189,6 +189,41 @@ public class Basics {
 	private static String pad(int indent, int level) {
 		return indent == 0 ? "" : "\n" + repeat(repeat("\t", indent), level);
 	}
+	
+	public static String prettyNesting_1(String s) {
+		
+		String tab = "\u2192";
+//		String tab = "\\_";
+//		String tab = "\t";
+		
+		String ret = "";
+		int level = 0;
+		for (int i = 0; i < s.length(); i++) {
+			String c = String.valueOf(s.charAt(i));
+			if (c.equals("(") || c.equals("{")) {
+				
+				level++;
+				ret += c + '\n' + repeat(tab, level);
+				
+			}
+			else if (c.equals(")") || c.equals("}")) {
+				
+				level--;
+				
+				ret += '\n' + repeat(tab, level) + c + '\n' + repeat(tab, level) ;
+				
+			} else {
+				ret += c;
+			}
+		}
+		
+		String tab_ = "\\u2192";
+		return ret.replaceAll("\\n+", "\n").replaceAll("\\n" + tab_ + "*\\n", "\n").replaceAll("(" + tab_ + ")\s+", "$1");
+		//		return ret.replaceAll("\\n+", "\n").replaceAll("\\n\\\\_*\\n", "\n").replaceAll("(\\\\_)\s+", "$1");
+//		return ret.replaceAll("\\n+", "\n").replaceAll("\\n\\t*\\n", "\n").replaceAll("(\\t)\s+\\(", "$1(");
+		
+	}
+			
 
 	public static <T> T c_(T t, Consumer<T> c) {
 		c.accept(t);
