@@ -1,5 +1,6 @@
 package japath3.core;
 
+import static japath3.core.Japath.__;
 import static japath3.core.Japath.empty;
 import static japath3.core.Japath.nodeIter;
 import static japath3.core.Japath.single;
@@ -13,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -24,8 +26,10 @@ import io.vavr.collection.Set;
 import io.vavr.collection.TreeSet;
 import japath3.core.Japath.Assignment;
 import japath3.core.Japath.Assignment.Scope;
+import japath3.core.Japath.Expr;
 import japath3.core.Japath.NodeIter;
 import japath3.core.Japath.NodeProcessing.Kind;
+import japath3.core.Japath.PathExpr;
 import japath3.core.Japath.Selection;
 import japath3.schema.Schema;
 import japath3.util.Basics.Ref;
@@ -291,7 +295,7 @@ public abstract class Node extends NodeBase implements Cloneable {
 			x = x.previousNode;
 		}
 	}
-	public List<Node> nodePath() {
+	public List<Node> nodePathToRoot() {
 		List<Node> l = new ArrayList<Node>();
 		toRoot(x -> {
 			l.add(0, x);
@@ -299,14 +303,69 @@ public abstract class Node extends NodeBase implements Cloneable {
 		return l;
 	}
 	public List<Object> selectorPath() {
-		return nodePath().stream().map(x -> {
+		return selectorPathStream().collect(Collectors.toList());
+	}
+	private Stream<Object> selectorPathStream() {
+		return nodePathToRoot().stream().map(x -> {
 			return x.selector;
-		}).collect(Collectors.toList());
+		});
+	}
+	public PathExpr selectorPathExpr() {
+		return Japath.path(selectorPathStream().map(x -> {
+			return x instanceof String name ? __(name)
+					: x instanceof Integer idx ? __(idx) : null /* cannot happen */;
+		}).toArray(Expr[]::new));
+	}
+	
+	public Set<String> selectorNameSet() {
+		
+		Ref<Set<String>> ret = Ref.of(TreeSet.empty());
+		walkr(this, (x, kind, __, __1, __2) -> {
+			if (kind == Kind.Pre) {
+				if (x.selector instanceof String) ret.r = ret.r.add(x.selector.toString());
+			}
+		});
+		return ret.r;
+		
+	}
+	
+	public List<Node> leafNodes() {
+		
+		List<Node> leafNodes = new ArrayList<>();
+				
+		Japath.walkr(this, (x, kind, __, __1, __2) -> {
+			if (kind == Kind.Pre && x.isLeaf()) 
+				leafNodes.add(x);
+		});
+		return leafNodes;
+	}
+	
+	public Node freshNode() {
+		return freshNode(false);
+	}
+	public Node freshNode(boolean array) {
+		return create(createWo(array), "");
+	}
+
+	public Node prefixPropertyNames(String prefix) {
+		
+		Node n = freshNode(false);
+		
+		for (Node n_ : all()) n.set(prefix + n_.selector, get(n_.selector.toString()).val());
+		
+		return n;
+		
+	}
+
+
+	final public <T> T v(String name) {
+		
+		return ctx.getVars().val(name);
 	}
 	
 	final public void setAncestors0(Assignment assignment) {
 		
-		for (Node x: io.vavr.collection.List.ofAll(this.nodePath()).reverse()) {
+		for (Node x: io.vavr.collection.List.ofAll(this.nodePathToRoot()).reverse()) {
 			// recursion failure
 			if (x != this && x.wo == this.wo) {
 				throw new JapathException("resursion caused by " + (assignment == null ? "internal" : assignment));
@@ -346,41 +405,6 @@ public abstract class Node extends NodeBase implements Cloneable {
 			x = x.previousNode;
 			level++;
 		}
-	}
-	
-	public Set<String> selectorNameSet() {
-		
-		Ref<Set<String>> ret = Ref.of(TreeSet.empty());
-		walkr(this, (x, kind, level, orderNo, isLast) -> {
-			if (kind == Kind.Pre) {
-				if (x.selector instanceof String) ret.r = ret.r.add(x.selector.toString());
-			}
-		});
-		return ret.r;
-		
-	}
-	
-	public Node freshNode() {
-		return freshNode(false);
-	}
-	public Node freshNode(boolean array) {
-		return create(createWo(array), "");
-	}
-
-	public Node prefixPropertyNames(String prefix) {
-		
-		Node n = freshNode(false);
-		
-		for (Node n_ : all()) n.set(prefix + n_.selector, get(n_.selector.toString()).val());
-		
-		return n;
-		
-	}
-
-
-	final public <T> T v(String name) {
-		
-		return ctx.getVars().val(name);
 	}
 	
 	@Override public Object clone() throws CloneNotSupportedException { 

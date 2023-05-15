@@ -41,6 +41,7 @@ import japath3.core.Node.DefaultNode;
 import japath3.core.Node.PrimitiveType;
 import japath3.util.Basics;
 import japath3.util.Regex;
+import japath3.wrapper.NodeFactory;
 
 /**
  * core containing ADT and 'select & walking'. In order to be compact, 'single line'-code is preferred (similar to functional languages).
@@ -1141,7 +1142,8 @@ public class Japath {
 		return walki(n, new Ctx.ParamAVarEnv(), path);
 	}
 	
-	public static Iterable<Node> walki(Node n, Ctx.ParamAVarEnv envx, Expr... path) { 
+	public static Iterable<Node> walki(Node n, Ctx.ParamAVarEnv envx, Expr... path) {
+		NodeFactory.checkJsonWrapperClass(n);
 		n.ctx.initSalience(n);
 		n.ctx.getVars().add(Var.of(n), "$");
 		

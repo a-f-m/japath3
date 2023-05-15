@@ -319,7 +319,7 @@ public class Language {
 	
 	// for flexibility reasons, e.g. other syntax forms, it is not defined 
 	// as (polymorphic) 'Expr'-method with tradeoff readability
-	private static String stringify0(Expr e) {
+	public static String stringify0(Expr e) {
 		
 		if (e instanceof Bind bind) {
 			return "$" + bind.vname;
@@ -405,10 +405,10 @@ public class Language {
 		int i = 0;
 		while (it.hasNext()) {
 			Expr e_ = it.next();
-			ret += (i == 0 ? ""
+			ret += (i == 0 || e_ instanceof Idx ? ""
 					: (e_ instanceof Bind || e_ instanceof Filter
 							|| e_ instanceof SubExpr
-							|| e_ instanceof Idx ? " " : delim))
+							 ? " " : delim))
 					+ stringify0(e_);
 			i++;
 		}

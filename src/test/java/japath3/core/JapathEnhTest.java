@@ -888,8 +888,33 @@ public class JapathEnhTest {
 		Testing.assertEquals_("testTransformWcopy", n_.woString(3));
 	}
 
+	@Test 
+	public void testSelectorPathExpr() throws Exception {
 
-	
+		Node n = w_("""
+				{
+				   "text": "lolo",
+				   "names": [
+					   {
+					      "first": "john",
+					      "last": "miller"
+					   },
+						{
+							"first": "johnny",
+							"last": "muller"
+						}
+				   ],
+				   "age": 99
+				}
+				""");
+
+		n.leafNodes().forEach(x -> {
+			PathExpr pe = x.selectorPathExpr();
+			System.out.println(Language.stringify0(pe));
+		});
+
+	}
+
 	public static void main(String[] args) throws Exception {
 		
 		JapathEnhTest japt = new JapathEnhTest();

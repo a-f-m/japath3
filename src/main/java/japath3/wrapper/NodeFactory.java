@@ -24,7 +24,7 @@ public class NodeFactory {
 	static public Object emptyArray = new Object(); 
 
 	static public boolean test = false;
-	static Class<?> defaultWrapperClass = WJsonOrg.class;
+	static public Class<?> defaultWrapperClass = WJsonOrg.class;
 //	static private Class<?> defaultWrapperClass = WGson.class;
 //	static Class<?> defaultWrapperClass = WJsonB.class;
 
@@ -53,6 +53,15 @@ public class NodeFactory {
 			throw new JapathException("no class wrapper");
 		}
 	}
+	
+	public static void checkJsonWrapperClass(Node n) {
+
+		if ((n instanceof WJsonOrg && defaultWrapperClass != WJsonOrg.class)
+				|| (n instanceof WGson && defaultWrapperClass != WGson.class)
+				|| (n instanceof WJsonB && defaultWrapperClass != WJsonB.class))
+			throw new JapathException("uncompatible wrapper classes: '" + n.getClass() + "' <-> default: '" + defaultWrapperClass + "'");
+	}
+	
 	public static void setDefaultWrapperClass(Class<?> defaultWrapperClass_) {
 		defaultWrapperClass = defaultWrapperClass_;
 	}
