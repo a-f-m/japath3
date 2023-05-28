@@ -172,6 +172,10 @@ public class JapathEnhTest {
 		n = w_(" {a: {b: false, c: 'lala'} }  ");
 		
 		assertIt(n, "[{\"b\":99,\"c\":\"lala\",\"d\":88} | ]", "::modifiable.a{b:99, d:88}", true);
+		
+		n = w_(" {}  ");
+		n.setConstruct(true);
+		assertIt(n, "[{\"b\":99} | ]", "_{b:99}", true);
 	}
 	
 	@Test 
@@ -889,7 +893,7 @@ public class JapathEnhTest {
 	}
 
 	@Test 
-	public void testSelectorPathExpr() throws Exception {
+	public void doSelectorPathExpr() throws Exception {
 
 		Node n = w_("""
 				{
@@ -912,7 +916,26 @@ public class JapathEnhTest {
 			PathExpr pe = x.selectorPathExpr();
 			System.out.println(Language.stringify0(pe));
 		});
+		
+		//---
+		
+		n = w_(
+				"""						
+				{
+				   "$names": [
+					   {
+					      "first": ["john", "james"],
+					      "last":  ["miller", "muller"],
+					      "lolo": 88
+					   }
+				   ]
+				}
+				"""
+				);
 
+		n.leafNodes(true).forEach(x -> {
+			System.out.println(x);
+		});
 	}
 
 	public static void main(String[] args) throws Exception {

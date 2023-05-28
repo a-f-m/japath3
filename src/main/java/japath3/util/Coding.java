@@ -7,6 +7,7 @@ public class Coding {
 
 	public static String UrlSpecial = " :/?#[]@!$%&'()*+,;=";
 	public static String FhirSpecial = UrlSpecial + "|";
+//	public static String SolrSpecialPlus = FhirSpecial + "\\+-! ():^[]\"{}~*?|&;/";
 
 	public static String IdRegex = "[a-zA-Z0-9_]";
 	

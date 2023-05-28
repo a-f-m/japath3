@@ -192,7 +192,9 @@ public class Basics {
 	
 	public static String prettyNesting_1(String s) {
 		
-		String tab = "\u2192";
+//		String tab = "\u2192";
+		String tab = "\u00B7";
+		String tab_ = "\\u00B7";
 //		String tab = "\\_";
 //		String tab = "\t";
 		
@@ -217,7 +219,6 @@ public class Basics {
 			}
 		}
 		
-		String tab_ = "\\u2192";
 		return ret.replaceAll("\\n+", "\n").replaceAll("\\n" + tab_ + "*\\n", "\n").replaceAll("(" + tab_ + ")\s+", "$1");
 		//		return ret.replaceAll("\\n+", "\n").replaceAll("\\n\\\\_*\\n", "\n").replaceAll("(\\\\_)\s+", "$1");
 //		return ret.replaceAll("\\n+", "\n").replaceAll("\\n\\t*\\n", "\n").replaceAll("(\\t)\s+\\(", "$1(");

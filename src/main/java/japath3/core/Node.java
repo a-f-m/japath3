@@ -274,6 +274,10 @@ public abstract class Node extends NodeBase implements Cloneable {
 			for (int i = 0; i < props.length; i++) x.remove(props[i]);
 		});
 	}
+	public Node detach() {
+		previousNode = null;
+		return this;
+	}
 	final public Node setPreviousNode(Node n) {
 		this.previousNode = n;
 		return this;
@@ -329,13 +333,29 @@ public abstract class Node extends NodeBase implements Cloneable {
 		
 	}
 	
-	public List<Node> leafNodes() {
+	public List<Node> leafNodes() { return leafNodes(false); }	
+	public List<Node> leafNodes(boolean leafArrays) {
 		
 		List<Node> leafNodes = new ArrayList<>();
+		Ref<Node> lastArr = new Ref<>();
 				
 		Japath.walkr(this, (x, kind, __, __1, __2) -> {
-			if (kind == Kind.Pre && x.isLeaf()) 
-				leafNodes.add(x);
+			if (kind == Kind.Pre && x.isLeaf()) {
+				if (leafArrays && x.previousNode != null && x.previousNode.isArray()) {
+					if (x.previousNode != lastArr.r) {
+						// all have to be leafs
+						NodeIter all = x.previousNode.all();
+						for (Node y : all) {
+							if (!y.isLeaf()) throw new JapathException("only leafs allowed");
+						}
+						//
+						leafNodes.add(x.previousNode);
+						lastArr.r = x.previousNode;
+					}
+				} else {
+					leafNodes.add(x);
+				}
+			}
 		});
 		return leafNodes;
 	}

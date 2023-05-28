@@ -1,6 +1,6 @@
 package japath3.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -8,6 +8,8 @@ import java.net.URLEncoder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import com.florianingerl.util.regex.Pattern;
 
 public class CodingTest {
 
@@ -47,6 +49,11 @@ public class CodingTest {
 		es1 = coding.encode(s1);
 		System.out.println(es1);
 		assertEquals(s1, coding.decode(es1));
+
+		s1 = "_14_b_c_";
+		es1 = coding.encode(s1);
+		System.out.println(es1);
+		assertEquals(s1, coding.decode(es1));
 		
 		s1 = "person_children";
 		es1 = coding.encode(s1);
@@ -70,5 +77,4 @@ public class CodingTest {
 		assertEquals(s1, coding.decode(es1));
 
 	}
-
 }
