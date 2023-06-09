@@ -21,12 +21,18 @@ public class PathRepresent {
 	private Coding fieldCoding = new Coding('_').setAllowedCharsRegex(Coding.IdRegex);
 	
 	private String prefix;
+	private String skipPropRegex;
 	private boolean leafArray;
 	
 	public PathRepresent() {}
 	
 	public PathRepresent(String prefix) {
 		this.prefix = prefix;
+	}
+	
+	public PathRepresent(String prefix, String skipPropRegex) {
+		this.prefix = prefix;
+		this.skipPropRegex = skipPropRegex;
 	}
 
 	public Node toFlatNode(Node n) {
@@ -61,7 +67,12 @@ public class PathRepresent {
 		
 		Node n = NodeFactory.w_().setConstruct(true);
 
-		for (Node x : flatnode.all()) buildAssignment(x.selector.toString(), (Object) x.val()).eval(n);
+		for (Node x : flatnode.all()) {
+			
+			String sel = x.selector.toString();
+			if (!sel.startsWith(prefix + "." ) || (skipPropRegex != null && sel.matches(skipPropRegex))) continue;
+			buildAssignment(sel, (Object) x.val()).eval(n);
+		}
 
 		return n;
 	}
@@ -70,6 +81,7 @@ public class PathRepresent {
 		
 		List<Expr> exprs = new ArrayList<>();
 		for (String s : path.split("\\.")) {
+			if (s.equals(prefix)) continue;
 			if (s.matches("\\d+")) {
 				exprs.add(Japath.__(Integer.valueOf(s)));
 			} else {
@@ -84,19 +96,33 @@ public class PathRepresent {
 		r = regexTrans1.matcher(r).replaceAll(m -> {
 			return "(" + fieldCoding.encode(m.group(1)) + ")";
 		});
-		System.out.println(r);
+//		System.out.println(r);
 
 		r = regexTrans2.matcher(r).replaceAll(m -> {
 			return "\\.";
 		});
-		System.out.println(r);
+//		System.out.println(r);
 
 		r = regexTrans3.matcher(r).replaceAll(m -> {
 			return ".";
 		});
-		System.out.println(r);
+//		System.out.println(r);
 		
 		return r;
+	}
+	
+	public Iterable<Node> process(Node flatnode, String regex) {
+		
+		flatnode.setConstruct(true);
+		final String regex_ = encodePathRegex(regex);
+		
+		return io.vavr.collection.List.ofAll(flatnode.all()).filter(x -> {
+			return x.selector.toString().matches(regex_);
+		});
+//		
+//		return Japath.nodeIter(io.vavr.collection.List.ofAll(flatnode.all()).filter(x -> {
+//			return x.selector.toString().matches(regex_);
+//		}).iterator());
 	}
 
 	public PathRepresent setLeafArray(boolean leafArray) {

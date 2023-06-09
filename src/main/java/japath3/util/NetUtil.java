@@ -138,7 +138,8 @@ public class NetUtil {
 
 	public static String getResponseString(okhttp3.Response resp) {
 		try {
-			return IOUtils.toString(resp.body().byteStream(), "utf-8");
+//			return IOUtils.toString(resp.body().byteStream(), "utf-8");
+			return new String(resp.body().bytes());
 		} catch (IOException e) {
 			throw new JapathException(e);
 		}
