@@ -34,18 +34,23 @@ public class PathRepresent {
 		this.prefix = prefix;
 		this.skipPropRegex = skipPropRegex;
 	}
-
+	
 	public Node toFlatNode(Node n) {
+		return toFlatNode(n, null);
+	}
+
+	public Node toFlatNode(Node n, String skipPrefixRegex) {
 
 		Node ret = NodeFactory.w_();
 
 		for (Node leaf : n.leafNodes(leafArray)) {
-			String p = prefix != null ? prefix + "." : "";
+			String p = "";
 			for (Node x : leaf.nodePathToRoot()) {
 				if (x.previousNode != null) p = extendPath(p, x);
 			}
 			// remove '.'-tail
-			p = p.replaceAll("\\.$", "");
+			p = (prefix != null && (skipPrefixRegex == null || !p.matches(skipPrefixRegex)) ? prefix + "." : "")
+					+ p.replaceAll("\\.$", "");
 			//
 			ret.set(p, leaf.woVal());
 		}
@@ -70,7 +75,8 @@ public class PathRepresent {
 		for (Node x : flatnode.all()) {
 			
 			String sel = x.selector.toString();
-			if (!sel.startsWith(prefix + "." ) || (skipPropRegex != null && sel.matches(skipPropRegex))) continue;
+			if ((prefix != null && !sel.startsWith(prefix + ".")) || (skipPropRegex != null && sel.matches(skipPropRegex)))
+				continue;
 			buildAssignment(sel, (Object) x.val()).eval(n);
 		}
 

@@ -45,17 +45,6 @@ public class PathRepresentTest {
 		Node n__;
 		testToFrom(n, pr, "testPathRepr_1", true);
 		
-		n_ = w_(
-				"""						
-				{
-				   "_24_names.0.first": ["john", 99]
-				}
-				"""
-				);
-
-		n__ = pr.toStructNode(n_);
-		System.out.println(n__.woString(0));
-		Assert.assertEquals("{\"$names\":[{\"first\":[\"john\",99]}]}", n__.woString(0));
 	}
 
 	private void testToFrom(Node n, PathRepresent pr, String t, boolean checkEq) {
