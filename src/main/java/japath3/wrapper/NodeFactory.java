@@ -37,20 +37,25 @@ public class NodeFactory {
 	}
 	public static Node w_(Object x, Class<?> wclass) {
 		
-		if (wclass == WJsonOrg.class) {
-			return new WJsonOrg(
-					x instanceof String ? (test ? JoeUtil.createJoe(x.toString()) : WJsonOrg.parse(x.toString()))
-							: x == emptyObject ? JoeUtil.createJoe() : x == emptyArray ? new JSONArray() : x,
-					"", null, new Ctx());
-		} else if (wclass == WGson.class) {
-			return new WGson(x instanceof String ? JsonParser.parseString(x.toString())
-					: x == emptyObject ? new JsonObject() : x == emptyArray ? new JsonArray() : x, "", null, new Ctx());
-		} else if (wclass == WJsonB.class) {
-			return new WJsonB(x instanceof String
-					? Json.createReader(new StringReader(WJsonOrg.parse(x.toString()).toString())).read()
-					: x == emptyObject ? Json.createObjectBuilder().build() : x, "", null, new Ctx());
-		} else {
-			throw new JapathException("no class wrapper");
+		try {
+			if (wclass == WJsonOrg.class) {
+				return new WJsonOrg(
+						x instanceof String ? (test ? JoeUtil.createJoe(x.toString()) : WJsonOrg.parse(x.toString()))
+								: x == emptyObject ? JoeUtil.createJoe() : x == emptyArray ? new JSONArray() : x,
+										"", null, new Ctx());
+			} else if (wclass == WGson.class) {
+				return new WGson(x instanceof String s ? JsonParser.parseString(s)
+						: x == emptyObject ? new JsonObject() : x == emptyArray ? new JsonArray() : x, "", null, new Ctx());
+			} else if (wclass == WJsonB.class) {
+				return new WJsonB(x instanceof String
+						? Json.createReader(new StringReader(WJsonOrg.parse(x.toString()).toString())).read()
+								: x == emptyObject ? Json.createObjectBuilder().build() : x, "", null, new Ctx());
+			} else {
+				throw new JapathException("no class wrapper");
+			}
+			
+		} catch (Exception e) {
+			throw new JapathException(e);
 		}
 	}
 	

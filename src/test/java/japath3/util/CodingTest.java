@@ -75,6 +75,18 @@ public class CodingTest {
 		es1 = coding.encode(s1);
 		System.out.println(es1);
 		assertEquals(s1, coding.decode(es1));
+		
+		coding = new Coding('_').setAllowedCharsRegex("x");
 
+		s1 = "10";
+		System.out.println(s1);
+		es1 = coding.encode(s1);
+		System.out.println(es1);
+		assertEquals(s1, coding.decode(es1));
+		
+		coding = new Coding('_').setAllowedCharsRegex(Coding.IdRegex);
+		assertEquals("10", coding.decode("_31__30_"));
+		
+		
 	}
 }

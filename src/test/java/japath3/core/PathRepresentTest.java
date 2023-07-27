@@ -1,6 +1,7 @@
 package japath3.core;
 
 import static japath3.wrapper.NodeFactory.w_;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.AfterClass;
@@ -8,8 +9,10 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import japath3.core.Japath.NodeIter;
 import japath3.util.Coding;
 import japath3.util.Testing;
+import japath3.wrapper.WGson;
 
 public class PathRepresentTest {
 	
@@ -93,5 +96,80 @@ public class PathRepresentTest {
 		
 	}
 
+	@Test 
+	public void testPathSchema() throws Exception {
+		
+		Node n = w_(
+				"""						
+				{
+				   "$names": [
+					   {
+					      "first": ["john", "james"],
+					      "last.num_All~w\\\\ed":  ["miller", "muller", 88]
+					      //,
+					      //"0": 88
+					   }
+				   ]
+				}
+				""",
+				WGson.class
+				);
+		PathRepresent pr = new PathRepresent().setLeafArray(false).setFieldCoding(pathReprCoding);
+
+		String actual = pr.toPathSchema(n).woString(3);
+		System.out.println(actual);
+		Testing.assertEquals_(getClass(), "path-schema-1", actual);
+	}
+
+	@Test 
+	public void testSingleInt() throws Exception {
+		
+		Node n = w_(
+				"""						
+				{
+				   "0": [
+					   {
+					      "first": ["john", "james"],
+					      "10": 88
+					   }
+				   ]
+				}
+				"""
+				);
+		PathRepresent pr = new PathRepresent().setLeafArray(false).setFieldCoding(pathReprCoding);
+		
+		testToFrom(n, pr, "testSingleInt_1", true);
+	}
+
+	@Test 
+	public void testPreserveTopProp() throws Exception {
+		
+		Node n = w_(
+				"""						
+				{
+					"a": 22,
+					"b": {"c": 8},
+					"_id": "99"
+				}
+				"""
+				);
+				PathRepresent pr = new PathRepresent("_path").setPreserveTopPropRegex("_id")
+						.setLeafArray(false)
+						.setFieldCoding(pathReprCoding);
+		
+		testToFrom(n, pr, "testPreserveTopProp", true);
+		
+	}
+
+	@Test 
+	public void testSubscripts() throws Exception {
+		
+		PathRepresent pr = new PathRepresent().setLeafArray(false).setFieldCoding(pathReprCoding);
+
+		assertTrue(pr.containsSubscripts("22.a.b"));
+		assertTrue(pr.containsSubscripts("a.10.b"));
+		assertTrue(pr.containsSubscripts("a.10"));
+		assertFalse(pr.containsSubscripts("a.b.c"));
+	}
 
 }
