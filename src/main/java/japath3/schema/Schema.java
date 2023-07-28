@@ -53,6 +53,7 @@ import japath3.core.Japath.Message;
 import japath3.core.Japath.NodeIter;
 import japath3.core.Japath.NodeProcessing.Kind;
 import japath3.core.Japath.PathExpr;
+import japath3.core.Japath.Property;
 import japath3.core.Japath.QuantifierExpr;
 import japath3.core.JapathException;
 import japath3.core.Node;
@@ -299,7 +300,8 @@ public class Schema {
 
 		return violations.collect(new PartialFunction() {
 
-			@Override public Object apply(Object t) { return t; }
+			@Override public Object apply(Object t) { 
+				return t; }
 
 			@Override public boolean isDefinedAt(Object value) {
 				return ((Node) ((Tuple2<ViolationKind, List<Object>>) value)._2.get(1)) //
@@ -385,7 +387,8 @@ public class Schema {
 			return x != null;
 		}).map(x -> {
 			return (x instanceof Expr e ? 
-//					"possible correction: " + 
+//					"possible correction: " +
+					(e instanceof Property ? "missing: " : "") +
 					stringify(e, 0) : x.toString());
 		}).distinct() ;
 		return messageHandling == Prefer && l.isEmpty() ? violList(v, None) : l;

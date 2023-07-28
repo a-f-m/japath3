@@ -138,7 +138,9 @@ public class Module {
 		if (!isSchemaModule) throw new JapathException("'" + name + "' is not a schema module");
 		prepare(n, vars);
 		
+//		Schema schema = new Schema().setSchema(getExpr(schemaName)).genMessages(MessageHandling.None);
 		Schema schema = new Schema().setSchema(getExpr(schemaName)).genMessages(MessageHandling.Prefer);
+//		Schema schema = new Schema().setSchema(getExpr(schemaName)).genMessages(MessageHandling.Only);
 		Option<String> validityViolations = schema.getValidityViolations(n);
 
 		return validityViolations.isDefined()
