@@ -352,7 +352,8 @@ public class Schema {
 						if (x.isStruct() || x.isCheckedArray()) {
 							sb.append((x.isStruct() ? "{" : "["));
 						} else if (x.isCheckedLeaf()) {
-							sb.append(StringUtils.abbreviate(embrace(x.val(), jsonOutput ? "\"" : "'") + (!isLast ? "," : ""), 40));
+							sb.append(StringUtils
+									.abbreviateMiddle(embrace(x.val(), jsonOutput ? "\"" : "'") + (!isLast ? "," : ""), "...", 30));
 						}
 						List v = getViolations(x);
 						if (v.nonEmpty()) {
