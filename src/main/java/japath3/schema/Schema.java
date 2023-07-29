@@ -179,7 +179,8 @@ public class Schema {
 	boolean genOpt;
 	boolean genSelectorRestriction;
 	boolean genCompleteness = true;
-	MessageHandling genMessages = None;
+//	MessageHandling genMessages = Prefer;
+	MessageHandling genMessages = Prefer;
 	boolean modular = true;
 //	boolean modular;
 	boolean jsonOutput = true;
