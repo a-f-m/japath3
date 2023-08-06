@@ -21,7 +21,7 @@ public class JsoupTest {
 	@Test public void test() throws Exception { 
 		
 		File input = new File("C:\\Users\\andreas-fm\\Desktop\\temp\\bookmarks.html");
-		Document doc = Jsoup.parse(input, "UTF-8", "http://example.com/");
+		Document doc = Jsoup.parse(input, "UTF-8", "");
 		
 		Elements links = doc.select("a[href]");
 		

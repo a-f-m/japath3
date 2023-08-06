@@ -3,6 +3,8 @@ package japath3.util;
 import static io.vavr.control.Option.none;
 import static org.apache.commons.lang3.StringUtils.repeat;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -343,6 +345,11 @@ public class Basics {
 			else return def;
 		}
 
+	}
+	public static String stackTraceToString(Exception e) {
+		StringWriter sw = new StringWriter();
+		e.printStackTrace(new PrintWriter(sw));
+		return sw.toString();
 	}
 	
 	public static class Switches {
