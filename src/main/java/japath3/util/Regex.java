@@ -2,6 +2,7 @@ package japath3.util;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import com.florianingerl.util.regex.CaptureTreeNode;
 import com.florianingerl.util.regex.Matcher;
@@ -117,4 +118,22 @@ public class Regex {
 		
 		return ret;
 	}
+	
+	public static String replaceParts(String s, String regex, Function<Matcher, String> f) {
+		
+		Matcher m = Pattern.compile(regex).matcher(s);
+		StringBuffer sb = new StringBuffer();
+		while (m.find()) m.appendReplacement(sb, f.apply(m));
+		m.appendTail(sb);		
+		String res = sb.toString();
+		return res;
+	}
+	
+	public static String collapseBacktickStrings(String s) {
+
+		return replaceParts(s,
+				"(?m)(?s)`(" + "(\\\\`|[^`])" + "*?)`",
+				m -> "\"" + m.group(1).replace("\n", " ").replace("\r", " ") + "\"");
+	}
+
 }

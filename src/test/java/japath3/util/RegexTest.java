@@ -63,5 +63,33 @@ public class RegexTest {
 		assertFalse(b);
 		assertEquals("a, >>> unexpected input >>> x,b", Regex.getErrorString(Pattern.compile(regex), input));
 	}
+	
+	@Test public void testRepl() {
+		
+		String s = """
+				{
+					a: `
+						xxx\\`
+						yyy
+					`,
+					b: `aaa`,
+					c: "lala"
+				}
+				""";
+		String res = Regex.replaceParts(s,
+				"(?m)(?s)`(" + "(\\\\`|[^`])" + "*?)`",
+				m -> "\"" + m.group(1).replaceAll("\\n", " ").replace("\\r", " ") + "\"");
+		
+		System.out.println(res);
+		
+		assertEquals(("{\r\n"
+				+ "	a: \" 		xxx` 		yyy 	\",\r\n"
+				+ "	b: \"aaa\",\r\n"
+				+ "	c: \"lala\"\r\n"
+				+ "}\r\n"
+				+ "").replace("\r", ""), Regex.collapseBacktickStrings(s));
+
+		
+	}
 
 }
