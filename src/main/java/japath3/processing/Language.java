@@ -109,7 +109,7 @@ public class Language {
 	
 	private static String keywords = 
 			"selector|filter|and|assert|or|xor|not|true|false|cond|imply|optional|opt|every|union|"
-			+ "eq|neq|lt|gt|le|ge|call|type|self|def|def-script|new|java|j|js|match|null|nil|error|message|asProperty";
+			+ "eq|neq|lt|gt|le|ge|call|type|self|def|def-script|new|java|j|js|match|null|nil|error|message|asProperty|regex";
 	
 	private static PegjsEngineGraal pegjsEngine;
 	
@@ -211,6 +211,8 @@ public class Language {
 		if ((x = ast.get("selection").node()) != nil)  return buildExpr(env, x, schemaProc);
 		if ((x = ast.get("selector").node()) != nil)  return List.of(sel);
 		if ((x = ast.get("property").node()) != nil)  return List.of(__((String) x.val()));
+		if ((x = ast.get("propertyRegex").node()) != nil)  
+			return List.of(__(false, (String) x.val()));
 		if ((x = ast.get("lhsProperty").node()) != nil)  return List.of(__(true, (String) x.val()));
 		if ((x = ast.get("pathAsProperty").node()) != nil)
 			return List.of(pathAsProperty(buildExpr(env, x, schemaProc).get(0)));
@@ -221,7 +223,8 @@ public class Language {
 			return List.of(val.equals("all") ? all : new Desc(val.equals("desc-bu")));
 		}
 		if ((x = ast.get("self").node()) != nil) return List.of(self);
-		if ((x = ast.get("create").node()) != nil) return List.of(create);
+		if ((x = ast.get("create").node()) != nil) 
+			return List.of(create);
 		if ((x = ast.get("text").node()) != nil) return List.of(text);
 		if ((x = ast.get("filter").node()) != nil) return List.of(filter(subExprs(env, schemaProc, x)));		
 		if ((x = ast.get("assignment").node()) != nil) {
@@ -349,7 +352,11 @@ public class Language {
 		} else if  (e instanceof Text) {
 			return "text()";
 		} else if  (e instanceof Property p) {
-			return Language.nameForm(p.name, p.isTrueRegex);
+			if (p.ignoreRegex) {
+				return Language.nameForm(p.name);
+			} else {
+				return "regex('" + p.name + "')";
+			}
 		} else if  (e instanceof PathAsProperty p) {
 			return "asProperty(" + stringify0(p.exprs[0]) + ")";
 		} else if  (e instanceof Idx idx) {
@@ -436,7 +443,7 @@ public class Language {
 				indent,
 				",",
 				"\\.",
-				"(type|opt|every|match|all|text|new|\\=|\\.|java|::complete|::modifiable)").replaceAll("(?m)\\(\\s*\\)", "()");
+				"(type|opt|every|match|all|text|new|regex|\\=|\\.|java|::complete|::modifiable)").replaceAll("(?m)\\(\\s*\\)", "()");
 	}
 	
 	public static Expr clone(Expr e, boolean schemaProc) {
@@ -454,7 +461,7 @@ public class Language {
 		return !rootIsPath ? e2.last() : e2;
 		
 	}
-	public static String nameForm(String id, boolean isTrueRegex) {
+	public static String nameForm(String id) {
 		return isIdentifier(id) && !id.matches(keywords) ? id : embraceEsc(id, '`');
 //		return isTrueRegex ? embrace(id.replace("`", "\\`"), '`')
 ////		return isTrueRegex ? embrace(id, '`')

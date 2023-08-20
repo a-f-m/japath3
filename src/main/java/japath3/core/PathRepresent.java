@@ -54,7 +54,6 @@ public class PathRepresent {
 
 		for (Node leaf : n.leafNodes(leafArray)) {
 			
-			String p = "";
 			if (leaf.previousNode == n) {
 				String sel = leaf.selector.toString();
 				
@@ -65,16 +64,21 @@ public class PathRepresent {
 					continue;
 				}
 			}
-			for (Node x : leaf.nodePathToRoot()) {
-				if (x.previousNode != null) p = extendPath(p, x);
-			}
-			// remove '.'-tail
-			p = (prefix != null ? prefix + "." : "")
-					+ p.replaceAll("\\.$", "");
-			//
-			ret.set(p, lop.apply(leaf));
+			ret.set(selectorPath(leaf), lop.apply(leaf));
 		}
 		return ret;
+	}
+
+	public String selectorPath(Node n) {
+		String p = "";
+		for (Node x : n.nodePathToRoot()) {
+			if (x.previousNode != null) p = extendPath(p, x);
+		}
+		// remove '.'-tail
+		p = (prefix != null ? prefix + "." : "")
+				+ p.replaceAll("\\.$", "");
+		//
+		return p;
 	}
 	
 	public Node toPathSchema(Node n) {

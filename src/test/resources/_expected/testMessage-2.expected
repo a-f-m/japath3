@@ -1,7 +1,6 @@
-{  // ← b.assert(message('c,d must exist and of type Number resp.String'),c.type(Number),d.type(String))
-  // ← a.assert(message('num exp'),type(Number))
-
+{
   "a": "lili",    // ← num exp
+    // ← type(Number)
 
   "b": {    // ← selectors [d1, cx] not covered by schema
     // ← c, d must exist and of type Number resp. String

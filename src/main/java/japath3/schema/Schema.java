@@ -113,6 +113,13 @@ public class Schema {
 					}
 				}
 				break;
+//			case imply:
+//				b = testIt(exprs[0].eval(node, envx)) ? testIt(exprs[1].eval(node, envx)) : true;
+//				if (!(boolean) Basics.getAt(1, envx, false) && ctx.checkValidity() && !b) {
+//					schema.addViolation(AndOp, this, node);
+//					mess = null;
+//				}
+//				break;
 			default:
 //				throw new UnsupportedOperationException();
 				return super.eval(node, envx);
@@ -384,7 +391,12 @@ public class Schema {
 		List<String> l = v.reverse().map(x -> {
 			Object mess = x._2.size() == 3 ? x._2.get(2) : null;
 			Object constr = x._2.get(0);
-			return messageHandling != None ? mess : constr;
+			if (constr instanceof Expr && containsMess((Expr) constr)) constr = null;
+			
+			return messageHandling == None ? //
+					constr : messageHandling == Prefer ? //
+							(mess != null ? mess : constr)
+							: mess;
 		}).filter(x -> {
 			return x != null;
 		}).map(x -> {
@@ -394,6 +406,17 @@ public class Schema {
 					stringify(e, 0) : x.toString());
 		}).distinct() ;
 		return messageHandling == Prefer && l.isEmpty() ? violList(v, None) : l;
+	}
+
+	private boolean containsMess(Expr constr) {
+		
+		Ref<Boolean> wMess = Ref.of(constr instanceof Message);
+		constr.visit(
+				(e, pre) -> {
+					if (pre && e instanceof Message) wMess.r = true; 
+				}
+				);
+		return wMess.r;
 	}
 
 	private String pad(int level) { return repeat("  ", level); }

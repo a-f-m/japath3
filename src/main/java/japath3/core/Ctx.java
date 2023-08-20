@@ -257,7 +257,9 @@ public class Ctx {
 					Object ret = m._2.invoke(m._1, args);
 					return ret == null ? empty : Japath.singleObject(ret, node);
 				} else {
-					return nits.length == 0 ? (NodeIter) m._2.invoke(m._1, node) : (NodeIter) m._2.invoke(m._1, node, nits);
+//					NodeIter result = nits.length == 0 ? (NodeIter) m._2.invoke(m._1, node) : (NodeIter) m._2.invoke(m._1, node, nits);
+					Object result = nits.length == 0 ? m._2.invoke(m._1, node) : m._2.invoke(m._1, node, nits);
+					return result instanceof NodeIter nit ? nit : Japath.singleObject(result, node);
 				}
 
 			} catch (ClassCastException e) {

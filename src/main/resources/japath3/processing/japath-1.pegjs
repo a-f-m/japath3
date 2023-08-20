@@ -142,7 +142,7 @@ message = 'message' _  '(' _ e:simpleExpr ')' _
 argNumber = '#' i:index
     { return {argNumber: i}; }
 
-exprAppl = !('asProperty') id:Identifier '(' _ a:args? ')' _
+exprAppl = !('asProperty'/'regex') id:Identifier '(' _ a:args? ')' _
     { return {exprAppl: {name: id, args: a}}; }
 
 ////
@@ -166,8 +166,10 @@ funcCall =
 
 ////
 property = 
-    'asProperty'!Identifier _ '(' _ p:path ')' _ { return {pathAsProperty: p}; } /
+    'asProperty'!Identifier _ '(' _ p:simpleExpr ')' _ { return {pathAsProperty: p}; } /
+    'regex'!Identifier _ '(' _ s:String ')' _ { return {propertyRegex: s}; } /
     x:(Identifier / QIdentifier) { return {property: x}; }
+
 
 ////
 subscript = 

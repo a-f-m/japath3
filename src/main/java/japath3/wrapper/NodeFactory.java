@@ -23,7 +23,6 @@ public class NodeFactory {
 	static public Object emptyObject = new Object(); 
 	static public Object emptyArray = new Object(); 
 
-	static public boolean test = false;
 	static public Class<?> defaultWrapperClass = WJsonOrg.class;
 //	static private Class<?> defaultWrapperClass = WGson.class;
 //	static Class<?> defaultWrapperClass = WJsonB.class;
@@ -40,7 +39,7 @@ public class NodeFactory {
 		try {
 			if (wclass == WJsonOrg.class) {
 				return new WJsonOrg(
-						x instanceof String ? (test ? JoeUtil.createJoe(x.toString()) : WJsonOrg.parse(x.toString()))
+						x instanceof String ? WJsonOrg.parse(x.toString())
 								: x == emptyObject ? JoeUtil.createJoe() : x == emptyArray ? new JSONArray() : x,
 										"", null, new Ctx());
 			} else if (wclass == WGson.class) {

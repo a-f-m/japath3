@@ -2,6 +2,7 @@
 
   "a": 1,
   "b": {    // ← selectors [d1, cx] not covered by schema
+    // ← c.type(Number)
 
     "cx": 1,
     "d": "lolo",

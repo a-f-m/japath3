@@ -533,7 +533,6 @@ public class Japath {
 	public static class Property extends Selection {
 
 		public String name;
-		public boolean isTrueRegex;
 		public boolean ignoreRegex;
 		
 		private Property(String name, boolean ignoreRegex) {
@@ -541,14 +540,14 @@ public class Japath {
 			this.name = name;
 			this.ignoreRegex = ignoreRegex;
 //			if (!Language.isIdentifier(name) && (isTrueRegex = Regex.isTrueRegex(name))) {
-			if (isTrueRegex = Regex.isTrueRegex(name)) {
+			if (!ignoreRegex) {
 				String expl = Regex.check(name);
 				if (expl != null) throw new JapathException("'" + name + "' is not a regex (" + expl + ")");
 			}
 		}
 		public NodeIter eval(Node node, Object... envx) {
 			
-			if (isTrueRegex && !ignoreRegex) {
+			if (!ignoreRegex) {
 				return regexSelection(node);
 			} else {
 				// TODO better attribute handling
@@ -574,7 +573,7 @@ public class Japath {
 		}
 		@Override public boolean isProperty() {return true;}
 		@Override public Object selector() { return name; }
-		@Override public String toString() { return "__" + (isTrueRegex ? "r" : "") + (ignoreRegex ? "i" : "")
+		@Override public String toString() { return "__" + (ignoreRegex ? "" : "r")
 				+ "(" + embrace(name, "\"").replace("\\`", "`") + ")"; }
 	}
 	
@@ -1071,7 +1070,7 @@ public class Japath {
 	public static PathExpr p_(Expr... exprs) { return new PathExpr(exprs); }
 	public static Walk walk(Expr... exprs) { return new Walk(exprs); }
 	public static Expr __(String... names) {
-		return __(false, names);
+		return __(true, names);
 	}
 	public static Expr __(boolean ignoreRegex, String... names) {
 		if (names.length == 1) {

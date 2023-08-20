@@ -7,10 +7,18 @@ import japath3.core.Japath;
 import japath3.core.Japath.NodeIter;
 import japath3.core.JapathException;
 import japath3.core.Node;
+import japath3.core.PathRepresent;
 import japath3.util.Basics;
+import japath3.util.Coding;
 
 public class GeneralFuncs { // available by ns 'it' or 'gen'
+	
+	private PathRepresent pathRepresent;
 
+	public GeneralFuncs() {
+		pathRepresent = new PathRepresent().setFieldCoding(new Coding('_').setSpecialChars("."));
+	}
+	
 	public NodeIter distinct(Node ctxNode, NodeIter[] nits) {
 		
 		if (nits.length == 0 || nits.length > 1) throw new JapathException("'set' must have exactly one argument");
@@ -70,6 +78,15 @@ public class GeneralFuncs { // available by ns 'it' or 'gen'
 		
 		return Japath.single(previousNode);
 		
+	}
+	
+	public boolean isLeaf(Node ctxNode) {
+		
+		return ctxNode.isLeaf();
+	}
+	
+	public String selectorPath(Node ctxNode) {
+		return pathRepresent.selectorPath(ctxNode);
 	}
 	
 	public NodeIter clone(Node ctxNode) throws CloneNotSupportedException {

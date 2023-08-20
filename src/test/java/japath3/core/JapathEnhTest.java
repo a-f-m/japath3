@@ -295,13 +295,13 @@ public class JapathEnhTest {
 		assertIt(n, "[{\"a\":1,\"c\":88}]", "new $x{a:1, cond(a.eq(2), b, c):88}"); 
 
 		n.ctx.clearVars();
-		try {
-			assertIt(n, "", "new $x{`.*`:88}");
-			fail();
-		} catch (JapathException e) {
-			assertEquals("operation on undef node '``->undef' (assign value first)",
-					e.getMessage());
-		}
+//		try {
+			assertIt(n, "[{\".*\":88}]", "new $x{`.*`:88}");
+//			fail();
+//		} catch (JapathException e) {
+//			assertEquals("operation on undef node '``->undef' (assign value first)",
+//					e.getMessage());
+//		}
 		
 		
 		n.ctx.clearVars();
@@ -937,6 +937,79 @@ public class JapathEnhTest {
 			System.out.println(x);
 		});
 	}
+	
+	@Test 
+	public void testPathAsProperty() throws Exception {
+		
+		
+		Node n = w_("""
+			{
+			    "pers": {
+			        "name": "Miller",
+			        "age": 17,
+			        "#post-code": 12205,
+			        "driverLic": true
+			    },
+			    "favs": ["coen-brothers", "dylan"]
+			}				
+			""");
+		
+		String ap = """
+				
+				def( trans,
+					_{new $name}
+					.{
+						asProperty( $name.selectorPath() ): pers.name $name
+					}
+				)
+				.trans()
+				
+				""";
+		
+		Node n_ = Japath.select(n, Language.e_(ap));
+		
+		System.out.println(n_);
+		assertEquals("``->{\"pers.name\":\"Miller\"}", n_.toString());
+	}
+	
+	@Test 
+	public void doPathAsPropertyWregex() throws Exception {
+		
+		Node n = w_("""
+				{
+				    "pers": {
+				        "name": "Miller",
+				        "age": 17,
+				        "#post-code": 12205,
+				        "driverLic": true
+				    },
+				    "favs": ["coen-brothers", "dylan"]
+				}				
+				""");
+
+		String ap = """
+				
+				def( trans,
+				
+					_{ new $flat: {},
+						_.**?(isLeaf()) $val
+						.selectorPath()?(match('.*\\.age|.*\\.name')) $path
+						//.selectorPath() $path
+						._{$flat.asProperty($path): $val}
+					}
+					.$flat
+				)
+				.trans()
+				
+				""";
+		
+		Node n_ = Japath.select(n, Language.e_(ap));
+
+		System.out.println(n_.woString(3));
+//		assertEquals("``->{\"pers.name\":\"Miller\"}", n_.toString());
+	}
+
+
 
 	public static void main(String[] args) throws Exception {
 		

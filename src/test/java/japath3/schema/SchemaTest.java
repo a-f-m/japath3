@@ -149,7 +149,7 @@ public class SchemaTest {
 				+ "		  d.type(String)))\n"
 				+ "");
 
-		NodeFactory.test = true;
+//		NodeFactory.test = true;
 		Node n = NodeFactory.w_(jo);
 //		System.out.println(schema.buildConstraintText(n));
 		
@@ -162,7 +162,7 @@ public class SchemaTest {
 		assertEquals(
 				"LinkedHashMap(({\"a\":1,\"b\":{\"cx\":1,\"d\":\"lolo\",\"d1\":\"lolo\"}}, HashSet(a, b)), (1, HashSet()), ({\"cx\":1,\"d\":\"lolo\",\"d1\":\"lolo\"}, HashSet(c, d)), (lolo, HashSet()))",
 				schema.propHits.toString());
-		
+//		NodeFactory.test = false;
 	}
 	
 	@Test public void testMessage() throws Exception {

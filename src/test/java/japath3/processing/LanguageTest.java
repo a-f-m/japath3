@@ -58,7 +58,7 @@ public class LanguageTest extends Language {
 		
 //		String input = "def(func2(v:99), $v.a.b)"  
 				;
-		String input = "eq(nil). or(`x \" \"`, imply(a, b)). some(*, c). b$v.*. a[1][2][#8]. a[#1..]. a[#1..2] .?(a). x?(a). `c\\` \\` §$` . [a, b]. union(or(a, b), union(or(c, d)))."
+		String input = "eq(nil). or(`x \" \"`, imply(a, b)). some(*, c). b$v.*. a[1][2][#8]. a[#1..]. a[#1..2] .?(a). x?(a). `c\\` \\` §$` . regex('.*'). [a, b]. union(or(a, b), union(or(c, d)))."
 				+ "**. ** ^. * .union ( a, b ). $ x .* . eq ( 88 ). eq ( -1.44E11 ). eq ( \"lolo\" ). eq ( $x ). §. match('la\\'la'). cond(a, b, c). self. text(). "
 				+ "def(func, #1.a.b). def(func1(), #1.a.b). def(func2(u, v:99, w, z: {a: 1}), $v.a.b). func(x, y.z) { \"a\" :(c.d)}. a {x.y, z}. java::sys::func(a, b.c). {c : 0}. j::sys::func(). js::func(). ::complete"
 				+ ". def-script(\"\"\"function aaa(){ \n return bbb}\"\"\"). asProperty(a.b). message('lala')"  
@@ -73,12 +73,12 @@ public class LanguageTest extends Language {
 		
 		assertEquals(stringify(e, 1), stringify(Language.clone(e, false), 1));
 		
-		assertEquals(es.replace("\r", ""), prettyNesting(stringify(e, 1), "\\,|\\.", ""));
+		assertEquals(es.replace("\r", ""), prettyNesting(stringify(e, 0), "\\,|\\.", ""));
 //		assertEquals(es.replace("\r", ""), stringify(e, 1));
 //		System.out.println(es);
 		
 		// check exception
-		e_(es);
+		e_(es.replaceAll("\r|\n", ""));
 		
 		Var x = null;
 		PathExpr path = path(or(__("x"), __("y")),
@@ -140,6 +140,9 @@ public class LanguageTest extends Language {
 			+ "x ?(\r\n"
 			+ "	a).\r\n"
 			+ "`c\\` \\` §$`.\r\n"
+			+ "regex(\r\n"
+			+ "	'.\r\n"
+			+ "	*').\r\n"
 			+ "[a,\r\n"
 			+ "b].\r\n"
 			+ "union(\r\n"
@@ -310,6 +313,7 @@ public class LanguageTest extends Language {
 			+ "   {\"step\": {\"property\": \"x\"}},\r\n"
 			+ "   {\"filter\": {\"path\": [{\"step\": {\"property\": \"a\"}}]}},\r\n"
 			+ "   {\"step\": {\"property\": \"c` ` §$\"}},\r\n"
+			+ "   {\"step\": {\"propertyRegex\": \".*\"}},\r\n"
 			+ "   {\"step\": {\"array\": {\"args\": [\r\n"
 			+ "      {\"path\": [{\"step\": {\"property\": \"a\"}}]},\r\n"
 			+ "      {\"path\": [{\"step\": {\"property\": \"b\"}}]}\r\n"

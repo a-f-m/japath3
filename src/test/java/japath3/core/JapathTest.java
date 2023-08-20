@@ -256,12 +256,12 @@ public class JapathTest {
 		assertEquals((Integer) 77, select(n, e_("a.*"), e_("b1.b2")).val());
 		
 		n = w_(" {a: [ {'§$%&H.Hb': 99, b1: {'b`2': 88} }, {'p#\"a-b': 'lala'  } ]}  ");
-		Expr[] expr1 = { e_("a[0].`§\\$%&H\\.Hb`") };
+		Expr[] expr1 = { e_("a[0].`§$%&H.Hb`") };
 		
 		Node x = select(n, expr1);
 		assertEquals((Number) 99, ((Number) x.val()).intValue());
 		
-		x = select(n, e_("a[0]"), __("§\\$%&H\\.Hb") );
+		x = select(n, e_("a[0]"), __("§$%&H.Hb") );
 		assertEquals((Number) 99, ((Number) x.val()).intValue());
 		
 		x = select(n, e_("a[0].b1.`b\\`2`") );
@@ -274,6 +274,18 @@ public class JapathTest {
 		assertEquals(true, x.val());
 		
 	}
+	
+	@Test
+	public void testPropertyRegex() {
+		
+		Node n = w_(" {a: [ {b: 99, b1: {b2: 88} }, {c: 'lala'  } ]}  ");
+		
+		assertIt(n, "[[{\"b\":99,\"b1\":{\"b2\":88}},{\"c\":\"lala\"}]]", "regex('a')");
+
+		assertIt(n, "[99, lala]", "a.*.regex('b|c')");
+		
+	}
+
 	
 	@Test
 	public void testBool() {

@@ -6,6 +6,10 @@ def(clone, j::it::clone()).
 
 def(parent, j::it::parent()).
 
+def(isLeaf, j::it::isLeaf()).
+
+def(selectorPath, j::it::selectorPath()).
+
 def(lift, 
     _{ new $lifted,
        *.*._{ selector $p, $lifted.asProperty($p): _ }
