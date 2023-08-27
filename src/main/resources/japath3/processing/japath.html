@@ -11,7 +11,7 @@
 	<pre id="ret">...</pre>
 
 	<script type="application/javascript" src="stringify.js"></script>
-	<script type="application/javascript" src="japath-1.js"></script>
+	<script type="application/javascript" src="japath-2.js"></script>
 	<script type="text/javascript">
 	
 		try {
@@ -25,7 +25,7 @@
 		// ret = peg$parse("'    x  y  '")
 		// ret = peg$parse("f(\"\"\"aaa \n bbb\"\"\")")
 		//ret = peg$parse("def(func2(u, v:99, w, z: {a: 1}), $v.a.b)")
-		ret = peg$parse("{a: 1}")
+		ret = peg$parse("var x : 99")
 		// ret = peg$parse("j::time::germanToIsoDate(a.f)")
 		//ret = peg$parse("'x''")
 		

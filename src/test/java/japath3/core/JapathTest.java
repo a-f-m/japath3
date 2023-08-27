@@ -821,7 +821,15 @@ public class JapathTest {
 		assertEquals("{\"P_a\":1,\"P_c\":true,\"P_b\":4.4,\"P_x\":{\"y\":9}}", n.prefixPropertyNames("P_").val().toString()  );
 	}
 
-
+	@Test 
+	public void testVarDecl() throws Exception {
+		
+		String ap = """
+				
+				var x : 99
+				
+				""";
+	}
 
 	public static String cr(String s) { return s.replace("\r", ""); }
 	

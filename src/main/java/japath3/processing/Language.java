@@ -36,6 +36,7 @@ import static japath3.util.Basics.it;
 import static japath3.util.Basics.stream;
 import static java.util.stream.Collectors.toList;
 
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.Arrays;
@@ -44,6 +45,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -101,6 +103,15 @@ import japath3.wrapper.WJsonOrg;
  */
 public class Language {
 	
+	private static String moduleStr = "module\\.exports = \\{\\R  SyntaxError: peg\\$SyntaxError,"
+			+ "\\R  parse:       peg\\$parse\\R\\};";
+
+	
+	public static String _syntaxVersion = "2";
+	public static boolean _deprecatedSyntaxAsError 
+//		= true
+		;
+	
 	public static class Env {
 		io.vavr.collection.Map<String, ParametricExprDef> defs = HashMap.empty();
 	}
@@ -109,7 +120,7 @@ public class Language {
 	
 	private static String keywords = 
 			"selector|filter|and|assert|or|xor|not|true|false|cond|imply|optional|opt|every|union|"
-			+ "eq|neq|lt|gt|le|ge|call|type|self|def|def-script|new|java|j|js|match|null|nil|error|message|asProperty|regex";
+			+ "eq|neq|lt|gt|le|ge|call|type|self|def|def-script|new|java|j|js|match|null|nil|error|message|asProperty|regex|do";
 	
 	private static PegjsEngineGraal pegjsEngine;
 	
@@ -118,12 +129,15 @@ public class Language {
 	
 	static {
 		
-		pegjsEngine = new PegjsEngineGraal(new InputStreamReader(Language.class.getResourceAsStream("japath-1.js")));
-//		try {
-//			pegjsEngine = new PegjsEngineRhino(new InputStreamReader(Language.class.getResourceAsStream("japath-1.js")));
-//		} catch (IOException e) {
-//			throw new JapathException(e);
-//		}
+		try {
+			pegjsEngine = new PegjsEngineGraal(new StringReader(IOUtils
+					.toString(new InputStreamReader(Language.class.getResourceAsStream("japath-" + _syntaxVersion + ".js")))
+					.replaceAll(moduleStr, "")));
+			
+		} catch (IOException e) {
+			throw new JapathException(e);
+		}
+		
 	}
 	
 	public static PathExpr e_(String path) {
@@ -168,6 +182,9 @@ public class Language {
 	public static Tuple2<JSONObject, String> getAst(String path) { return pegjsEngine.getAst(path); }
 	
 	private static List<Expr> buildExpr(Env env, final Node ast, boolean schemaProc) {
+		
+		if (ast.val("_deprecatedSyntax", false) && _deprecatedSyntaxAsError)
+			throw new JapathException("deprecated syntax as error: " + ast);
 		
 		if (ast.isArray()) {
 			List<Expr> exprs = List.empty();
@@ -372,7 +389,9 @@ public class Language {
 		} else if (e instanceof BoolExpr b) {
 			Op op = b.op;
 			return op != Op.constant ? ( e instanceof Schema.SchemaBoolExpr ? (op == BoolExpr.Op.and ? "assert" : op) : op ) + "(" + collect(e, ", ") + ")" : e.toString();
-		} else if (e instanceof SubExpr || e instanceof Struct) {
+		} else if (e instanceof SubExpr) {
+			return "do(" + collect(e, ", ") + ")";
+		} else if (e instanceof Struct) {
 			return "{" + collect(e, ", ") + "}";
 		} else if (e instanceof Optional opt) {
 			return "opt(" + stringify0(opt.exprs[0]) + ")";
@@ -391,7 +410,7 @@ public class Language {
 		} else if (e instanceof Filter f) {
 			return "?(" + stringify0(f.exprs[0]) + ")";
 		} else if (e instanceof Assignment ass) {
-			return stringify0(ass.exprs[0]) + " : (" + stringify0(ass.exprs[1]) + ")";
+			return stringify0(ass.exprs[0]) + " : " + stringify0(ass.exprs[1]) + "";
 		} else if (e instanceof Comparison cmp) {
 			return cmp.op + "(" + stringify0(cmp.exprs[0]) + ")";
 		} else if (e instanceof HasType h) {
@@ -479,6 +498,17 @@ public class Language {
 	public static void main(String[] args) {
 
 		System.out.println( "(  \r\n )".replaceAll("(?m)\\(\\s*\\)", "()")  );
+		
+		String s = """
+				
+				kashj lksjfd 
+				
+module.exports = {
+  SyntaxError: peg$SyntaxError,
+  parse:       peg$parse
+};				""";
+		
+		System.out.println(s.replaceAll(moduleStr, ""));
 	}
 
 }

@@ -11,16 +11,17 @@ def(isLeaf, j::it::isLeaf()).
 def(selectorPath, j::it::selectorPath()).
 
 def(lift, 
-    _{ new $lifted,
-       *.*._{ selector $p, $lifted.asProperty($p): _ }
-     }
+     do( new $lifted,
+       *.*.do( selector $p, $lifted.asProperty($p): _ )
+     )
      . $lifted
 ).
 
 def(embed, 
-    _ $root{ 
+    _ $root
+    .do( 
        #0.*
-       ._{ selector $p,
-           $root.asProperty($p) : _ } 
-    }    
+       .do( selector $p,
+           $root.asProperty($p) : _ )
+    )
 )

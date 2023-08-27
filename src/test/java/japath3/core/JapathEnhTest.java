@@ -61,10 +61,10 @@ public class JapathEnhTest {
 		}
 
 		
-		n.ctx.clearVars().clearDefs();
-		assertIt(n, "[lala | (x, ^``->undef)]", 
-				"   def(do, ?(#0)). "
-						+ " do(new $x: true). a.c", true, true);
+//		n.ctx.clearVars().clearDefs();
+//		assertIt(n, "[lala | (x, ^``->undef)]", 
+//				"   def(do, ?(#0)). "
+//						+ " do(new $x: true). a.c", true, true);
 	}
 	
 	@Test public void testNull() {
@@ -140,20 +140,20 @@ public class JapathEnhTest {
 		
 		n = w_(" {a: {b: false, c: [2,3,4]} }  ").setConstruct(true);
 		
-		assertIt(n, "[{\"a\":{\"b\":false,\"c\":[2,99,4],\"d\":[88]}} | ]", "a{c[1]:(99), d[>]:(88)}.$", true);
+		assertIt(n, "[{\"a\":{\"b\":false,\"c\":[2,99,4],\"d\":[88]}} | ]", "a{c[1]:99, d[>]:88}.$", true);
 		
 		n = w_("[2,3,4]");
 		
-		assertIt(n, "[[2,99,4] | ]", "::modifiable._{_[1]:(99)}.$", true);
+		assertIt(n, "[[2,99,4] | ]", "::modifiable._{_[1]:99}.$", true);
 		
 		n = w_("[2,3,4]");
 		
-		assertIt(n, "[[2,3,4,99] | ]", "::modifiable._{_[>]:(99)}.$", true);
+		assertIt(n, "[[2,3,4,99] | ]", "::modifiable._{_[>]:99}.$", true);
 		
 		n = w_(" {a: {b: {b1: 88}, c: 'lala'} }  ");
 		
 		n.ctx.setSalient(true);
-		assertIt(n, "[{\"a\":{\"b\":{\"b1\":88},\"c\":{\"b1\":88}}} | ]", "::modifiable.a{c:(b)}.$", true);
+		assertIt(n, "[{\"a\":{\"b\":{\"b1\":88},\"c\":{\"b1\":88}}} | ]", "::modifiable.a{c:b}.$", true);
 		
 		n = w_(" {a: {b: {b1: 88}, c: 'lala'} }  ");
 		
@@ -202,17 +202,17 @@ public class JapathEnhTest {
 		n.ctx.clearVars();
 		assertIt(n, "[{\"a\":[null,{\"b\":99}]} | (x, ^``->{\"a\":[null,{\"b\":99}]})]", 
 				
-				"new $x{a[1].b:(99)}. $x", true);
+				"new $x{a[1].b:99}. $x", true);
 		
 		n.ctx.clearVars();
 		assertIt(n, "[{\"a\":{\"b\":[null,99]}} | (x, ^``->{\"a\":{\"b\":[null,99]}})]", 
 				
-				"new $x{a.b[1]:(99)}", true);
+				"new $x{a.b[1]:99}", true);
 		
 		n.ctx.clearVars();
 		assertIt(n, "[[null,99] | (x, ^``->[null,99])]", 
 				
-				"new $x{_[1]:(99)}. $x", true);
+				"new $x{_[1]:99}. $x", true);
 		
 		n.ctx.clearVars();
 		String expr1 = "new { a : new{b : 99, b1 : {\"c1\" : 88}}, c : union(1, 2, new{\"d\" : \"lala\"}) }";
@@ -438,7 +438,7 @@ public class JapathEnhTest {
 		Node n = w_(" {a: {b: false, c: 'lala'} }  ");
 		
 		String s = "{\n"
-				+ "    type: 'lala',\n"
+				+ "    \"and\": 'lala',\n"
 				+ "    x: 2.2,\n"
 				+ "    y: true,\n"
 				+ "    apath: \"\"\"\n"

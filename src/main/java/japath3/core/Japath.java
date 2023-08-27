@@ -1146,7 +1146,7 @@ public class Japath {
 		n.ctx.initSalience(n);
 		n.ctx.getVars().add(Var.of(n), "$");
 		
-		Iterable<Node> it = it(path(path).eval(n, envx));
+		Iterable<Node> it = path(path).eval(n, envx);
 		return n.ctx.salient() ? io.vavr.collection.Iterator.concat(it, Basics.action(() -> {
 			n.ctx.checkSalience();
 		})) : it;
