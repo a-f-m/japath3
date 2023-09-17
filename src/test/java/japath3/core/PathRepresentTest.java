@@ -9,7 +9,6 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import japath3.core.Japath.NodeIter;
 import japath3.util.Coding;
 import japath3.util.Testing;
 import japath3.wrapper.WGson;

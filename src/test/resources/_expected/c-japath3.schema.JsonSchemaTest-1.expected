@@ -1,0 +1,58 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$ref": "#/$defs/root",
+   "$defs": {
+      "pers.embedded": {
+         "type": "object",
+         "properties": {"x": {"type": "integer"}},
+         "required": ["x"]
+      },
+      "pers": {
+         "type": "object",
+         "properties": {
+            "name": {"type": "string"},
+            "age": {"type": "integer"},
+            "#post-code": {"type": "integer"},
+            "driverLic": {"type": "boolean"},
+            "null": {"type": "null"},
+            "embedded": {"$ref": "#/$defs/pers.embedded"}
+         },
+         "required": [
+            "name",
+            "age",
+            "#post-code",
+            "driverLic",
+            "null",
+            "embedded"
+         ]
+      },
+      "favs.2": {
+         "type": "object",
+         "properties": {"uups": {"type": "string"}},
+         "required": ["uups"]
+      },
+      "favs.3": {
+         "type": "object",
+         "properties": {"embedded": {"$ref": "#/$defs/pers.embedded"}},
+         "required": ["embedded"]
+      },
+      "root": {
+         "type": "object",
+         "properties": {
+            "pers": {"$ref": "#/$defs/pers"},
+            "favs": {
+               "type": "array",
+               "items": {"anyOf": [
+                  {"type": "string"},
+                  {"$ref": "#/$defs/favs.2"},
+                  {"$ref": "#/$defs/favs.3"}
+               ]}
+            }
+         },
+         "required": [
+            "pers",
+            "favs"
+         ]
+      }
+   }
+}

@@ -23,6 +23,7 @@ import static japath3.schema.Schema.ViolationKind.OrOp;
 import static japath3.util.Basics.embrace;
 import static japath3.util.Basics.it;
 import static japath3.util.Basics.setIfAbsent;
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.repeat;
 
 import java.io.IOException;
@@ -58,6 +59,7 @@ import japath3.core.Japath.QuantifierExpr;
 import japath3.core.JapathException;
 import japath3.core.Node;
 import japath3.core.Node.PrimitiveType;
+import japath3.core.PathRepresent;
 import japath3.processing.Language;
 import japath3.util.Basics;
 import japath3.util.Basics.Ref;
@@ -188,7 +190,7 @@ public class Schema {
 	boolean genCompleteness = true;
 //	MessageHandling genMessages = Prefer;
 	MessageHandling genMessages = Prefer;
-	boolean modular = true;
+	boolean modular = false;
 //	boolean modular;
 	boolean jsonOutput = true;
 	boolean jsonOutputErrorAsProperty;
@@ -435,13 +437,14 @@ public class Schema {
 	public Expr buildConstraintExpr(Node n) {
 		
 		Ref<Map<String, Expr>> defs = Ref.of(HashMap.empty());
+		Ref<Map<String, String>> exprStrToName = Ref.of(HashMap.empty());
 		defCnt = 0;
-		Expr e = buildConstraintExpr(n, defs);
+		Expr e = buildConstraintExpr(n, defs, exprStrToName);
 		return modular ? Japath.path(defs.r.values().append(e).toJavaArray(Expr.class)) : e;
 		
 	}
 
-	private Expr buildConstraintExpr(Node n, Ref<Map<String, Expr>> defs) {
+	private Expr buildConstraintExpr(Node n, Ref<Map<String, Expr>> defs, Ref<Map<String,String>> exprStrToName) {
 
 		if (n.isStruct()) {
 
@@ -451,7 +454,7 @@ public class Schema {
 			for (Node x : it(n.all())) {
 				String sel = (String) x.selector;
 				selectors = selectors.add(Language.isIdentifier(sel) ? sel : "\\Q" + sel + "\\E");
-				Expr ex = buildConstraintExpr(x, defs);
+				Expr ex = buildConstraintExpr(x, defs, exprStrToName);
 				
 				Expr opt =   __(sel);
 				if (genOpt) opt = Japath.opt(opt);
@@ -473,14 +476,14 @@ public class Schema {
 			if (mode == SchemaMode && genSelectorRestriction)
 				ands = ands.prepend(every(all, path(Japath.sel, Japath.cmpConst(Comparison.Op.match, selectors.mkString("|")))));
 			Expr[] a = ands.toJavaArray(Expr.class);
-			return buildStructExpr(a, defs);
+			return buildStructExpr(a, defs, exprStrToName, new PathRepresent().selectorPath(n).replace(".", "_"));
 
 		} else if (n.isCheckedArray()) {
 
 			Set<String> mem = HashSet.empty();
 			List<Expr> ors = empty();
 			for (Node x : it(n.all())) {
-				Expr ex = buildConstraintExpr(x, defs);
+				Expr ex = buildConstraintExpr(x, defs, exprStrToName);
 				if (!mem.contains(ex.toString())) {
 					mem = mem.add(ex.toString());
 					if (ex != Nop) ors = ors.append(ex);
@@ -508,14 +511,21 @@ public class Schema {
 								ors[0] : union(ors)));
 	}
 
-	private Expr buildStructExpr(Expr[] ands, Ref<Map<String, Expr>> defs) {
-		
+	private Expr
+			buildStructExpr(Expr[] ands, Ref<Map<String, Expr>> defs, Ref<Map<String, String>> exprStrToName, String sel) {
+
 		Expr h = ands.length == 0 ? Nop //
 				: ands.length == 1 ? ands[0] //
-						: (mode == SchemaMode ? new SchemaBoolExpr(Op.and, ands)   : union(ands));
+						: (mode == SchemaMode ? new SchemaBoolExpr(Op.and, ands) : union(ands));
 		if (modular) {
-			String defName = "h" + defCnt++;
-			defs.r = defs.r.put(defName, Japath.paramExprDef(defName, h));
+			
+			String hStr = asList(h).toString();
+			String defName = exprStrToName.r.getOrElse(hStr, null);
+			if (defName == null) {
+				defName = sel.equals("") ? "root" : sel;
+				exprStrToName.r = exprStrToName.r.put(hStr, defName);
+				defs.r = defs.r.put(defName, Japath.paramExprDef(defName, h));
+			}
 			return Japath.paramExprAppl(defName);
 		} else {
 			return h;

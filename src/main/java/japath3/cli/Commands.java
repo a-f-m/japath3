@@ -34,6 +34,7 @@ import japath3.core.JapathException.Kind;
 import japath3.core.Node;
 import japath3.core.Var;
 import japath3.core.Vars;
+import japath3.schema.JsonSchema;
 import japath3.schema.Schema;
 import japath3.schema.Schema.Mode;
 import japath3.service.HttpService;
@@ -268,16 +269,29 @@ public class Commands {
 			case "schemaGen":
 			case "selectGen":
 				String optString = request.optString("schemaGenSwitches", null);
-				String switchPatt = "opt|selectorRestriction";
+				String switchPatt = "opt|selectorRestriction|json-schema|modular";
 				if (optString != null) {
 					io.vavr.control.Option<String> c = checkSwitches(optString, switchPatt);
 					if (c.isDefined()) throw new JapathException("--schemaGenSwitches: " + c.get());
 				}
+				
+				if (switchEnabled(optString, "json-schema") && oOp.equals("schemaGen")) {
+					
+					results.put(new JSONObject(new JsonSchema().setOpt(switchEnabled(optString, "opt"))
+							.setModular(switchEnabled(optString, "modular"))
+							.buildJsonTopSchema(node)
+							.val()
+							.toString()));
+					
+				} else {
+					
+					results.put(new Schema().genOpt(switchEnabled(optString, "opt"))
+							.modular(switchEnabled(optString, "modular"))
+							.genSelectorRestriction(switchEnabled(optString, "selectorRestriction"))
+							.setMode(oOp.equals("schemaGen") ? Mode.SchemaMode : Mode.SelectMode)
+							.buildConstraintText(oVar != null ? v.node() : node));
+				}
 
-				results.put(new Schema().genOpt(switchEnabled(optString, "opt"))
-						.genSelectorRestriction(switchEnabled(optString, "selectorRestriction"))
-						.setMode(oOp.equals("schemaGen") ? Mode.SchemaMode : Mode.SelectMode)
-						.buildConstraintText(oVar != null ? v.node() : node));
 				break;
 			default:
 				throw new JapathException("command '" + oOp + "' not implemented");

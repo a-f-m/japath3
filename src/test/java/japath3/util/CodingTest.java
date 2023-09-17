@@ -9,8 +9,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.florianingerl.util.regex.Pattern;
-
 public class CodingTest {
 
 	@BeforeClass public static void setUpBeforeClass() throws Exception {}

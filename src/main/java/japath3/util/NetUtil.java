@@ -17,7 +17,6 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 
 import io.vavr.collection.List;
