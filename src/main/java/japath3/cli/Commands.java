@@ -8,7 +8,6 @@ import static japath3.schema.Schema.MessageHandling.Prefer;
 import static japath3.util.Basics.stream;
 import static japath3.util.Basics.Switches.checkSwitches;
 import static japath3.util.Basics.Switches.switchEnabled;
-import static japath3.util.JoeUtil.createJoe;
 import static java.util.stream.Collectors.joining;
 
 import java.io.BufferedReader;
@@ -34,13 +33,12 @@ import japath3.core.JapathException.Kind;
 import japath3.core.Node;
 import japath3.core.Var;
 import japath3.core.Vars;
-import japath3.schema.JsonSchema;
+import japath3.schema.JsonSchemaProcessing;
 import japath3.schema.Schema;
 import japath3.schema.Schema.Mode;
 import japath3.service.HttpService;
 import japath3.util.JoeUtil;
 import japath3.wrapper.NodeFactory;
-import japath3.wrapper.WJsonOrg;
 import japath3.wrapper.WJsoup;
 
 //String c = CliBase.getCommand(args, "(select|schema)");
@@ -169,18 +167,18 @@ public class Commands {
 					}
 				}
 				
-				JSONObject request = createJoe()
-						.put("_op", op)
-						.put("type", type)
-						.put("_body", text)
-						.put("apathExpr", cmd.getOptionValue("apathExpr", null))
-						.put("var",
+				Node request = NodeFactory.w_()
+						.set("_op", op)
+						.set("type", type)
+						.set("_body", text)
+						.set("apathExpr", cmd.getOptionValue("apathExpr", "nil"))
+						.set("var",
 								!cmd.hasOption("var") ? null : cmd.getOptionValue("var") == null ? "" : cmd.getOptionValue("var"))
-						.put("constraints", cmd.getOptionValue("constraints"))
-						.put("pretty", cmd.hasOption("pretty"))
-						.put("asArray", cmd.hasOption("asArray"))
-						.put("schemaGenSwitches", cmd.getOptionValue("schemaGenSwitches", null))
-						.put("salient", cmd.hasOption("salient"))
+						.set("constraints", cmd.getOptionValue("constraints", "true"))
+						.set("pretty", cmd.hasOption("pretty"))
+						.set("asArray", cmd.hasOption("asArray"))
+						.set("schemaGenSwitches", cmd.getOptionValue("schemaGenSwitches", ""))
+						.set("salient", cmd.hasOption("salient"))
 						;
 
 				String out = cmd.getOptionValue("out", null);
@@ -206,39 +204,34 @@ public class Commands {
 		// : result._1.toString();
 	}
 
-	public static String exec(JSONObject request) {
+	public static String exec(Node request) {
 
-		Node nReq = NodeFactory.w_(request, WJsonOrg.class);
-		// System.out.println(request.toString(3));
-		// System.out.println(schema.getSchemaExpr());
-		// System.out.println(new Schema().buildConstraintText(nReq));
-
-		if (!reqSchema.checkValidity(nReq)) {
-			throw new JapathException(reqSchema.annotatedViolations(nReq));
+		if (!reqSchema.checkValidity(request)) {
+			throw new JapathException(reqSchema.annotatedViolations(request));
 			// return Tuple.of(reqSchema.annotatedViolations(nReq), false);
 		}
 
-		String oOp = request.optString("_op", "select");
-		String oType = request.optString("type", "json");
+		String oOp = request.val("_op", "select");
+		String oType = request.val("type", "json");
 		String t = "json|xml";
 		if (!oType.matches(t)) {
 			throw new JapathException("--type: one of (" + t + ") ");
 		}
-		String oVar = request.optString("var", null);
-		String oSchema = request.optString("constraints", null);
-		int ind = request.optBoolean("pretty") ? 3 : 0;
+		String oVar = request.val("var", null);
+		String oSchema = request.val("constraints", null);
+		int ind = request.val("pretty", false) ? 3 : 0;
 
-		Object body = request.get("_body");
+		Object body = request.get("_body").val();
 		Node n = buildNode(body, oType);
-		n.ctx.setSalient(request.optBoolean("salient"));
+		n.ctx.setSalient(request.val("salient", false));
 		// Implicitly throws exception at viol
-		checkSchema(oSchema, oType, n, request.optBoolean("genMessages"), request.optBoolean("genMessagesOnly"));
+		checkSchema(oSchema, oType, n, request.val("genMessages", false), request.val("genMessagesOnly", false));
 
 		JSONArray results = new JSONArray();
 		// for (Node node : nodes) {
 		Iterable<Node> walki = null;
 		try {
-			String apathExpr = request.optString("apathExpr", "?(true)");
+			String apathExpr = request.val("apathExpr", "?(true)");
 			if (apathExpr.startsWith("^")) {
 				try {
 					apathExpr = IOUtils.toString(new FileReader(apathExpr.substring(1)));
@@ -268,7 +261,7 @@ public class Commands {
 				break;
 			case "schemaGen":
 			case "selectGen":
-				String optString = request.optString("schemaGenSwitches", null);
+				String optString = request.val("schemaGenSwitches", null);
 				String switchPatt = "opt|selectorRestriction|json-schema|modular";
 				if (optString != null) {
 					io.vavr.control.Option<String> c = checkSwitches(optString, switchPatt);
@@ -277,7 +270,7 @@ public class Commands {
 				
 				if (switchEnabled(optString, "json-schema") && oOp.equals("schemaGen")) {
 					
-					results.put(new JSONObject(new JsonSchema().setOpt(switchEnabled(optString, "opt"))
+					results.put(new JSONObject(new JsonSchemaProcessing().setOpt(switchEnabled(optString, "opt"))
 							.setModular(switchEnabled(optString, "modular"))
 							.buildJsonTopSchema(node)
 							.val()
@@ -297,7 +290,7 @@ public class Commands {
 				throw new JapathException("command '" + oOp + "' not implemented");
 			}
 		}
-		return !request.optBoolean("asArray") ? //
+		return !request.val("asArray", false) ? //
 				stream(results).map(x -> {
 					return JoeUtil.prettyString(x, ind);
 				}).collect(joining("\n")) //
@@ -319,8 +312,7 @@ public class Commands {
 		}
 
 		if (oType.equals("json")) {
-			n = NodeFactory.w_(body, WJsonOrg.class);
-//			n = NodeFactory.w_(body instanceof JSONObject ? body : createJoe(body.toString()), WJsonOrg.class);
+			n = NodeFactory.w_(body);
 		} else { // xml
 			Document doc = Jsoup.parse(body.toString(), "", Parser.xmlParser());
 			if (doc.children().isEmpty()) throw new JapathException("no tags given");

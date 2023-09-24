@@ -39,7 +39,7 @@ public class SchemaTest {
 		// new JSONTokener(new
 		// FileInputStream("src/test/resources/japath3/processing/schema-input-1.json")));
 		String jo = 
-				IOUtils.toString(new FileInputStream("src/test/resources/japath3/processing/schema-input-1.json"), "utf-8");
+				IOUtils.toString(new FileInputStream("src/test/resources/japath3/schema/schema-input-1.json"), "utf-8");
 
 		Schema schema = new Schema().genSelectorRestriction(true);
 
@@ -55,8 +55,8 @@ public class SchemaTest {
 //		assertEquals(e1, t + "\n");
 
 		Writer fw = new BufferedWriter(
-//				new OutputStreamWriter(new FileOutputStream("src/test/resources/japath3/processing/schema-input-1.jap"),
-				new OutputStreamWriter(new FileOutputStream("src/test/resources/japath3/processing/schema-input-1.ap"),
+//				new OutputStreamWriter(new FileOutputStream("src/test/resources/japath3/schema/schema-input-1.jap"),
+				new OutputStreamWriter(new FileOutputStream("src/test/resources/japath3/schema/schema-input-1.ap"),
 						"utf-8"));
 
 		fw. write(t);
@@ -220,12 +220,12 @@ public class SchemaTest {
 	@Test public void testSchemaFile() throws Exception {
 
 		String jo = 
-				IOUtils.toString(new FileInputStream("src/test/resources/japath3/processing/schema-input-1.json"), "utf-8");
+				IOUtils.toString(new FileInputStream("src/test/resources/japath3/schema/schema-input-1.json"), "utf-8");
 
 		System.out.println("------");
 		
 		Schema schema = new Schema().genSelectorRestriction(true)
-				.setSchema(IOUtils.toString(new FileInputStream("src/test/resources/japath3/processing/schema-input-1.ap"), "utf-8"));
+				.setSchema(IOUtils.toString(new FileInputStream("src/test/resources/japath3/schema/schema-input-1.ap"), "utf-8"));
 
 		Node n = NodeFactory.w_(jo);
 		System.out.println(schema.buildConstraintText(n));

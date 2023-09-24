@@ -2,22 +2,19 @@ package japath3.processing;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.nio.file.Path;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONTokener;
+import org.apache.commons.io.IOUtils;
 
 import io.vavr.collection.HashMap;
 import io.vavr.collection.Map;
 import japath3.core.Ctx;
 import japath3.core.JapathException;
+import japath3.core.Node;
 import japath3.schema.Schema;
 import japath3.wrapper.NodeFactory;
-import japath3.wrapper.WJsonOrg;
 
 public class ModuleHandler {
 	
@@ -42,21 +39,25 @@ public class ModuleHandler {
 		
 		moduleMap = HashMap.empty();
 		
-		JSONObject joConfig;
+		Node joConfig;
 		try {
-			joConfig = new JSONObject(new JSONTokener(new FileReader(configFile)));
-		} catch (JSONException | FileNotFoundException e) {
+//			joConfig = new JSONObject(new JSONTokener(new FileReader(configFile)));
+			joConfig = NodeFactory.w_(IOUtils.toString(new FileReader(configFile)));
+//		} catch (JSONException | FileNotFoundException e) {
+		} catch (IOException e) {
 			throw new JapathException(e);
 		}
 		
-		String mess = Schema.checkValidity(NodeFactory.w_(joConfig, WJsonOrg.class) , configSchema);
+//		String mess = Schema.checkValidity(NodeFactory.w_(joConfig, WJsonOrg.class) , configSchema);
+		String mess = Schema.checkValidity(joConfig , configSchema);
 		if (mess != null) throw new JapathException(mess);
 		
-		JSONArray joModules = joConfig.getJSONArray("modules");
-		for (Object o : joModules) {
-			JSONObject	joModule = (JSONObject) o;
+		Node joModules = joConfig.node("modules");
+		for (Node o : joModules.all()) {
+//			JSONObject	joModule = (JSONObject) o;
 			
-			String moduleName = joModule.getString("name");
+//			String moduleName = joModule.getString("name");
+			String moduleName = o.val("name");
 			
 			Path baseDir = configFile.toPath().getParent().toAbsolutePath();
 			
@@ -68,16 +69,16 @@ public class ModuleHandler {
 			try {
 				module = new Module(moduleName,
 						new FileInputStream(baseDir.toString() + "/" + moduleName + ".ap"),
-						joModule.optBoolean("isSchema"));
+						o.val("isSchema", false));
 			} catch (Exception e) {
 				throw new JapathException(e.getMessage() + " (at module '" + moduleName + "')");
 			}
 			
-			JSONArray jaImports = joModule.optJSONArray("imports");
+			Node jaImports = o.node("imports");
 			
-			if (jaImports != null)
-				for (Object use : jaImports) {
-					Module m = moduleMap.getOrElse((String) use, null);
+			if (jaImports != Node.nil)
+				for (Node use : jaImports.all()) {
+					Module m = moduleMap.getOrElse(use.val(), null);
 					if (m == null) throw new JapathException("module '" + use + "' not known");
 					module.importModule(m);				
 				}

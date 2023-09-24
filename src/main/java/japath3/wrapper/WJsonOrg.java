@@ -111,6 +111,8 @@ public class WJsonOrg extends Node {
 		
 		if (wo instanceof JSONArray ja) {
 			return ja.length();
+		} else if (wo instanceof JSONObject jo) {
+			return jo.keySet().size();
 		} else {
 			throw new JapathException("length() is only for arrays");
 		}

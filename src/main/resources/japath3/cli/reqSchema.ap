@@ -1,4 +1,4 @@
-self{::complete}.and(
+::complete.and(
 	// every(*, §.match('(_op)?|(type)?|_body|(apathExpr)?|(var)?|(constraints)?|(pretty)?|(asArray)?|(schemaGenSwitches)?|(salient)?')),
 	opt(_op).type(String),
 	opt(type).type(String),

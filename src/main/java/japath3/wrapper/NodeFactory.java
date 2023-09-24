@@ -23,7 +23,7 @@ public class NodeFactory {
 	static public Object emptyObject = new Object(); 
 	static public Object emptyArray = new Object(); 
 
-	static public Class<?> defaultWrapperClass = WJsonOrg.class;
+	static private Class<?> defaultWrapperClass = WJsonOrg.class;
 //	static private Class<?> defaultWrapperClass = WGson.class;
 //	static Class<?> defaultWrapperClass = WJsonB.class;
 
@@ -66,11 +66,22 @@ public class NodeFactory {
 			throw new JapathException("uncompatible wrapper classes: '" + n.getClass() + "' <-> default: '" + defaultWrapperClass + "'");
 	}
 	
-	public static void setDefaultWrapperClass(Class<?> defaultWrapperClass_) {
-		defaultWrapperClass = defaultWrapperClass_;
-	}
+	public static void setDefaultWrapperClass(Class<?> defaultWrapperClass_) { defaultWrapperClass = defaultWrapperClass_; }
+	public static Class<?> getDefaultWrapperClass() { return defaultWrapperClass; }
+	
 	public static void setPrettyStringifying(boolean prettyStringifying_) {
 		prettyStringifying = prettyStringifying_;
 	}
 
+	public static void main(String[] args) {
+		String s = """
+				{
+					"a":1,
+					// lala
+					"b":2
+				}
+				
+				""";
+		System.out.println(w_(s, WGson.class));
+	}
 }

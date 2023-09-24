@@ -23,6 +23,7 @@ import org.json.JSONObject;
 
 import japath3.cli.Commands;
 import japath3.util.JoeUtil;
+import japath3.wrapper.NodeFactory;
 
 public class HttpService {
 	
@@ -110,7 +111,7 @@ public class HttpService {
 							if (request instanceof HttpEntityEnclosingRequest) {
 								JSONObject joReq = JoeUtil.createJoe(
 										IOUtils.toString(((HttpEntityEnclosingRequest) request).getEntity().getContent(), "utf-8"));
-								response.setEntity(new StringEntity(Commands.exec(joReq), "utf-8"));
+								response.setEntity(new StringEntity(Commands.exec( NodeFactory.w_(joReq)), "utf-8"));
 							} else {
 								throw new MethodNotSupportedException("no input given");
 							}

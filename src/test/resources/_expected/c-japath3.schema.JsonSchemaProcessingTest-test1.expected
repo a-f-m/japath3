@@ -4,17 +4,35 @@
    "$defs": {
       "pers.embedded": {
          "type": "object",
-         "properties": {"x": {"type": "integer"}},
+         "properties": {"x": {
+            "type": "integer",
+            "example": 1
+         }},
          "required": ["x"]
       },
       "pers": {
          "type": "object",
          "properties": {
-            "name": {"type": "string"},
-            "age": {"type": "integer"},
-            "#post-code": {"type": "integer"},
-            "driverLic": {"type": "boolean"},
-            "null": {"type": "null"},
+            "name": {
+               "type": "string",
+               "example": "Miller"
+            },
+            "age": {
+               "type": "integer",
+               "example": 17
+            },
+            "#post-code": {
+               "type": "integer",
+               "example": 12205
+            },
+            "driverLic": {
+               "type": "boolean",
+               "example": true
+            },
+            "null": {
+               "type": "null",
+               "example": null
+            },
             "embedded": {"$ref": "#/$defs/pers.embedded"}
          },
          "required": [
@@ -28,7 +46,10 @@
       },
       "favs.2": {
          "type": "object",
-         "properties": {"uups": {"type": "string"}},
+         "properties": {"uups": {
+            "type": "string",
+            "example": "an struct"
+         }},
          "required": ["uups"]
       },
       "favs.3": {
@@ -43,7 +64,14 @@
             "favs": {
                "type": "array",
                "items": {"anyOf": [
-                  {"type": "string"},
+                  {
+                     "type": "string",
+                     "example": "coen-brothers"
+                  },
+                  {
+                     "type": "string",
+                     "example": "dylan"
+                  },
                   {"$ref": "#/$defs/favs.2"},
                   {"$ref": "#/$defs/favs.3"}
                ]}

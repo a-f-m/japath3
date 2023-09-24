@@ -1,0 +1,42 @@
+{
+    "$defs": {
+        "Person": {
+            "$proto:json-schema": {
+                "required": [
+                    "personal"
+                ],
+                "additionalProperties": false
+            },
+            "personal": {
+                "name": "Miller",
+                "age": 17
+            },
+            "skills": [
+                {
+                    "topic": "java",
+                    "level": 1
+                },
+                {
+                    "topic": "python",
+                    "level": 2
+                }
+            ],
+            "favorites": [
+                "coen-brothers",
+                "dylan"
+            ]
+        },
+        "Project": {
+            "name": "proj1",
+            "lead": {
+                "$ref": "#/$defs/Person"
+            },
+            "optSkills": [
+                {
+                    "topic": "python",
+                    "level": 2
+                }
+            ]
+        }
+    }
+}

@@ -150,6 +150,8 @@ public class WGson extends Node {
 		
 		if (wo instanceof JsonArray ja) {
 			return ja.size();
+		} else if (wo instanceof JsonObject jo) {
+			return jo.size();
 		} else {
 			throw new JapathException("length() is only for arrays");
 		}
@@ -160,7 +162,7 @@ public class WGson extends Node {
 		if (wo instanceof JsonArray ja) {
 			return ja.contains((JsonElement) createWoHelper(o));
 		} else {
-			throw new JapathException("length() is only for arrays");
+			throw new JapathException("containsWo() is only for arrays");
 		}
 	}
 

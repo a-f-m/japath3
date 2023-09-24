@@ -1,0 +1,49 @@
+{"$defs": {
+   "Person": {"value": {
+      "personal": {
+         "name": "Miller",
+         "age": 17
+      },
+      "skills": [
+         {
+            "topic": "java",
+            "level": 1
+         },
+         {
+            "topic": "python",
+            "level": 2
+         }
+      ],
+      "favorites": [
+         "coen-brothers",
+         "dylan"
+      ]
+   }},
+   "Project": {"value": {
+      "name": "proj1",
+      "lead": {"value": {
+         "personal": {
+            "name": "Miller",
+            "age": 17
+         },
+         "skills": [
+            {
+               "topic": "java",
+               "level": 1
+            },
+            {
+               "topic": "python",
+               "level": 2
+            }
+         ],
+         "favorites": [
+            "coen-brothers",
+            "dylan"
+         ]
+      }},
+      "optSkills": [{
+         "topic": "python",
+         "level": 2
+      }]
+   }}
+}}
