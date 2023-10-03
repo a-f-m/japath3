@@ -21,7 +21,7 @@
    }},
    "Project": {"value": {
       "name": "proj1",
-      "lead": {"value": {
+      "lead": {
          "personal": {
             "name": "Miller",
             "age": 17
@@ -40,7 +40,7 @@
             "coen-brothers",
             "dylan"
          ]
-      }},
+      },
       "optSkills": [{
          "topic": "python",
          "level": 2

@@ -3,6 +3,7 @@ package japath3.schema;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.FileReader;
 import java.util.List;
@@ -153,12 +154,36 @@ public class JsonSchemaProcessingTest {
 		
 		// resolve
 		
-		Node res = js.resolvePrototypeBundle();
+		Node res = js.getResolvedPrototypeBundle();
 		
 		System.out.println(res.woString(3));
 		Testing.assertEquals_(getClass(), "testSchemaBundle1-1", res.woString(3));
+		
+		// cyclic
+		
+		String proto = """
+			{
+			    "$defs": {
+			        "A": {
+				        "x": {"$ref": "#/$defs/B"}
+			        },
+			        "B": {
+				        "y": {"$ref": "#/$defs/A"}
+			        }
+			    }
+			}
+				""";
 
+		prototypes = NodeFactory.w_(proto);
+		
+		try {
+			js = new JsonSchemaProcessing().setModular(true).setOnlyTopModular(true).usePrototypeBundle(prototypes);
+			fail();
+		} catch (Exception e) {
+			// ok
+		}
 	}
+	
 
 	public static String inst1 = 
 			"""

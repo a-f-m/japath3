@@ -25,6 +25,10 @@
                 "coen-brothers",
                 "dylan"
             ]
+            //,
+            //"rec": {
+            //    "$ref": "#/$defs/Project"
+            //}
         },
         "Project": {
             "name": "proj1",

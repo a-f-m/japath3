@@ -5,9 +5,9 @@ import static japath3.wrapper.NodeFactory.emptyArray;
 import static japath3.wrapper.NodeFactory.w_;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Stack;
 import java.util.stream.Collectors;
 
 import org.json.JSONArray;
@@ -67,6 +67,7 @@ public class JsonSchemaProcessing {
 	
 	private Node schemaBundle;
 	private Node prototypeBundle;
+	private Node resolvedPrototypeBundle;
 	private static GsonNode.Factory gsonNodeFactory = new GsonNode.Factory();
 	private static ValidatorFactory validator = new ValidatorFactory().withJsonNodeFactory(gsonNodeFactory);
 	
@@ -190,73 +191,76 @@ public class JsonSchemaProcessing {
 		
 		this.prototypeBundle = prototypeBundle;
 		setSchemaBundle(buildJsonTopSchema(prototypeBundle));
+		resolvePrototypeBundle();
 		return this;
 	}
 	
-	private void resolvePrototypeBundle_trav(Object current, JSONObject root, int level) { 
+	
+	private Node resolvePrototypeBundle_trav(Stack hits, Object current, JSONObject root, int level) {
 		
 		if (current instanceof JSONObject joCurrent) {
 			
-			// post process
-			List<String> props = Basics.streamIt(joCurrent.keys()).collect(Collectors.toList());
-			props.forEach(prop -> {
-				if (prop.startsWith("$proto:")) {
-					joCurrent.remove(prop);
-				} else {
-					resolvePrototypeBundle_trav(joCurrent.get(prop), root, level + 1);
-				}
-			});
-			//
+			Node n = NodeFactory.w_();
 			
 			String ref = joCurrent.optString("$ref", null);
 			if (ref != null) {
-				joCurrent.remove("$ref");
 				if (ref.matches("^(\\/|\\#\\/).*")) {
-					
+
 					if (new JSONPointer(ref).queryFrom(root) instanceof JSONObject joRef) {
-						if (joRef != null) {
-							Iterator<String> keys = joRef.keys();
-							while (keys.hasNext()) {
-								String key = keys.next();
-								joCurrent.put(key, joRef.get(key));
-							}
+						if (hits.contains(joRef)) {
+							throw new JapathException("ref '" + ref + "' yields a cycle");
+						} else {
+							hits.add(joRef);
 						}
-						
+						Node ret = resolvePrototypeBundle_trav(hits, joRef, root, level + 1);
+						hits.pop();
+						return ret;
 					} else {
-						throw new JapathException("ref '' not resolvable");
+						throw new JapathException("ref '" + ref + "' not resolvable");
 					}
+				} else {
+					throw new JapathException("ref '" + ref + "' must not be external");
 				}
 			}
-			if (level == 2) {
-				JSONObject copy = new JSONObject(joCurrent.toString());
-				List<String> keys = Basics.streamIt(joCurrent.keys()).collect(Collectors.toList());
-				keys.forEach(
-						key -> joCurrent.remove(key)
-						);
-				joCurrent.put("value", copy);
+			
+			List<String> props = Basics.streamIt(joCurrent.keys()).collect(Collectors.toList());
+			for (String prop : props) {
+				if (!prop.startsWith("$proto:"))
+					n.setNode(prop, resolvePrototypeBundle_trav(hits, joCurrent.get(prop), root, level + 1));
 			}
+//			return n;
+			return level == 2 ? NodeFactory.w_().setNode("value", n) : n ;
 		} else if (current instanceof JSONArray ja) {
 			
+			Node n = NodeFactory.w_(NodeFactory.emptyArray);
+		
 			ja.forEach(x -> {
-				resolvePrototypeBundle_trav(x, root, level);
+				n.addNode(resolvePrototypeBundle_trav(hits, x, root, level + 1));
 			});
+			return n;
+
+		} else { // primitive
+			Node h = NodeFactory.w_();
+			return new Node.DefaultNode(h.createWo(current), h.ctx);
 		}
 	}
 
-	public Node resolvePrototypeBundle() {
-		if (prototypeBundle == null) throw new JapathException("not prototype bundle set");
-		return resolvePrototypeBundle(prototypeBundle);
-	}
 
-	public Node resolvePrototypeBundle(Node prototypeBundle) {
-		
+	private void resolvePrototypeBundle() {
+		if (prototypeBundle == null) throw new JapathException("not prototype bundle set");
 		// we need json.org for json pointers
 		JSONObject root = new JSONObject(prototypeBundle.woString(0));
-		
-		resolvePrototypeBundle_trav(root, root, 0);
-		return NodeFactory.w_(root.toString());
+		Stack hits = new Stack();
+		resolvedPrototypeBundle = resolvePrototypeBundle_trav(hits, root, root, 0);		
 	}
 	
+	public Node getExample(String type) {
+		
+		Node exa = resolvedPrototypeBundle.node("$defs").node(type). node("value");
+		if (exa == Node.nil) throw new JapathException("example for type '" + type + "' not found");
+		return exa; 
+	}
+
 
 	public JsonSchemaProcessing setOpt(boolean opt) { this.opt = opt; return this; }
 
@@ -280,5 +284,8 @@ public class JsonSchemaProcessing {
 	}
 
 	public Node getPrototypeBundle() { return prototypeBundle; }
+
+	public Node getResolvedPrototypeBundle() { return resolvedPrototypeBundle; }
+
 
 }
