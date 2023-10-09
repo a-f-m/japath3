@@ -91,7 +91,7 @@
             "lead": {"$ref": "#/$defs/Person"},
             "optSkills": {
                "type": "array",
-               "items": {"anyOf": [{"$ref": "#/$defs/Person.skills.1"}]}
+               "items": {"$ref": "#/$defs/Person.skills.1"}
             }
          },
          "required": [

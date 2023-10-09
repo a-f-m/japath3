@@ -334,6 +334,10 @@ public class Basics {
 		return o instanceof String ? s + o.toString() + s : o.toString();
 	}
 	
+	public static <T> String templSubst(String s, String var, T val) {
+		return s.replace("{{" + var + "}}", val.toString());
+	}
+	
 	public static int toInt(String s) {
 		return toInt(s, null);
 	}

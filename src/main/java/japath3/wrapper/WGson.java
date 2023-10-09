@@ -279,7 +279,7 @@ public class WGson extends Node {
 	}
 	
 	@Override public String woString(int indent) { 
-		return (wo instanceof JsonElement je ? prettyString(je, indent) : wo.toString());
+		return (indent != 0 && wo instanceof JsonElement je ? prettyString(je, indent) : wo.toString());
 	}
 
 	public static String prettyString(JsonElement je, int indent) throws AssertionError {

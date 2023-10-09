@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 public class Buffer<T> implements Iterable<T> {
 
@@ -35,14 +36,29 @@ public class Buffer<T> implements Iterable<T> {
 		buffer.add(x);
 		return this;
 	}
+	
+	public Buffer<T> addAll(Iterator<T> it) {
+		while (it.hasNext()) add(it.next());
+		return this;
+	}
 
+	public Buffer<T> addAll(Iterable<T> it) {
+		addAll(it.iterator());
+		return this;
+	}
+
+	public Buffer<T> addAll(Stream<T> stream) {
+		addAll(stream.iterator());
+		return this;
+	}
+	
 	public void flush() { flush(initialPuncher); }
 
 	public void flush(Consumer<List<T>> puncher) { flush(puncher, true); }
 
 	private void flush(Consumer<List<T>> puncher, boolean force) {
 
-		if (force || cnt == buffSize) {
+		if (cnt != 0 && (force || cnt == buffSize)) {
 			puncher.accept(buffer);
 			cnt = 0;
 			buffer.clear();

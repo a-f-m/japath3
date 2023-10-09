@@ -17,8 +17,9 @@ public class Testing {
 	public static String dir = "src/test/resources/_expected";
 
 	// !!!!!!!!!!!!!!!!!!!!!!
-	public static boolean overwrite = false;
-//	public static boolean overwrite = true;
+	public static boolean overwrite 
+//			= true
+			;
 	// !!!!!!!!!!!!!!!!!!!!!!
 	
 	public static void assertEquals_(Class clazz, String expectedFile, String actual, boolean overwriteOnlyThisboolean ) {

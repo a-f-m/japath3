@@ -124,23 +124,30 @@ public class JsonSchemaProcessing {
 
 			// handle proto spec
 			Node protoSpec = n.node("$proto:json-schema");
+			Boolean ignoreVariant = false;
 			if (protoSpec != Node.nil) {
+				ignoreVariant = protoSpec.val("ignoreVariant", false);
 				for (Node spec : protoSpec.all()) structType.set(spec.selector.toString(), spec.val());
 			}
 			//
-			return buildStructNode(structType, new PathRepresent().selectorPath(n), level);
+			return ignoreVariant ? Node.nil : buildStructNode(structType, new PathRepresent().selectorPath(n), level);
 
 		} else if (n.isArray()) {
 
-			Node itemTypes;
-			Node arrayTypes = w_().set("type", "array").setNode("items", w_().setNode("anyOf", itemTypes = w_(emptyArray)));
+			Node itemTypes = w_(emptyArray);
 
 			Set<String> mem = new HashSet<>();
 
+			int i = 0;
 			for (Node x : it(n.all())) {
 				Node js = buildJsonSchema(x, root, level + 1);
-				if (mem.add(js.toString())) itemTypes.addNode(js);
+				if (js != Node.nil && mem.add(js.toString())) {
+					itemTypes.addNode(js);
+					i++;
+				}
 			}
+			Node arrayTypes =
+					w_().set("type", "array").setNode("items", i > 1 ? w_().setNode("anyOf", itemTypes) : itemTypes.node(0));
 
 			return arrayTypes;
 		} else {

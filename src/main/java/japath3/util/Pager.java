@@ -1,6 +1,10 @@
 package japath3.util;
 
 import java.util.Iterator;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 import japath3.core.JapathException;
 
@@ -55,6 +59,14 @@ public class Pager<T> implements Iterable<T> {
 
 		};
 	}
+	
+	public Stream<T> stream() {
+		return Basics.stream(this);
+	}
+	
+	public void punch(Function<T, T> mapper, Consumer<List<T>> puncher, int puncherSize) {
+		new Buffer<T>(puncherSize, puncher).addAll(this.stream().map(mapper)).flush();
+	}
 
 	private Pager<T> setPageFunc(PageFunc<T> func) {
 		this.pageFunc = func;
@@ -62,4 +74,6 @@ public class Pager<T> implements Iterable<T> {
 		forward(true);
 		return this;
 	}
+
+	public int getPageSize() { return pageSize; }
 }
