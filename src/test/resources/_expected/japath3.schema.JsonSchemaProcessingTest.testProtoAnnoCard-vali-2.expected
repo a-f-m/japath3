@@ -1,0 +1,4 @@
+/meals: Array has more than 0 items
+/meals: Array has less than 2 items
+/meals: Value does not match against any of the schemas
+/meals: False schema always fails

@@ -15,12 +15,18 @@ import japath3.core.JapathException;
 public class Testing {
 	
 	public static String dir = "src/test/resources/_expected";
+	
+	public static boolean wStackTrace;
+	public static boolean printActual;
+			
 
 	// !!!!!!!!!!!!!!!!!!!!!!
 	public static boolean overwrite 
 //			= true
 			;
 	// !!!!!!!!!!!!!!!!!!!!!!
+
+	
 	
 	public static void assertEquals_(Class clazz, String expectedFile, String actual, boolean overwriteOnlyThisboolean ) {
 		assertEquals_("c-" + clazz.getTypeName() + "-" + expectedFile, actual, overwriteOnlyThisboolean);
@@ -37,11 +43,13 @@ public class Testing {
 	public static void assertEquals_(String expectedFile, String actual) {
 		assertEquals_("", expectedFile, actual, false);
 	}
-
+	
 	public static void assertEquals_(String projectDir /* with trailing '/' */ , String expectedFile, String actual, boolean overwriteOnlyThis) { 
 		
+		StackTraceElement[] stk = Thread.currentThread().getStackTrace();
+		String sss = stk[3].getClassName() + "." + stk[3].getMethodName();
 		try {
-			String path = projectDir + dir + "/" + expectedFile + ".expected";
+			String path = projectDir + dir + "/" + (wStackTrace ? sss + "-" : "") + expectedFile + ".expected";
 			File f = new File(path);
 			if (!f.exists()) {
 				new File(projectDir + dir).mkdirs();
@@ -55,9 +63,14 @@ public class Testing {
 				System.out.println("!!!!!!!!!!!!!!!!!!!!!! overwrite !!!!!!!!!!!!!!!!!!!!!!");
 			}
 			String expected = IOUtils.toString(new FileInputStream(f), "utf-8");
+			if (printActual) System.out.println(actual);
 			assertEquals(expected, actual);
 		} catch (IOException e) {
 			throw new JapathException(e);
 		}
 	 }
+
+	public static void setwStackTrace(boolean wStackTrace) { Testing.wStackTrace = wStackTrace; }
+
+	public static void setPrintActual(boolean printActual) { Testing.printActual = printActual; }
 }

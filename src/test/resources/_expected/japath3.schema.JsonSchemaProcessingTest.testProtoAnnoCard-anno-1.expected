@@ -1,0 +1,41 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$ref": "#/$defs/root",
+   "$defs": {
+      "Person": {
+         "type": "object",
+         "properties": {
+            "meals": {
+               "type": "array",
+               "minItems": 2,
+               "maxItems": 2,
+               "items": {"anyOf": [
+                  {
+                     "type": "string",
+                     "example": "fish"
+                  },
+                  {
+                     "type": "string",
+                     "example": "meat"
+                  }
+               ]}
+            },
+            "fav": {
+               "type": "array",
+               "items": {
+                  "type": "string",
+                  "example": "dylan"
+               }
+            }
+         },
+         "required": ["fav"],
+         "additionalProperties": false
+      },
+      "root": {
+         "type": "object",
+         "properties": {"Person": {"$ref": "#/$defs/Person"}},
+         "required": ["Person"],
+         "additionalProperties": false
+      }
+   }
+}

@@ -10,6 +10,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class JsoupTest {
@@ -18,7 +19,7 @@ public class JsoupTest {
 
 	@AfterClass public static void tearDownAfterClass() throws Exception {}
 
-	@Test public void test() throws Exception { 
+	@Ignore @Test public void test() throws Exception { 
 		
 		File input = new File("C:\\Users\\andreas-fm\\Desktop\\temp\\bookmarks.html");
 		Document doc = Jsoup.parse(input, "UTF-8", "");

@@ -1,9 +1,10 @@
 package japath3.schema;
 
 import static japath3.util.Basics.it;
-import static japath3.wrapper.NodeFactory.emptyArray;
-import static japath3.wrapper.NodeFactory.w_;
+import static japath3.wrapper.NodeFactory.emptyObject;
+//import static japath3.wrapper.NodeFactory.w_;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -13,6 +14,8 @@ import java.util.stream.Collectors;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONPointer;
+
+import com.florianingerl.util.regex.Pattern;
 
 import dev.harrel.jsonschema.Error;
 import dev.harrel.jsonschema.Validator.Result;
@@ -26,14 +29,16 @@ import japath3.core.JapathException;
 import japath3.core.Node;
 import japath3.core.PathRepresent;
 import japath3.util.Basics;
+import japath3.util.Regex;
 import japath3.wrapper.NodeFactory;
+import japath3.wrapper.WGson;
 
 /**
  * 
  */
 public class JsonSchemaProcessing {
 	
-	private static class Defs {
+	static class Defs {
 		Map<String, Node> nameToNode = LinkedHashMap.empty();
 		Map<String, String> nodeStrToName = LinkedHashMap.empty();
 		@SuppressWarnings("unused")
@@ -55,13 +60,51 @@ public class JsonSchemaProcessing {
 		private Node makeRef(String name) {
 			
 //			{ "$ref": "#/$defs/veggie" }
-			return w_().set("$ref", "#/$defs/" + name); 
+			return createObjNode().set("$ref", "#/$defs/" + name); 
+		}
+	}
+	
+	static record PropertyAnnotation(boolean opt_, MinMax minmax) {
+		
+		static record MinMax(String min, String max, boolean allowEmpty) {}
+	
+		static String a = "( \\| (?<opt>\\+|\\-) )? (?<card> \\| (?<emp>\\?)? (?<min>\\d+)..(?<max>\\d+|\\*) )? ".replace(" ", "\\s*");
+		static String m = "[^\\|]+" + a;
+		static String a_ = a + "\"";
+
+		public static PropertyAnnotation eval(String prop, boolean optDefault) {
+			
+			if (prop.contains("|")) {
+				
+				String[] anno = Regex.multiExtract(prop, m, null, null, null, null, null, "0", null);
+				var map = Regex.multiExtract(prop, m, new HashMap<>() {
+					{
+						put("opt", null);
+						put("emp", null);
+						put("card", null);
+						put("min", "0");
+						put("max", null);
+					}
+				});
+				if (anno == null) throw new JapathException(Regex.getErrorString(Pattern.compile(m), prop));
+
+				return new PropertyAnnotation( //
+						map.get("opt") != null ? map.get("opt").equals("-") : optDefault,
+						map.get("card") == null ? null : new MinMax(map.get("min"), map.get("max"), map.get("emp") != null));
+			} else {
+				return null;
+			}
+			
+		}
+		
+		public static String removeAnnotation(String text, boolean inclQuote) { 
+			return inclQuote ? text.replaceAll(a_, "\"") : text.replaceAll(a, ""); 
 		}
 	}
 	
 	private boolean opt;
-	private boolean complete;
-	private boolean modular;
+	private boolean complete = true;
+	private boolean modular = true;
 	private boolean onlyTopModular = true;
 	private Defs defs = new Defs();
 	
@@ -71,11 +114,14 @@ public class JsonSchemaProcessing {
 	private static GsonNode.Factory gsonNodeFactory = new GsonNode.Factory();
 	private static ValidatorFactory validator = new ValidatorFactory().withJsonNodeFactory(gsonNodeFactory);
 	
-	public Node buildJsonTopSchema(Node n) {
+	public JsonSchemaProcessing() {
+	}
+	
+	public Node buildJsonTopSchema(Node prototypeBundle) {
 		
-		Node root = n.node("$defs").detach();
+		Node root = prototypeBundle.node("$defs").detach();
 		Node js = buildJsonSchema(root, root, 0);
-		Node ret = w_().set("$schema", "https://json-schema.org/draft/2020-12/schema")
+		Node ret = createObjNode().set("$schema", "https://json-schema.org/draft/2020-12/schema")
 //				.set("$id", UUID.randomUUID().toString())
 				;
 		
@@ -88,7 +134,7 @@ public class JsonSchemaProcessing {
 		
 		if (!defs.nameToNode.isEmpty()) {
 			
-			Node defs_= w_();
+			Node defs_= createObjNode();
 			for (Tuple2<String, Node> def : defs.nameToNode) {
 				defs_.setNode(def._1, def._2);
 			}
@@ -97,16 +143,26 @@ public class JsonSchemaProcessing {
 		return ret;
 	}
 
+	private static Node createObjNode(String s) { 
+		return NodeFactory.w_(s, WGson.class); 
+	}
+	private static Node createObjNode() { 
+		return NodeFactory.w_(emptyObject, WGson.class); 
+	}
+	private Node createArrayNode() { 
+		return NodeFactory.w_(NodeFactory.emptyArray, WGson.class); 
+	}
+
 	public Node buildJsonSchema(Node n, Node root, int level) {
 
 		if (n.isStruct()) {
 
 			Node propTypes;
 			Node reqProps = null;
-			Node structType = w_().set("type", "object")
-					.setNode("properties", propTypes = w_());
-			if (!opt) structType.setNode("required", reqProps = w_(emptyArray));
-			if (complete) structType.set("additionalProperties", false);
+			Node structType = createObjNode().set("type", "object")
+					.setNode("properties", propTypes = createObjNode());
+			if (!opt) structType.setNode("required", reqProps = createArrayNode());
+			if (complete && !n.isEmpty()) structType.set("additionalProperties", false);
 			
 			String use = n.val("$ref", null);
 			if (use != null) {
@@ -118,7 +174,18 @@ public class JsonSchemaProcessing {
 			for (Node x : it(n.all())) {
 				String sel = x.selector.toString();
 				if (sel.matches("^\\$proto\\:.*")) continue;
-				if (!opt) reqProps.add(sel);
+				// anno
+				PropertyAnnotation pa = PropertyAnnotation.eval(sel, opt);
+				if (pa != null) {
+					sel = PropertyAnnotation.removeAnnotation(sel, false);
+					if (!pa.opt_) {
+						if (reqProps == null) structType.setNode("required", reqProps = createArrayNode());
+						reqProps.add(sel);
+					}
+				} else {
+					if (!opt) reqProps.add(sel);
+				}
+				//
 				propTypes.setNode(sel, buildJsonSchema(x, root, level + 1));
 			}
 
@@ -134,8 +201,7 @@ public class JsonSchemaProcessing {
 
 		} else if (n.isArray()) {
 
-			Node itemTypes = w_(emptyArray);
-
+			Node itemTypes = createArrayNode();
 			Set<String> mem = new HashSet<>();
 
 			int i = 0;
@@ -146,15 +212,32 @@ public class JsonSchemaProcessing {
 					i++;
 				}
 			}
-			Node arrayTypes =
-					w_().set("type", "array").setNode("items", i > 1 ? w_().setNode("anyOf", itemTypes) : itemTypes.node(0));
+			Node arrayTypes = createObjNode().set("type", "array");
+			// anno
+			PropertyAnnotation pa = PropertyAnnotation.eval(n.selector.toString(), opt);
+			if (pa != null && pa.minmax != null) {
+				Node anyOf;
+				if (pa.minmax.allowEmpty) {
+					arrayTypes.setNode("anyOf", anyOf = createArrayNode().addNode(createObjNode().set("maxItems", 0)));
+					Node xxx = createObjNode().set("minItems", Integer.valueOf(pa.minmax.min));
+					if (!pa.minmax.max.equals("*")) xxx.set("maxItems", Integer.valueOf(pa.minmax.max));
+					anyOf.addNode(xxx);
+				} else {
+					arrayTypes.set("minItems", Integer.valueOf(pa.minmax.min));
+					if (!pa.minmax.max.equals("*")) arrayTypes.set("maxItems", Integer.valueOf(pa.minmax.max));
+				}
+			}
+			//
+			if (i != 0) 
+				arrayTypes.setNode("items", i > 1 ? createObjNode().setNode("anyOf", itemTypes) : itemTypes.node(0));
 
 			return arrayTypes;
 		} else {
-			return w_().set("type", deriveType(n)).set("example", n.val());
+			return createObjNode().set("type", deriveType(n)).set("example", n.val());
 		}
 
 	}
+
 
 	private Node buildStructNode(Node structType, String sel, int level) {
 		boolean m = modular && (onlyTopModular ? level <= 1 : true);
@@ -167,7 +250,8 @@ public class JsonSchemaProcessing {
 		
 		Object val = n.val();
 		String t = val instanceof String ? "string" //
-				: val instanceof Integer ? "integer" //
+//				: val instanceof Integer ? "integer" //
+				: val instanceof Number ? "number" //
 						: val instanceof Boolean ? "boolean" : null;
 		if (t == null) throw new JapathException("primitive type '" + val.getClass() + "' not convertable");
 		return t;
@@ -179,7 +263,8 @@ public class JsonSchemaProcessing {
 		Node defs_ = schemaBundle.node("$defs");
 		if (defs_.node(name) == Node.nil) throw new JapathException("subSchema '" + name + "' not found");
 
-		Node alignedToSubSchema = NodeFactory.w_().set("$ref", "#/$defs/" + name).set("$defs", defs_.val());
+		Node alignedToSubSchema =
+				createObjNode().set("$ref", "#/$defs/" + name).set("$defs", defs_.val());
 		
 		Result result =
 				validator.validate(gsonNodeFactory.wrap(alignedToSubSchema.woVal()), gsonNodeFactory.wrap(instance.woVal()));
@@ -187,7 +272,7 @@ public class JsonSchemaProcessing {
 		return result.isValid() ? Option.none() :  Option.of(result.getErrors());
 	}
 	
-	public String errorText(List<Error> errors) {
+	public static String errorText(List<Error> errors) {
 		
 		return errors.stream().map(
 				error -> {return error.getInstanceLocation() + ": " + error.getError();}
@@ -196,7 +281,7 @@ public class JsonSchemaProcessing {
 	
 	public JsonSchemaProcessing usePrototypeBundle(Node prototypeBundle) {
 		
-		this.prototypeBundle = prototypeBundle;
+		this.prototypeBundle = createObjNode(PropertyAnnotation.removeAnnotation(prototypeBundle.woString(0), true));
 		setSchemaBundle(buildJsonTopSchema(prototypeBundle));
 		resolvePrototypeBundle();
 		return this;
@@ -207,7 +292,7 @@ public class JsonSchemaProcessing {
 		
 		if (current instanceof JSONObject joCurrent) {
 			
-			Node n = NodeFactory.w_();
+			Node n = createObjNode();
 			
 			String ref = joCurrent.optString("$ref", null);
 			if (ref != null) {
@@ -236,10 +321,10 @@ public class JsonSchemaProcessing {
 					n.setNode(prop, resolvePrototypeBundle_trav(hits, joCurrent.get(prop), root, level + 1));
 			}
 //			return n;
-			return level == 2 ? NodeFactory.w_().setNode("value", n) : n ;
+			return level == 2 ? createObjNode().setNode("value", n) : n ;
 		} else if (current instanceof JSONArray ja) {
 			
-			Node n = NodeFactory.w_(NodeFactory.emptyArray);
+			Node n = createArrayNode();
 		
 			ja.forEach(x -> {
 				n.addNode(resolvePrototypeBundle_trav(hits, x, root, level + 1));
@@ -247,7 +332,7 @@ public class JsonSchemaProcessing {
 			return n;
 
 		} else { // primitive
-			Node h = NodeFactory.w_();
+			Node h = createObjNode();
 			return new Node.DefaultNode(h.createWo(current), h.ctx);
 		}
 	}

@@ -1,0 +1,35 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$ref": "#/$defs/root",
+   "$defs": {
+      "Person": {
+         "type": "object",
+         "properties": {
+            "age": {
+               "type": "number",
+               "example": 9
+            },
+            "name": {
+               "type": "string",
+               "example": "Miller"
+            },
+            "post": {
+               "type": "object",
+               "properties": {},
+               "required": []
+            }
+         },
+         "required": [
+            "age",
+            "post"
+         ],
+         "additionalProperties": false
+      },
+      "root": {
+         "type": "object",
+         "properties": {"Person": {"$ref": "#/$defs/Person"}},
+         "required": ["Person"],
+         "additionalProperties": false
+      }
+   }
+}

@@ -5,7 +5,7 @@
       "pers.embedded": {
          "type": "object",
          "properties": {"x": {
-            "type": "integer",
+            "type": "number",
             "example": 1
          }},
          "required": ["x"]
@@ -18,11 +18,11 @@
                "example": "Miller"
             },
             "age": {
-               "type": "integer",
+               "type": "number",
                "example": 17
             },
             "#post-code": {
-               "type": "integer",
+               "type": "number",
                "example": 12205
             },
             "driverLic": {

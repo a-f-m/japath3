@@ -1,6 +1,9 @@
 package japath3.util;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -92,11 +95,29 @@ public class Regex {
 			return Optional.of(e.getMessage());
 		}
 	}
-
+	
 	public static String extract(String input, String regex, String def) {
+		
+		return extract(Pattern.compile(regex).matcher(input), def);
+	}
 
-		Matcher matcher = Pattern.compile(regex).matcher(input);
+	public static String extract(Matcher matcher, String def) {
+
 		return matcher.find() ?  matcher.group(1).trim() : def;
+	}
+	
+	public static Map<String, String> multiExtract(String input, String regex, Map<String, String> defaults) {
+		
+		Matcher matcher = Pattern.compile(regex).matcher(input);
+		if (!matcher.matches()) return null;
+		
+		HashMap<String, String> ret = new HashMap<String, String>();
+		
+		for (Entry<String, String> e : defaults.entrySet()) {
+			ret.put(e.getKey(), matcher.group(e.getKey()));
+		}
+		
+		return ret;
 	}
 	
 	public static String[] multiExtract(String input, String regex, String... defaults) {

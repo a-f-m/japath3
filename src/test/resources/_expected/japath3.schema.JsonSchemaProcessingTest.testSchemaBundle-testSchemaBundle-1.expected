@@ -10,7 +10,7 @@
                "example": "Miller"
             },
             "age": {
-               "type": "integer",
+               "type": "number",
                "example": 17
             }
          },
@@ -27,7 +27,7 @@
                "example": "java"
             },
             "level": {
-               "type": "integer",
+               "type": "number",
                "example": 1
             }
          },
@@ -44,7 +44,7 @@
                "example": "python"
             },
             "level": {
-               "type": "integer",
+               "type": "number",
                "example": 2
             }
          },

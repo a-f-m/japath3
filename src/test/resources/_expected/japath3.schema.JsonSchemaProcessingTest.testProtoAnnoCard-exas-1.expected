@@ -1,0 +1,7 @@
+{"$defs": {"Person": {"value": {
+   "meals": [
+      "fish",
+      "meat"
+   ],
+   "fav": ["dylan"]
+}}}}
