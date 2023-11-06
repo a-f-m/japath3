@@ -1,0 +1,30 @@
+{
+	"type": "object",
+	"properties": {
+		"meals": {
+			"anyOf": [
+				{
+					"type": "array",
+					"minItems": 2,
+					"maxItems": 2,
+					"items": {
+						"anyOf": [
+							{
+								"type": "string",
+								"example": "fish"
+							},
+							{
+								"type": "string",
+								"example": "meat"
+							}
+						]
+					}
+				},
+				{
+					"type": "array",
+					"maxItems": 0
+				}
+			]
+		}
+	}
+}

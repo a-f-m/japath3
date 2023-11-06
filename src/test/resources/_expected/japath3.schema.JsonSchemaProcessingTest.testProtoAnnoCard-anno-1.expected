@@ -7,8 +7,6 @@
          "properties": {
             "meals": {
                "type": "array",
-               "minItems": 2,
-               "maxItems": 2,
                "items": {"anyOf": [
                   {
                      "type": "string",
@@ -18,7 +16,9 @@
                      "type": "string",
                      "example": "meat"
                   }
-               ]}
+               ]},
+               "minItems": 2,
+               "maxItems": 2
             },
             "fav": {
                "type": "array",

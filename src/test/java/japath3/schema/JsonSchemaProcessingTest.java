@@ -46,7 +46,7 @@ public class JsonSchemaProcessingTest {
 		Testing.setPrintActual(false);
 	}
 
-	@Test public void test() { 
+	@Test public void testHarrel() throws Exception { 
 
 		String schema = """
 		        {
@@ -54,6 +54,15 @@ public class JsonSchemaProcessingTest {
 		        }""";
 		String instance = "true";
 		boolean valid = new ValidatorFactory().withJsonNodeFactory(new GsonNode.Factory()).validate(schema, instance).isValid();
+		assertTrue(valid);
+		
+		schema = IOUtils.toString(new FileReader("src/test/resources/japath3/processing/schema-meals-1.jsonc")) ;
+		instance = """				
+				{
+					"meals": []
+				}
+				""";
+		valid = new ValidatorFactory().withJsonNodeFactory(new GsonNode.Factory()).validate(schema, instance).isValid();
 		assertTrue(valid);
 	}
 	
@@ -303,6 +312,16 @@ public class JsonSchemaProcessingTest {
 					"meals": ["a"]
 				}
 				"""), "Person").get()).toString());
+		assertTrue(jsp.validate(NodeFactory.w_("""
+				{
+					"meals": ["a", "a"]
+				}
+				"""), "Person").isEmpty());
+		assertTrue(jsp.validate(NodeFactory.w_("""
+				{
+					"meals": []
+				}
+				"""), "Person").isEmpty());
 	}
 	
 

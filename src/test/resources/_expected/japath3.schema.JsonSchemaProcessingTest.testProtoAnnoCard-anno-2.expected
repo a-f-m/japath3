@@ -4,26 +4,27 @@
    "$defs": {
       "Person": {
          "type": "object",
-         "properties": {"meals": {
-            "type": "array",
-            "anyOf": [
-               {"maxItems": 0},
-               {
-                  "minItems": 2,
-                  "maxItems": 2
-               }
-            ],
-            "items": {"anyOf": [
-               {
-                  "type": "string",
-                  "example": "fish"
-               },
-               {
-                  "type": "string",
-                  "example": "meat"
-               }
-            ]}
-         }},
+         "properties": {"meals": {"anyOf": [
+            {
+               "type": "array",
+               "maxItems": 0
+            },
+            {
+               "type": "array",
+               "items": {"anyOf": [
+                  {
+                     "type": "string",
+                     "example": "fish"
+                  },
+                  {
+                     "type": "string",
+                     "example": "meat"
+                  }
+               ]},
+               "minItems": 2,
+               "maxItems": 2
+            }
+         ]}},
          "required": [],
          "additionalProperties": false
       },

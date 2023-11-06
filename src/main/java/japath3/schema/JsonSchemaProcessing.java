@@ -174,7 +174,7 @@ public class JsonSchemaProcessing {
 			for (Node x : it(n.all())) {
 				String sel = x.selector.toString();
 				if (sel.matches("^\\$proto\\:.*")) continue;
-				// anno
+				// handle annotations
 				PropertyAnnotation pa = PropertyAnnotation.eval(sel, opt);
 				if (pa != null) {
 					sel = PropertyAnnotation.removeAnnotation(sel, false);
@@ -206,38 +206,68 @@ public class JsonSchemaProcessing {
 
 			int i = 0;
 			for (Node x : it(n.all())) {
+				if (i == 0 && x.isStruct() && x.exists("$proto:json-schema")) 
+					continue;
 				Node js = buildJsonSchema(x, root, level + 1);
-				if (js != Node.nil && mem.add(js.toString())) {
+				if (js != Node.nil && mem.add(removedExamplesClone(js).toString())) {
 					itemTypes.addNode(js);
 					i++;
 				}
 			}
 			Node arrayTypes = createObjNode().set("type", "array");
-			// anno
+			
+			if (i != 0) {
+				arrayTypes.setNode("items", i > 1 ? createObjNode().setNode("anyOf", itemTypes) : itemTypes.node(0));
+				// handle proto spec
+				Node protoSpec = n.node(0).node("$proto:json-schema");
+				if (protoSpec != Node.nil) {
+					for (Node spec : protoSpec.all()) arrayTypes.set(spec.selector.toString(), spec.val());
+					n.remove(0);
+				}
+			}			
+			
+			// handle annotations
 			PropertyAnnotation pa = PropertyAnnotation.eval(n.selector.toString(), opt);
+			Node anyOf = null;
 			if (pa != null && pa.minmax != null) {
-				Node anyOf;
+				arrayTypes.set("minItems", Integer.valueOf(pa.minmax.min));
+				if (!pa.minmax.max.equals("*")) arrayTypes.set("maxItems", Integer.valueOf(pa.minmax.max));
 				if (pa.minmax.allowEmpty) {
-					arrayTypes.setNode("anyOf", anyOf = createArrayNode().addNode(createObjNode().set("maxItems", 0)));
-					Node xxx = createObjNode().set("minItems", Integer.valueOf(pa.minmax.min));
-					if (!pa.minmax.max.equals("*")) xxx.set("maxItems", Integer.valueOf(pa.minmax.max));
-					anyOf.addNode(xxx);
-				} else {
-					arrayTypes.set("minItems", Integer.valueOf(pa.minmax.min));
-					if (!pa.minmax.max.equals("*")) arrayTypes.set("maxItems", Integer.valueOf(pa.minmax.max));
+					anyOf =
+							createObjNode().setNode("anyOf",
+									createArrayNode().addNode(
+											createObjNode().set("type", "array").set("maxItems", 0)
+//												.setNode("items", createArrayNode()) // does'nt work for harrel
+											)
+											.addNode(arrayTypes));
 				}
 			}
 			//
-			if (i != 0) 
-				arrayTypes.setNode("items", i > 1 ? createObjNode().setNode("anyOf", itemTypes) : itemTypes.node(0));
 
-			return arrayTypes;
+			return anyOf == null ? arrayTypes : anyOf;
 		} else {
-			return createObjNode().set("type", deriveType(n)).set("example", n.val());
+			Object nval = n.val();
+			Node ret = createObjNode().set("type", deriveType(n));
+			
+//			if (nval instanceof String s && s.indexOf('|') >= 0 && s.indexOf('|') < s.length() && s.length() >= 3) {
+//				
+//				String[] split = s.split("\\|");
+//				ret.set("description", split[1]);
+//				ret.set("example", split[0]);
+//				n.set(n.selector.toString(), split[0]);
+//			} else {
+				ret.set("example", nval);
+//			}
+			return ret;
 		}
 
 	}
 
+	private Node removedExamplesClone(Node js) {
+		Node copy = NodeFactory.w_(js.woString(0));
+		copy.removeAll("example");
+		return copy;
+	}
 
 	private Node buildStructNode(Node structType, String sel, int level) {
 		boolean m = modular && (onlyTopModular ? level <= 1 : true);
