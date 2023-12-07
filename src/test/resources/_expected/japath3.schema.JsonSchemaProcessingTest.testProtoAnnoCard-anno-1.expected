@@ -7,16 +7,10 @@
          "properties": {
             "meals": {
                "type": "array",
-               "items": {"anyOf": [
-                  {
-                     "type": "string",
-                     "example": "fish"
-                  },
-                  {
-                     "type": "string",
-                     "example": "meat"
-                  }
-               ]},
+               "items": {
+                  "type": "string",
+                  "example": "fish"
+               },
                "minItems": 2,
                "maxItems": 2
             },

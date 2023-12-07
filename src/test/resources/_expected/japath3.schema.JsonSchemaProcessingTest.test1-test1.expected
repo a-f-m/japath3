@@ -68,10 +68,6 @@
                      "type": "string",
                      "example": "coen-brothers"
                   },
-                  {
-                     "type": "string",
-                     "example": "dylan"
-                  },
                   {"$ref": "#/$defs/favs.2"},
                   {"$ref": "#/$defs/favs.3"}
                ]}

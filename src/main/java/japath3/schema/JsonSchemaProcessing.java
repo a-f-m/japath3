@@ -357,6 +357,11 @@ public class JsonSchemaProcessing {
 			Node n = createArrayNode();
 		
 			ja.forEach(x -> {
+				
+//				if (!(x instanceof JSONObject jo && jo.has("$proto:json-schema")))
+//					n.addNode(resolvePrototypeBundle_trav(hits, x, root, level + 1));
+				if (x instanceof JSONObject jo && jo.has("$proto:json-schema")) jo.remove("$proto:json-schema");
+					
 				n.addNode(resolvePrototypeBundle_trav(hits, x, root, level + 1));
 			});
 			return n;

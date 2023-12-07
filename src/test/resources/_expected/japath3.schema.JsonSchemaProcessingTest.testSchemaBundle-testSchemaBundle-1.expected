@@ -66,16 +66,10 @@
             },
             "favorites": {
                "type": "array",
-               "items": {"anyOf": [
-                  {
-                     "type": "string",
-                     "example": "coen-brothers"
-                  },
-                  {
-                     "type": "string",
-                     "example": "dylan"
-                  }
-               ]}
+               "items": {
+                  "type": "string",
+                  "example": "coen-brothers"
+               }
             }
          },
          "required": ["personal"],

@@ -126,13 +126,18 @@ public class NetUtil {
 	
 	public static Response httpPost(OkHttpClient client, String url, String s) {
 
-		RequestBody body = RequestBody.create(s, JSON);
-		Request request = new Request.Builder().url(url).post(body).build();
+		Request request = buildPostRequest(url, s);
 		try (okhttp3.Response response = client.newCall(request).execute()) {
 			return new Response(request, response, getResponseString(response), response.code());
 		} catch (IOException e) {
 			throw new JapathException(e);
 		}
+	}
+
+	public static Request buildPostRequest(String url, String s) {
+		RequestBody body = RequestBody.create(s, JSON);
+		Request request = new Request.Builder().url(url).post(body).build();
+		return request;
 	}	
 
 	public static String getResponseString(okhttp3.Response resp) {

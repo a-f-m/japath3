@@ -11,6 +11,8 @@ public class Coding {
 
 	public static String IdRegex = "[a-zA-Z0-9_]";
 	
+	public static String IdRegex1 = "[a-zA-Z]+[a-zA-Z0-9_-]*";
+	
 	public char escapeChar = '_';
 	
 	public String specialChars;
