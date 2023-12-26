@@ -1,10 +1,13 @@
 package japath3.wrapper;
 
+import java.io.Reader;
 import java.io.StringReader;
 
 import javax.json.Json;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -39,12 +42,15 @@ public class NodeFactory {
 		try {
 			if (wclass == WJsonOrg.class) {
 				return new WJsonOrg(
-						x instanceof String ? WJsonOrg.parse(x.toString())
-								: x == emptyObject ? JoeUtil.createJoe() : x == emptyArray ? new JSONArray() : x,
-										"", null, new Ctx());
+						x instanceof Reader r ? new JSONObject(new JSONTokener(r))
+								: x instanceof String ? WJsonOrg.parse(x.toString())
+										: x == emptyObject ? JoeUtil.createJoe() : x == emptyArray ? new JSONArray() : x,
+												"", null, new Ctx());
 			} else if (wclass == WGson.class) {
-				return new WGson(x instanceof String s ? JsonParser.parseString(s)
-						: x == emptyObject ? new JsonObject() : x == emptyArray ? new JsonArray() : x, "", null, new Ctx());
+				return new WGson(
+						x instanceof Reader r ? JsonParser.parseReader(r)
+							: x instanceof String s ? JsonParser.parseString(s)
+								: x == emptyObject ? new JsonObject() : x == emptyArray ? new JsonArray() : x, "", null, new Ctx());
 			} else if (wclass == WJsonB.class) {
 				return new WJsonB(x instanceof String
 						? Json.createReader(new StringReader(WJsonOrg.parse(x.toString()).toString())).read()
@@ -66,7 +72,11 @@ public class NodeFactory {
 			throw new JapathException("uncompatible wrapper classes: '" + n.getClass() + "' <-> default: '" + defaultWrapperClass + "'");
 	}
 	
-	public static void setDefaultWrapperClass(Class<?> defaultWrapperClass_) { defaultWrapperClass = defaultWrapperClass_; }
+	public static Class<?> setDefaultWrapperClass(Class<?> defaultWrapperClass_) {
+		Class<?> h = getDefaultWrapperClass();
+		defaultWrapperClass = defaultWrapperClass_;
+		return h;
+	}
 	public static Class<?> getDefaultWrapperClass() { return defaultWrapperClass; }
 	
 	public static void setPrettyStringifying(boolean prettyStringifying_) {
