@@ -243,22 +243,4 @@ public class JoeUtil {
 				: o instanceof JSONArray ? ((JSONArray) o).toString(indent) : o.toString();
 	}
 	
-	public static void main(String[] args) {
-		String s = "\"lala\": \"http://\" // lolo\n"
-				+ " xxx\n"
-				+ "// yyy\n"
-				+ "//\n"
-				+ "//	\"solr\": \"http://tm-solr:8983/solr/labeco\",\n"
-				+ "uuu\n"
-				+ "{\r\n"
-				+ "	\"solr\": \"http://localhost:8984/solr/labeco\",\r\n"
-				+ "//	\"solr\": \"http://tm-solr:8983/solr/labeco\",\r\n"
-				+ "	\"rdfStore\": \"http://localhost:3030/labeco\"\r\n"
-				+ "}";
-		
-		System.out.println(s);
-		System.out.println("---");
-//		System.out.println(s.replaceAll("[^:]//[^\"]*?\n", "\n"));
-		System.out.println(s.replaceAll(commentRegex, ""));
-	}
 }

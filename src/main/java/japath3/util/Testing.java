@@ -47,9 +47,9 @@ public class Testing {
 	public static void assertEquals_(String projectDir /* with trailing '/' */ , String expectedFile, String actual, boolean overwriteOnlyThis) { 
 		
 		StackTraceElement[] stk = Thread.currentThread().getStackTrace();
-		String sss = stk[3].getClassName() + "." + stk[3].getMethodName();
+		String trace = stk[3].getClassName() + "." + stk[3].getMethodName();
 		try {
-			String path = projectDir + dir + "/" + (wStackTrace ? sss + "-" : "") + expectedFile + ".expected";
+			String path = projectDir + dir + "/" + (wStackTrace ? trace + "-" : "") + expectedFile + ".expected";
 			File f = new File(path);
 			if (!f.exists()) {
 				new File(projectDir + dir).mkdirs();
