@@ -19,23 +19,6 @@
             "age"
          ]
       },
-      "Person.skills.0": {
-         "type": "object",
-         "properties": {
-            "topic": {
-               "type": "string",
-               "example": "java"
-            },
-            "level": {
-               "type": "number",
-               "example": 1
-            }
-         },
-         "required": [
-            "topic",
-            "level"
-         ]
-      },
       "Person.skills.1": {
          "type": "object",
          "properties": {
@@ -59,10 +42,7 @@
             "personal": {"$ref": "#/$defs/Person.personal"},
             "skills": {
                "type": "array",
-               "items": {"anyOf": [
-                  {"$ref": "#/$defs/Person.skills.0"},
-                  {"$ref": "#/$defs/Person.skills.1"}
-               ]}
+               "items": {"$ref": "#/$defs/Person.skills.1"}
             },
             "favorites": {
                "type": "array",
@@ -88,11 +68,7 @@
                "items": {"$ref": "#/$defs/Person.skills.1"}
             }
          },
-         "required": [
-            "name",
-            "lead",
-            "optSkills"
-         ]
+         "required": []
       },
       "root": {
          "type": "object",

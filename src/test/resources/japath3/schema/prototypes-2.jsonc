@@ -1,0 +1,28 @@
+{
+    "$defs": {
+        "Person": {
+            "$proto:json-schema": {
+                "$scope": "deep",
+                "additionalProperties": true
+            },
+            "personal": {
+                "$proto:json-schema": {
+                    "$scope": "shallow",
+                    "additionalProperties": false,
+                    "x": 1
+                },
+                "name": "Miller",
+                "loc": {
+                    "lat|-": 1,
+                    "long": 2
+                }
+            },
+            "skills": [
+                {
+                    "topic": "java",
+                    "level": 1
+                }
+            ]
+        }
+    }
+}

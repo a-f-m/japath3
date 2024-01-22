@@ -270,7 +270,7 @@ public class Commands {
 				
 				if (switchEnabled(optString, "json-schema") && oOp.equals("schemaGen")) {
 					
-					results.put(new JSONObject(new JsonSchemaProcessing().setOpt(switchEnabled(optString, "opt"))
+					results.put(new JSONObject(new JsonSchemaProcessing().setOptDefault(switchEnabled(optString, "opt"))
 							.setModular(switchEnabled(optString, "modular"))
 							.buildJsonTopSchema(node)
 							.val()

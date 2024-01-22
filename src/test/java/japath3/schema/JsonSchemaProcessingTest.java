@@ -89,7 +89,7 @@ public class JsonSchemaProcessingTest {
 				"""
 				);
 		
-				Node jschema = new JsonSchemaProcessing().setOpt(false)
+				Node jschema = new JsonSchemaProcessing().setOptDefault(false)
 						.setModular(true)
 						.setComplete(false)
 						.setOnlyTopModular(false)
@@ -108,7 +108,9 @@ public class JsonSchemaProcessingTest {
 		
 //		System.out.println(bundle.woString(3));
 		
-		JsonSchemaProcessing js = new JsonSchemaProcessing().setModular(true).setComplete(false).setOnlyTopModular(false);
+		JsonSchemaProcessing js = new JsonSchemaProcessing().setModular(true)
+				.setComplete(false)
+				.setOnlyTopModular(false);
 		
 		Node topSchema = js.buildJsonTopSchema(bundle);
 		System.out.println(topSchema.woString(3));
@@ -227,7 +229,7 @@ public class JsonSchemaProcessingTest {
 		JsonSchemaProcessing jsp = new JsonSchemaProcessing().usePrototypeBundle(jo);
 		Testing.assertEquals_("opt-anno-1", jsp.getSchemaBundle().woString(3));
 		
-		jsp = new JsonSchemaProcessing().setOpt(true).usePrototypeBundle(jo);
+		jsp = new JsonSchemaProcessing().setOptDefault(true).usePrototypeBundle(jo);
 		Testing.assertEquals_("opt-anno-2", jsp.getSchemaBundle().woString(3));
 
 		Testing.assertEquals_("opt-anno-exas-1", jsp.getResolvedPrototypeBundle().woString(3));
@@ -322,6 +324,16 @@ public class JsonSchemaProcessingTest {
 					"meals": []
 				}
 				"""), "Person").isEmpty());
+	}
+	
+	@Test public void testProtoPropagation() throws Exception {
+		
+		JsonSchemaProcessing js = new JsonSchemaProcessing().usePrototypeBundle(
+				NodeFactory.w_(IOUtils.toString(new FileReader("src\\test\\resources\\japath3\\schema\\prototypes-2.jsonc"))));
+
+		Node schemaBundle = js.getSchemaBundle();
+		
+		Testing.assertEquals_("testProtoPropagation-1", schemaBundle.woString(3));
 	}
 	
 
@@ -463,5 +475,4 @@ public class JsonSchemaProcessingTest {
     }
 			}			
 			"""; 
-	
 }

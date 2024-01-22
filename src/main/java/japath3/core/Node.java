@@ -434,6 +434,14 @@ public abstract class Node extends NodeBase implements Cloneable {
 		return clone; 
 	}
 	
+	public Node deepCopy() {
+		try {
+			return (Node) clone();
+		} catch (CloneNotSupportedException e) {
+			throw new UnsupportedOperationException();
+		}
+	}
+	
 	public String woString(int indent)  { throw new UnsupportedOperationException(); };
 
 	@Override public String toString() { return wo.toString(); }

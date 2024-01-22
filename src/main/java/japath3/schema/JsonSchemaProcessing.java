@@ -102,7 +102,7 @@ public class JsonSchemaProcessing {
 		}
 	}
 	
-	private boolean opt;
+	private boolean optDefault;
 	private boolean complete = true;
 	private boolean modular = true;
 	private boolean onlyTopModular = true;
@@ -152,8 +152,12 @@ public class JsonSchemaProcessing {
 	private Node createArrayNode() { 
 		return NodeFactory.w_(NodeFactory.emptyArray, WGson.class); 
 	}
-
+	
 	public Node buildJsonSchema(Node n, Node root, int level) {
+		return buildJsonSchema(n, root, level, NodeFactory.w_());
+	}
+
+	public Node buildJsonSchema(Node n, Node root, int level, Node protoSpec) {
 
 		if (n.isStruct()) {
 
@@ -161,7 +165,7 @@ public class JsonSchemaProcessing {
 			Node reqProps = null;
 			Node structType = createObjNode().set("type", "object")
 					.setNode("properties", propTypes = createObjNode());
-			if (!opt) structType.setNode("required", reqProps = createArrayNode());
+			if (!optDefault) structType.setNode("required", reqProps = createArrayNode());
 			if (complete && !n.isEmpty()) structType.set("additionalProperties", false);
 			
 			String use = n.val("$ref", null);
@@ -171,11 +175,27 @@ public class JsonSchemaProcessing {
 				return n;
 			}
 			
+			/// handle proto spec
+			
+			Node localProtoSpec = inherit(protoSpec, n.node("$proto:json-schema"));
+			protoSpec = propagate(protoSpec, localProtoSpec);
+
+			boolean optional = false;
+			boolean ignore = false;
+
+			optional = localProtoSpec.val("$allOptional", false);
+			ignore = localProtoSpec.val("$ignore", false);
+			for (Node spec : localProtoSpec.all()) {
+				String sel = spec.selector.toString();
+				if (!sel.startsWith("$")) structType.set(sel, spec.val());
+			}
+			///
+			
 			for (Node x : it(n.all())) {
 				String sel = x.selector.toString();
 				if (sel.matches("^\\$proto\\:.*")) continue;
 				// handle annotations
-				PropertyAnnotation pa = PropertyAnnotation.eval(sel, opt);
+				PropertyAnnotation pa = PropertyAnnotation.eval(sel, optDefault);
 				if (pa != null) {
 					sel = PropertyAnnotation.removeAnnotation(sel, false);
 					if (!pa.opt_) {
@@ -183,21 +203,13 @@ public class JsonSchemaProcessing {
 						reqProps.add(sel);
 					}
 				} else {
-					if (!opt) reqProps.add(sel);
+					if (!optDefault && !optional) reqProps.add(sel);
 				}
 				//
-				propTypes.setNode(sel, buildJsonSchema(x, root, level + 1));
+				propTypes.setNode(sel, buildJsonSchema(x, root, level + 1, protoSpec));
 			}
 
-			// handle proto spec
-			Node protoSpec = n.node("$proto:json-schema");
-			Boolean ignoreVariant = false;
-			if (protoSpec != Node.nil) {
-				ignoreVariant = protoSpec.val("ignoreVariant", false);
-				for (Node spec : protoSpec.all()) structType.set(spec.selector.toString(), spec.val());
-			}
-			//
-			return ignoreVariant ? Node.nil : buildStructNode(structType, new PathRepresent().selectorPath(n), level);
+			return ignore ? Node.nil : buildStructNode(structType, new PathRepresent().selectorPath(n), level);
 
 		} else if (n.isArray()) {
 
@@ -206,9 +218,9 @@ public class JsonSchemaProcessing {
 
 			int i = 0;
 			for (Node x : it(n.all())) {
-				if (i == 0 && x.isStruct() && x.exists("$proto:json-schema")) 
-					continue;
-				Node js = buildJsonSchema(x, root, level + 1);
+//				if (i == 0 && x.isStruct() && x.exists("$proto:json-schema")) 
+//					continue;
+				Node js = buildJsonSchema(x, root, level + 1, protoSpec);
 				if (js != Node.nil && mem.add(removedExamplesClone(js).toString())) {
 					itemTypes.addNode(js);
 					i++;
@@ -219,15 +231,18 @@ public class JsonSchemaProcessing {
 			if (i != 0) {
 				arrayTypes.setNode("items", i > 1 ? createObjNode().setNode("anyOf", itemTypes) : itemTypes.node(0));
 				// handle proto spec
-				Node protoSpec = n.node(0).node("$proto:json-schema");
-				if (protoSpec != Node.nil) {
-					for (Node spec : protoSpec.all()) arrayTypes.set(spec.selector.toString(), spec.val());
+				Node localProtoSpec = n.node(0).node("$proto:json-schema");
+				if (localProtoSpec != Node.nil) {
+					for (Node spec : localProtoSpec.all()) {
+						String sel = spec.selector.toString();
+						if (!sel.startsWith("$")) arrayTypes.set(sel, spec.val());
+					}
 					n.remove(0);
 				}
 			}			
 			
 			// handle annotations
-			PropertyAnnotation pa = PropertyAnnotation.eval(n.selector.toString(), opt);
+			PropertyAnnotation pa = PropertyAnnotation.eval(n.selector.toString(), optDefault);
 			Node anyOf = null;
 			if (pa != null && pa.minmax != null) {
 				arrayTypes.set("minItems", Integer.valueOf(pa.minmax.min));
@@ -246,21 +261,30 @@ public class JsonSchemaProcessing {
 
 			return anyOf == null ? arrayTypes : anyOf;
 		} else {
-			Object nval = n.val();
-			Node ret = createObjNode().set("type", deriveType(n));
-			
-//			if (nval instanceof String s && s.indexOf('|') >= 0 && s.indexOf('|') < s.length() && s.length() >= 3) {
-//				
-//				String[] split = s.split("\\|");
-//				ret.set("description", split[1]);
-//				ret.set("example", split[0]);
-//				n.set(n.selector.toString(), split[0]);
-//			} else {
-				ret.set("example", nval);
-//			}
-			return ret;
+			return createObjNode().set("type", deriveType(n)).set("example", n.val());
 		}
 
+	}
+
+	private Node propagate(Node protoSpec, Node localProtoSpec) {
+		String pscope = localProtoSpec.val("$scope", "shallow");
+		if (pscope.equals("deep")) {
+			protoSpec = protoSpec.deepCopy();
+			for (Node local: localProtoSpec.all()) protoSpec.setNode(local.selector.toString(), local);
+		}
+		return protoSpec;
+	}
+
+	private Node inherit(Node protoSpec, Node localProtoSpec) {
+		
+		if (localProtoSpec == Node.nil) {
+			localProtoSpec = NodeFactory.w_();
+		}
+		for (Node inherit : protoSpec.all()) {
+			String sel = inherit.selector.toString();
+			if (!sel.equals("$scope") && !localProtoSpec.exists(sel)) localProtoSpec.setNode(sel, inherit);
+		}
+		return localProtoSpec; 
 	}
 
 	private Node removedExamplesClone(Node js) {
@@ -358,8 +382,6 @@ public class JsonSchemaProcessing {
 		
 			ja.forEach(x -> {
 				
-//				if (!(x instanceof JSONObject jo && jo.has("$proto:json-schema")))
-//					n.addNode(resolvePrototypeBundle_trav(hits, x, root, level + 1));
 				if (x instanceof JSONObject jo && jo.has("$proto:json-schema")) jo.remove("$proto:json-schema");
 					
 				n.addNode(resolvePrototypeBundle_trav(hits, x, root, level + 1));
@@ -389,7 +411,7 @@ public class JsonSchemaProcessing {
 	}
 
 
-	public JsonSchemaProcessing setOpt(boolean opt) { this.opt = opt; return this; }
+	public JsonSchemaProcessing setOptDefault(boolean opt) { this.optDefault = opt; return this; }
 
 	public JsonSchemaProcessing setModular(boolean modular) { this.modular = modular; return this; }
 

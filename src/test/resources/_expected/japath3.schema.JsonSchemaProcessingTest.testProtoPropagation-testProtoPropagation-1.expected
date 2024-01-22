@@ -1,0 +1,73 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$ref": "#/$defs/root",
+   "$defs": {
+      "Person": {
+         "type": "object",
+         "properties": {
+            "personal": {
+               "type": "object",
+               "properties": {
+                  "name": {
+                     "type": "string",
+                     "example": "Miller"
+                  },
+                  "loc": {
+                     "type": "object",
+                     "properties": {
+                        "lat": {
+                           "type": "number",
+                           "example": 1
+                        },
+                        "long": {
+                           "type": "number",
+                           "example": 2
+                        }
+                     },
+                     "required": ["long"],
+                     "additionalProperties": true
+                  }
+               },
+               "required": [
+                  "name",
+                  "loc"
+               ],
+               "additionalProperties": false,
+               "x": 1
+            },
+            "skills": {
+               "type": "array",
+               "items": {
+                  "type": "object",
+                  "properties": {
+                     "topic": {
+                        "type": "string",
+                        "example": "java"
+                     },
+                     "level": {
+                        "type": "number",
+                        "example": 1
+                     }
+                  },
+                  "required": [
+                     "topic",
+                     "level"
+                  ],
+                  "additionalProperties": true
+               }
+            }
+         },
+         "required": [
+            "personal",
+            "skills"
+         ],
+         "additionalProperties": true
+      },
+      "root": {
+         "type": "object",
+         "properties": {"Person": {"$ref": "#/$defs/Person"}},
+         "required": ["Person"],
+         "additionalProperties": false
+      }
+   }
+}
