@@ -69,7 +69,7 @@ public class NodeFactory {
 		if ((n instanceof WJsonOrg && defaultWrapperClass != WJsonOrg.class)
 				|| (n instanceof WGson && defaultWrapperClass != WGson.class)
 				|| (n instanceof WJsonB && defaultWrapperClass != WJsonB.class))
-			throw new JapathException("uncompatible wrapper classes: '" + n.getClass() + "' <-> default: '" + defaultWrapperClass + "'");
+			throw new JapathException("incompatible wrapper classes: '" + n.getClass() + "' <-> default: '" + defaultWrapperClass + "'");
 	}
 	
 	public static Class<?> setDefaultWrapperClass(Class<?> defaultWrapperClass_) {

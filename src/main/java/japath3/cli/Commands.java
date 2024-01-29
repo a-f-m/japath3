@@ -8,6 +8,7 @@ import static japath3.schema.Schema.MessageHandling.Prefer;
 import static japath3.util.Basics.stream;
 import static japath3.util.Basics.Switches.checkSwitches;
 import static japath3.util.Basics.Switches.switchEnabled;
+import static japath3.wrapper.NodeFactory.emptyArray;
 import static java.util.stream.Collectors.joining;
 
 import java.io.BufferedReader;
@@ -17,15 +18,18 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.util.Iterator;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.io.IOUtils;
-import org.json.JSONArray;
+//import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
+
+//import com.google.gson.JsonArray;
 
 import io.vavr.Tuple2;
 import japath3.core.JapathException;
@@ -227,7 +231,8 @@ public class Commands {
 		// Implicitly throws exception at viol
 		checkSchema(oSchema, oType, n, request.val("genMessages", false), request.val("genMessagesOnly", false));
 
-		JSONArray results = new JSONArray();
+//		JSONArray results = new JSONArray();
+		Node results = NodeFactory.w_(emptyArray);
 		// for (Node node : nodes) {
 		Iterable<Node> walki = null;
 		try {
@@ -248,7 +253,8 @@ public class Commands {
 			Vars vars = n.ctx.getVars();
 			if ("".equals(oVar)) {
 				// results.put(vars.toString());
-				results.put(vars.toJson());
+//				results.put(vars.toJson());
+				results.add(vars.toString());
 				continue;
 			}
 			Var v = vars.v(oVar);
@@ -257,7 +263,7 @@ public class Commands {
 
 			switch (oOp) {
 			case "select":
-				results.put(oVar != null ? v.valClone() : node.val());
+				results.add(node.val());
 				break;
 			case "schemaGen":
 			case "selectGen":
@@ -270,7 +276,7 @@ public class Commands {
 				
 				if (switchEnabled(optString, "json-schema") && oOp.equals("schemaGen")) {
 					
-					results.put(new JSONObject(new JsonSchemaProcessing().setOptDefault(switchEnabled(optString, "opt"))
+					results.add(new JSONObject(new JsonSchemaProcessing().setOptDefault(switchEnabled(optString, "opt"))
 							.setModular(switchEnabled(optString, "modular"))
 							.buildJsonTopSchema(node)
 							.val()
@@ -278,7 +284,7 @@ public class Commands {
 					
 				} else {
 					
-					results.put(new Schema().genOpt(switchEnabled(optString, "opt"))
+					results.add(new Schema().genOpt(switchEnabled(optString, "opt"))
 							.modular(switchEnabled(optString, "modular"))
 							.genSelectorRestriction(switchEnabled(optString, "selectorRestriction"))
 							.setMode(oOp.equals("schemaGen") ? Mode.SchemaMode : Mode.SelectMode)
@@ -291,11 +297,11 @@ public class Commands {
 			}
 		}
 		return !request.val("asArray", false) ? //
-				stream(results).map(x -> {
-					return JoeUtil.prettyString(x, ind);
+				(String) stream((Iterator) results.all()  ).map(x -> {
+					return "";
 				}).collect(joining("\n")) //
 				//
-				: JoeUtil.prettyString(results, ind);
+				: JoeUtil.prettyString(results.woString(3), ind);
 
 	}
 

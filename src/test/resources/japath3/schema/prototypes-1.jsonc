@@ -1,21 +1,29 @@
 {
+    "$proto:injections:json-schema": [
+        {
+            "$proto:targets": "Person",
+            "required": [
+                "personal"
+            ],
+            "additionalProperties": false
+        },
+        {
+            "$proto:targets": "Project",
+            "$allOptional": true
+        },
+        {
+            "$proto:targets": "Person.skills[0]",
+            "$ignore": true
+        }
+    ],
     "$defs": {
         "Person": {
-            "$proto:json-schema": {
-                "required": [
-                    "personal"
-                ],
-                "additionalProperties": false
-            },
             "personal": {
                 "name": "Miller",
                 "age": 17
             },
             "skills": [
                 {
-                    "$proto:json-schema": {
-                        "$ignore": true
-                    },
                     "topic": "java",
                     "level": 1
                 },
@@ -34,9 +42,6 @@
             //}
         },
         "Project": {
-            "$proto:json-schema": {
-                "$allOptional": true
-            },
             "name": "proj1",
             "lead": {
                 "$ref": "#/$defs/Person"

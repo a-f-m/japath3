@@ -326,14 +326,14 @@ public class JsonSchemaProcessingTest {
 				"""), "Person").isEmpty());
 	}
 	
-	@Test public void testProtoPropagation() throws Exception {
+	@Test public void testProtoPropagation_w_paths() throws Exception {
 		
 		JsonSchemaProcessing js = new JsonSchemaProcessing().usePrototypeBundle(
-				NodeFactory.w_(IOUtils.toString(new FileReader("src\\test\\resources\\japath3\\schema\\prototypes-2.jsonc"))));
+				NodeFactory.w_(IOUtils.toString(new FileReader("src\\test\\resources\\japath3\\schema\\prototypes-2-w-paths.jsonc"))));
 
 		Node schemaBundle = js.getSchemaBundle();
 		
-		Testing.assertEquals_("testProtoPropagation-1", schemaBundle.woString(3));
+		Testing.assertEquals_("testProtoPropagation_w_paths-1", schemaBundle.woString(3));
 	}
 	
 
