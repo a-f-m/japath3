@@ -7,7 +7,8 @@ import io.vavr.control.Option;
 public class JapathException extends RuntimeException {
 	
 	public static enum Kind {
-		ConstraintViolation
+		ConstraintViolation,
+		ObjectnotFound
 	}
 	public Option<Kind> kind = none();
 
@@ -20,7 +21,13 @@ public class JapathException extends RuntimeException {
 
 	public JapathException(Throwable cause) { super(cause); }
 
-	public JapathException() { this("irregular op  (please contact a-f-m)"); }	
-	
+	public JapathException() { this("irregular op  (please contact a-f-m)"); }
+
+	public boolean equalsKind(Kind kind) { return kind.equals(this.kind.getOrNull()); }
+
+	public JapathException setKind(Option<Kind> kind) {
+		this.kind = kind;
+		return this;
+	}
 
 }

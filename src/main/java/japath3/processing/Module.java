@@ -15,6 +15,7 @@ import japath3.core.Japath;
 import japath3.core.Japath.Expr;
 import japath3.core.Japath.ParametricExprDef;
 import japath3.core.JapathException;
+import japath3.core.JapathException.Kind;
 import japath3.core.Node;
 import japath3.core.Vars;
 import japath3.processing.Language.Env;
@@ -84,7 +85,9 @@ public class Module {
 	
 	public ParametricExprDef getParametricExprDef(String exprName) {
 		Option<ParametricExprDef> ped = env.defs.get(exprName);
-		if (ped.isEmpty()) throw new JapathException("expression '" + exprName + "' not defined in module '" + name + "'");
+		if (ped.isEmpty()) //
+			throw new JapathException("expression '" + exprName + "' not defined in module '" + name + "'")
+					.setKind(Option.some(Kind.ObjectnotFound));
 		return ped.get();
 	}
 
@@ -120,7 +123,9 @@ public class Module {
 			ParametricExprDef ped = getParametricExprDef(exprName);
 			return Japath.select(n, new Ctx.ParamAVarEnv(params).cloneResolvedParams(n, params, ped), ped.exprs[0]);
 		} catch (JapathException e) {
-			throw new JapathException("error at module '" + name + "', evaluation tree beneath def '" + exprName + "': " + e.getMessage());
+			throw new JapathException(
+					"error at module '" + name + "', evaluation tree beneath def '" + exprName + "': " + e.getMessage())
+							.setKind(e.kind)			;
 		}
 	}
 	
