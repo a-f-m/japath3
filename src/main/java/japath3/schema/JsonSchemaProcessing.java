@@ -161,6 +161,8 @@ public class JsonSchemaProcessing {
 	
 	private Node buildJsonSchema(Node n, Node root, int level) {
 
+		Node injections = protoInjections.getInjections(n);
+
 		if (n.isStruct()) {
 
 			Node propTypes;
@@ -179,17 +181,12 @@ public class JsonSchemaProcessing {
 			
 			/// handle proto spec
 			
-			Node injections = protoInjections.getInjections(n);
-
 			boolean optional = false;
 			boolean ignore = false;
 
-			optional = injections.val("$allOptional", false);
-			ignore = injections.val("$ignore", false);
-			for (Node spec : injections.all()) {
-				String sel = spec.selector.toString();
-				if (!sel.startsWith("$")) structType.set(sel, spec.val());
-			}
+			optional = injections.val("$proto:allOptional", false);
+			ignore = injections.val("$proto:ignore", false);
+			injectToTypeNode(injections, structType);
 			///
 			
 			for (Node x : it(n.all())) {
@@ -225,7 +222,9 @@ public class JsonSchemaProcessing {
 					i++;
 				}
 			}
-			Node arrayTypes = createObjNode().set("type", "array");
+			Node arrayTypes = createObjNode().set("type", "array")
+					.setNode("example", n)
+					;
 			
 			if (i != 0) {
 				arrayTypes.setNode("items", i > 1 ? createObjNode().setNode("anyOf", itemTypes) : itemTypes.node(0));
@@ -249,11 +248,23 @@ public class JsonSchemaProcessing {
 			}
 			//
 
+			injectToTypeNode(injections, arrayTypes);
 			return anyOf == null ? arrayTypes : anyOf;
 		} else {
-			return createObjNode().set("type", deriveType(n)).set("example", n.val());
+			Node typeNode = createObjNode().set("type", deriveType(n)).set("example", n.val());
+			injectToTypeNode(injections, typeNode);
+			return typeNode;
 		}
 
+	}
+
+	private void injectToTypeNode(Node injections, Node typeNode) {
+		for (Node spec : injections.all()) {
+			String sel = spec.selector.toString();
+			if (!sel.startsWith("$proto:")) {
+				typeNode.set(sel, spec.val());
+			}
+		}
 	}
 	
 	private Node removedExamplesClone(Node js) {

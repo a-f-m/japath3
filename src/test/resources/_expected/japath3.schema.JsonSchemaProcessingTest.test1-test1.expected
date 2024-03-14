@@ -63,6 +63,12 @@
             "pers": {"$ref": "#/$defs/pers"},
             "favs": {
                "type": "array",
+               "example": [
+                  "coen-brothers",
+                  "dylan",
+                  {"uups": "an struct"},
+                  {"embedded": {"x": 1}}
+               ],
                "items": {"anyOf": [
                   {
                      "type": "string",

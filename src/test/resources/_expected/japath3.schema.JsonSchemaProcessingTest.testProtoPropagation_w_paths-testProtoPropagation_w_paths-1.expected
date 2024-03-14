@@ -37,6 +37,10 @@
             },
             "skills": {
                "type": "array",
+               "example": [{
+                  "topic": "java",
+                  "level": 1
+               }],
                "items": {
                   "type": "object",
                   "properties": {

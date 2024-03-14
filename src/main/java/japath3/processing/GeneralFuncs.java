@@ -85,6 +85,11 @@ public class GeneralFuncs { // available by ns 'it' or 'gen'
 		return ctxNode.isLeaf();
 	}
 	
+	public boolean isArray(Node ctxNode) {
+		
+		return ctxNode.isArray();
+	}
+	
 	public String selectorPath(Node ctxNode) {
 		return pathRepresent.selectorPath(ctxNode);
 	}

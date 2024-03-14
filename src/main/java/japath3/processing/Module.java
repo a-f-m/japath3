@@ -132,13 +132,13 @@ public class Module {
 	public static record ValidationResult(String violations, String schema) {}
 	
 	public Option<ValidationResult> checkSchema(Node jo, String schemaName) {
-		return checkSchema(jo, schemaName, null);
+		return schemaCheck(jo, schemaName, null);
 	}
 	
 	/**
 	 * returns (violations, schema) 
 	 */
-	public Option<ValidationResult> checkSchema(Node n, String schemaName, Vars vars) {
+	public Option<ValidationResult> schemaCheck(Node n, String schemaName, Vars vars) {
 		
 		if (!isSchemaModule) throw new JapathException("'" + name + "' is not a schema module");
 		prepare(n, vars);

@@ -7,6 +7,10 @@
          "properties": {
             "meals": {
                "type": "array",
+               "example": [
+                  "fish",
+                  "meat"
+               ],
                "items": {
                   "type": "string",
                   "example": "fish"
@@ -16,6 +20,7 @@
             },
             "fav": {
                "type": "array",
+               "example": ["dylan"],
                "items": {
                   "type": "string",
                   "example": "dylan"

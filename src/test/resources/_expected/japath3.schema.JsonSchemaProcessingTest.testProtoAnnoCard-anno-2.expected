@@ -11,6 +11,10 @@
             },
             {
                "type": "array",
+               "example": [
+                  "fish",
+                  "meat"
+               ],
                "items": {
                   "type": "string",
                   "example": "fish"

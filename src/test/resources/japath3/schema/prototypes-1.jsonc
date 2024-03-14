@@ -9,11 +9,11 @@
         },
         {
             "$proto:targets": "Project",
-            "$allOptional": true
+            "$proto:allOptional": true
         },
         {
             "$proto:targets": "Person.skills[0]",
-            "$ignore": true
+            "$proto:ignore": true
         }
     ],
     "$defs": {

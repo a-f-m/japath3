@@ -25,8 +25,9 @@ class ProtoInjections {
 			String prefix = "`$defs`.";
 			Node pa = prototypeBundle.node("$proto:injections:json-schema");    
 			if (pa != Node.nil) {
+				boolean found = false;
 				for (Node inj : pa.all()) {
-					Object targets = inj.val("$proto:targets", null);
+					String targets = inj.val("$proto:targets", null);
 					if (targets == null) throw new JapathException("prototype json error: property '$proto:targets' not defined");
 					try {
 						// TODO needed cause bundle is Gson
@@ -36,6 +37,7 @@ class ProtoInjections {
 						for (Node n : walki) {
 							String selectorPath = new PathRepresent().selectorPath(n);
 							map = Basics.putExtend(map, selectorPath, inj);
+							found = true;
 						}
 						NodeFactory.setDefaultWrapperClass(c);
 					} catch (JapathException e) {
@@ -43,6 +45,8 @@ class ProtoInjections {
 								+ "\"\n"
 								+ e.getMessage());
 					}
+					if (!found)
+						throw new JapathException("prototype json error: $proto:targets '" + targets + "' not resolvable");
 				}
 			}
 		}
@@ -61,7 +65,7 @@ class ProtoInjections {
 					NodeIter all = a.all();
 					for (Node p : all) {
 						String sel = p.selector.toString();
-						if (!sel.startsWith("$proto:")) resolvedAnotation.setNode(sel, p);
+						resolvedAnotation.setNode(sel, p);
 					}
 				}
 			}

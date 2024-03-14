@@ -42,10 +42,24 @@
             "personal": {"$ref": "#/$defs/Person.personal"},
             "skills": {
                "type": "array",
+               "example": [
+                  {
+                     "topic": "java",
+                     "level": 1
+                  },
+                  {
+                     "topic": "python",
+                     "level": 2
+                  }
+               ],
                "items": {"$ref": "#/$defs/Person.skills.1"}
             },
             "favorites": {
                "type": "array",
+               "example": [
+                  "coen-brothers",
+                  "dylan"
+               ],
                "items": {
                   "type": "string",
                   "example": "coen-brothers"
@@ -65,6 +79,10 @@
             "lead": {"$ref": "#/$defs/Person"},
             "optSkills": {
                "type": "array",
+               "example": [{
+                  "topic": "python",
+                  "level": 2
+               }],
                "items": {"$ref": "#/$defs/Person.skills.1"}
             }
          },

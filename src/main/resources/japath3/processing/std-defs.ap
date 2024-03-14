@@ -8,6 +8,8 @@ def(parent, j::it::parent()).
 
 def(isLeaf, j::it::isLeaf()).
 
+def(isArray, j::it::isArray()).
+
 def(selectorPath, j::it::selectorPath()).
 
 def(lift, 

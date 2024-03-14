@@ -1,7 +1,7 @@
 {
     "$proto:injections:json-schema": [
         {
-            "$proto:targets": "Person.**",
+            "$proto:targets": "Person.**?(and(not(isLeaf()), not(isArray())))",
             "additionalProperties": true
         },
         {
