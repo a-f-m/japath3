@@ -162,6 +162,25 @@ public class NetUtil {
 		}
 	}
 
+	/** TODO call it from 'httpGet'	 */
+	public static okhttp3.Response okHttpGet(OkHttpClient client, String url, Param... params) {
+		
+		Request request = new Request.Builder().url( //
+				url + (params.length == 0 ? ""
+						: (url.contains("?") ? "" : "?") + Param.urlFormList(params, !url.endsWith("&"))))
+				.build();
+		
+//		Request request = new Request.Builder().url("http://localhost:8985/solr/test-0/stream?&expr=search%28%0A%09test-0%2C%0A%09q%3D%22id%3A*%22%0A%29%0A").build();
+		
+//		Request request = new Request.Builder().url("http://localhost:8985/solr/test-0/stream?&expr=search%28%0A%09test-0%2C%0A%09q%3D%22id%3A*%22%0A%29%0A")
+//				.build();
+		try {
+			return client.newCall(request).execute();
+		} catch (IOException e) {
+			throw new JapathException(e);
+		}
+	}
+	
 	public static InputStream getStreamFromUrlOrFile(String spec) {
 		
 		InputStream is;
