@@ -30,7 +30,6 @@ public class Commands {
 
 		cli.options
 				.addOption(Option.builder("p")
-						.required()
 						.longOpt("prototypes")
 						.desc("file containing the prototypes")
 						.hasArg()
@@ -58,7 +57,8 @@ public class Commands {
 					return;
 				}
 				
-				String prototypeFile = cmd.getOptionValue("p");
+				String prototypeFile = cmd.getOptionValue("p", null);
+				if (prototypeFile == null) throw new Exception("prototype file missing");
 				System.out.println("prototypes: " + prototypeFile);
 				String targetDir = cmd.getOptionValue("t", ".");
 				System.out.println("target directory: " + targetDir);
@@ -93,55 +93,36 @@ public class Commands {
 example call: java -Dfile.encoding=UTF-8 -cp target/japath-cli.jar  japath3.schema.Commands -p "./prototypes.jsonc" -t "./generated"
 
 {
+	// optional json schema injection. properties not prefixed with $proto
+	// are directly injected (e.g. 'additionalProperties') 
     "$proto:injections:json-schema": [
         {
+			// the target path to $defs below for injections
+			// if you want to inject deep, use "Person.**"
             "$proto:targets": "Person",
-            "additionalProperties": false
-        },
-        {
-            "$proto:targets": "Project",
-            "$proto:allOptional": true
-        },
-        {
-            "$proto:targets": "Person.skills[0]",
-            "$proto:ignore": true
+            // classical json schema keyword injection
+            "additionalProperties": false,
+            // properties matching regex are optional
+            "$proto:optional": "personal|fav.*" 
         }
     ],
+    // within $defs are the types (e.g. Person) and the corresponding prototype (~ json example)
     "$defs": {
         "Person": {
             "personal": {
                 "name": "Miller",
                 "age": 17
             },
-            "skills": [
-                {
-                    "topic": "java",
-                    "level": 1
-                },
-                {
-                    "topic": "python",
-                    "level": 2
-                }
-            ],
-            "favorites": [
-                "coen-brothers",
-                "dylan"
-            ]
+            "favorites": [ "coen-brothers", "dylan" ]
         },
         "Project": {
             "name": "proj1",
             "lead": {
+				// reference to other types allows for modularization
                 "$ref": "#/$defs/Person"
-            },
-            "optSkills": [
-                {
-                    "topic": "python",
-                    "level": 2
-                }
-            ]
+            }
         }
     }
 }			
-			
 			""";
 }
