@@ -8,6 +8,10 @@
             "$proto:targets": "Person.personal",
             "additionalProperties": false,
             "x": 1
+        },
+        {
+            "$proto:targets": "Person",
+            "$proto:optional": "skills"
         }
     ],
     "$defs": {

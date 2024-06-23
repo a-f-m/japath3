@@ -1,0 +1,25 @@
+{"$defs": {
+   "Person": {"value": {
+      "personal": {
+         "name": "Miller",
+         "age": 17
+      },
+      "favorites": [
+         "coen-brothers",
+         "dylan"
+      ]
+   }},
+   "Project": {"value": {
+      "name": "proj1",
+      "lead": {
+         "personal": {
+            "name": "Miller",
+            "age": 17
+         },
+         "favorites": [
+            "coen-brothers",
+            "dylan"
+         ]
+      }
+   }}
+}}

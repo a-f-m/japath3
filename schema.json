@@ -1,0 +1,122 @@
+{
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$ref": "#/$defs/root",
+   "$defs": {
+      "Person": {
+         "type": "object",
+         "properties": {
+            "personal": {
+               "type": "object",
+               "properties": {
+                  "name": {
+                     "type": "string",
+                     "example": "Miller"
+                  },
+                  "age": {
+                     "type": "number",
+                     "example": 17
+                  }
+               },
+               "required": [
+                  "name",
+                  "age"
+               ],
+               "additionalProperties": false
+            },
+            "skills": {
+               "type": "array",
+               "example": [
+                  {
+                     "topic": "java",
+                     "level": 1
+                  },
+                  {
+                     "topic": "python",
+                     "level": 2
+                  }
+               ],
+               "items": {
+                  "type": "object",
+                  "properties": {
+                     "topic": {
+                        "type": "string",
+                        "example": "python"
+                     },
+                     "level": {
+                        "type": "number",
+                        "example": 2
+                     }
+                  },
+                  "required": [
+                     "topic",
+                     "level"
+                  ],
+                  "additionalProperties": false
+               }
+            },
+            "favorites": {
+               "type": "array",
+               "example": [
+                  "coen-brothers",
+                  "dylan"
+               ],
+               "items": {
+                  "type": "string",
+                  "example": "coen-brothers"
+               }
+            }
+         },
+         "required": ["personal"],
+         "additionalProperties": false
+      },
+      "Project": {
+         "type": "object",
+         "properties": {
+            "name": {
+               "type": "string",
+               "example": "proj1"
+            },
+            "lead": {"$ref": "#/$defs/Person"},
+            "optSkills": {
+               "type": "array",
+               "example": [{
+                  "topic": "python",
+                  "level": 2
+               }],
+               "items": {
+                  "type": "object",
+                  "properties": {
+                     "topic": {
+                        "type": "string",
+                        "example": "python"
+                     },
+                     "level": {
+                        "type": "number",
+                        "example": 2
+                     }
+                  },
+                  "required": [
+                     "topic",
+                     "level"
+                  ],
+                  "additionalProperties": false
+               }
+            }
+         },
+         "required": [],
+         "additionalProperties": false
+      },
+      "root": {
+         "type": "object",
+         "properties": {
+            "Person": {"$ref": "#/$defs/Person"},
+            "Project": {"$ref": "#/$defs/Project"}
+         },
+         "required": [
+            "Person",
+            "Project"
+         ],
+         "additionalProperties": false
+      }
+   }
+}

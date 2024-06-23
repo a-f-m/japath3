@@ -17,6 +17,8 @@ public class CliBase {
 	public Options options;
 	String command;
 	String htext;
+	public String exaText = "";
+	public String optHint = "\n\n!!! An option-argument value below prefixed with 'd:' is the default value\n";
 	
 	public CliBase(String command, String htext) { 
 		this.command = command; 
@@ -67,9 +69,9 @@ public class CliBase {
 				command,
 				"\n"
 				+ htext
-				+ "\n\n!!! An option-argument value below prefixed with 'd:' is the default value\n",
+				+ optHint,
 				options,
-				"",
+				exaText,
 				true);
 	}
 	

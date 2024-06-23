@@ -61,10 +61,7 @@
                }
             }
          },
-         "required": [
-            "personal",
-            "skills"
-         ],
+         "required": ["personal"],
          "additionalProperties": true
       },
       "root": {

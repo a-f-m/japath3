@@ -1,0 +1,32 @@
+{
+	// optional json schema injection. properties not prefixed with $proto
+	// are directly injected (e.g. 'additionalProperties') 
+    "$proto:injections:json-schema": [
+        {
+			// the target path to $defs below for injections
+			// if you want to inject deep, use "Person.**"
+            "$proto:targets": "Person",
+            // classical json schema keyword injection
+            "additionalProperties": false,
+            // properties matching regex are optional
+            "$proto:optional": "personal|fav.*" 
+        }
+    ],
+    // within $defs are the types (e.g. Person) and the corresponding prototype (~ json example)
+    "$defs": {
+        "Person": {
+            "personal": {
+                "name": "Miller",
+                "age": 17
+            },
+            "favorites": [ "coen-brothers", "dylan" ]
+        },
+        "Project": {
+            "name": "proj1",
+            "lead": {
+				// reference to other types allows for modularization
+                "$ref": "#/$defs/Person"
+            }
+        }
+    }
+}

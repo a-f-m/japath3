@@ -181,12 +181,16 @@ public class JsonSchemaProcessing {
 			
 			/// handle proto spec
 			
-			boolean optional = false;
-			boolean ignore = false;
-
-			optional = injections.val("$proto:allOptional", false);
-			ignore = injections.val("$proto:ignore", false);
-			injectToTypeNode(injections, structType);
+			boolean allOptional = injections.val("$proto:allOptional", false);
+			boolean ignore = injections.val("$proto:ignore", false);
+			String optionalPropRegex = injections.val("$proto:optional", null);
+//			Set<String> optionalProps = 
+//					opt_ != Node.nil ? 
+//							Basics.streamIt(opt_.all()).map(x -> {
+//								return (String) x.val();
+//								}).collect(Collectors.toSet()) 
+//							: Collections.emptySet();
+			injectToTypeNode(injections, structType, true);
 			///
 			
 			for (Node x : it(n.all())) {
@@ -201,7 +205,8 @@ public class JsonSchemaProcessing {
 						reqProps.add(sel);
 					}
 				} else {
-					if (!optDefault && !optional) reqProps.add(sel);
+					if (!optDefault && !allOptional && (optionalPropRegex != null ? !sel.matches(optionalPropRegex) : true)) 
+						reqProps.add(sel);
 				}
 				//
 				propTypes.setNode(sel, buildJsonSchema(x, root, level + 1));
@@ -248,20 +253,24 @@ public class JsonSchemaProcessing {
 			}
 			//
 
-			injectToTypeNode(injections, arrayTypes);
+			injectToTypeNode(injections, arrayTypes, false);
 			return anyOf == null ? arrayTypes : anyOf;
 		} else {
 			Node typeNode = createObjNode().set("type", deriveType(n)).set("example", n.val());
-			injectToTypeNode(injections, typeNode);
+			injectToTypeNode(injections, typeNode, false);
 			return typeNode;
 		}
 
 	}
 
-	private void injectToTypeNode(Node injections, Node typeNode) {
+//	private void injectToTypeNode(Node injections, Node typeNode) {
+//		injectToTypeNode(injections, typeNode, false);
+//	}
+	
+	private void injectToTypeNode(Node injections, Node typeNode, boolean isObject) {
 		for (Node spec : injections.all()) {
 			String sel = spec.selector.toString();
-			if (!sel.startsWith("$proto:")) {
+			if (!sel.startsWith("$proto:") && !(sel.equals("additionalProperties") && !isObject)) {
 				typeNode.set(sel, spec.val());
 			}
 		}
