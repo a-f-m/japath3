@@ -1,8 +1,9 @@
 package japath3.schema;
 
 import static japath3.util.Basics.it;
+import static japath3.wrapper.NodeFactory.emptyArray;
 import static japath3.wrapper.NodeFactory.emptyObject;
-//import static japath3.wrapper.NodeFactory.w_;
+import static japath3.wrapper.NodeFactory.w_;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,7 +31,6 @@ import japath3.core.Node;
 import japath3.core.PathRepresent;
 import japath3.util.Basics;
 import japath3.util.Regex;
-import japath3.wrapper.NodeFactory;
 import japath3.wrapper.WGson;
 
 /**
@@ -106,6 +106,9 @@ public class JsonSchemaProcessing {
 	private boolean complete = true;
 	private boolean modular = true;
 	private boolean onlyTopModular = true;
+	private boolean allowAllNull 
+			= true
+			;
 	private Defs defs = new Defs();
 	
 	private Node schemaBundle;
@@ -150,13 +153,13 @@ public class JsonSchemaProcessing {
 	}
 
 	private static Node createObjNode(String s) { 
-		return NodeFactory.w_(s, WGson.class); 
+		return w_(s, WGson.class); 
 	}
 	private static Node createObjNode() { 
-		return NodeFactory.w_(emptyObject, WGson.class); 
+		return w_(emptyObject, WGson.class); 
 	}
 	private Node createArrayNode() { 
-		return NodeFactory.w_(NodeFactory.emptyArray, WGson.class); 
+		return w_(emptyArray, WGson.class); 
 	}
 	
 	private Node buildJsonSchema(Node n, Node root, int level) {
@@ -274,10 +277,20 @@ public class JsonSchemaProcessing {
 				typeNode.set(sel, spec.val());
 			}
 		}
+		if (allowAllNull) {
+			Node type = typeNode.node("type");
+			if (type != Node.nil) {
+				if (type.isArray()) {
+					if (!type.containsWo("null")) type.add("null");
+				} else {
+					typeNode.setNode("type", w_(emptyArray).add(type.val()).add("null"));
+				}
+			}
+		}
 	}
 	
 	private Node removedExamplesClone(Node js) {
-		Node copy = NodeFactory.w_(js.woString(0));
+		Node copy = w_(js.woString(0));
 		copy.removeAll("example");
 		return copy;
 	}
@@ -408,6 +421,11 @@ public class JsonSchemaProcessing {
 
 	public JsonSchemaProcessing setOnlyTopModular(boolean onlyTopModular) {
 		this.onlyTopModular = onlyTopModular;
+		return this;
+	}
+	
+	public JsonSchemaProcessing setAllowAllNull(boolean allowAllNull) {
+		this.allowAllNull = allowAllNull;
 		return this;
 	}
 
